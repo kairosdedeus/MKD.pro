@@ -478,6 +478,15 @@ export interface Database {
         Args: { cell_uuid: string }
         Returns: boolean
       }
+      create_user_with_auth: {
+        Args: {
+          p_nome: string
+          p_email: string
+          p_password: string
+          p_telefone?: string | null
+        }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never

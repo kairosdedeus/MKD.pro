@@ -1,73 +1,119 @@
+import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
-import { 
-  LayoutDashboard, 
-  Music, 
-  UsersRound,
-  UserPlus,
-  Music2
+import {
+  LayoutDashboard, Music, UsersRound, UserPlus, Music2, Menu, X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 
 const navigation = [
-  { 
-    name: 'Gerencial', 
-    section: true,
+  {
+    name: 'Gerencial',
     items: [
       { name: 'Dashboard', href: '/gerencial', icon: LayoutDashboard },
       { name: 'Usuários', href: '/gerencial/usuarios', icon: UserPlus },
       { name: 'Equipes', href: '/gerencial/equipes', icon: UsersRound },
       { name: 'Músicas', href: '/gerencial/musicas', icon: Music2 },
-    ]
+    ],
   },
-  { 
-    name: 'Ministérios', 
-    section: true,
+  {
+    name: 'Ministérios',
     items: [
       { name: 'Louvor', href: '/louvor', icon: Music },
-    ]
+    ],
   },
 ]
 
-export function Sidebar() {
+function SidebarContent({ onClose }: { onClose?: () => void }) {
   return (
-    <div className="hidden md:flex md:w-64 md:flex-col">
-      <div className="flex flex-col flex-grow pt-5 overflow-y-auto bg-white border-r">
-        <div className="flex items-center flex-shrink-0 px-4">
-          <h1 className="text-xl font-bold text-gray-900">
-            Escalas Ministeriais
-          </h1>
+    <div className="flex flex-col h-full sidebar-bg border-r">
+      {/* Logo */}
+      <div className="flex items-center justify-between px-4 pt-5 pb-4 flex-shrink-0">
+        <div>
+          <h1 className="text-lg font-bold text-gray-900">Escalas</h1>
+          <p className="text-xs text-purple-600 font-medium">Ministeriais</p>
         </div>
-        <div className="mt-8 flex-grow flex flex-col">
-          <nav className="flex-1 px-2 space-y-4">
-            {navigation.map((section) => (
-              <div key={section.name}>
-                <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  {section.name}
-                </h3>
-                <div className="mt-2 space-y-1">
-                  {section.items.map((item) => (
-                    <NavLink
-                      key={item.name}
-                      to={item.href}
-                      className={({ isActive }) =>
-                        cn(
-                          'group flex items-center px-2 py-2 text-sm font-medium rounded-md',
-                          isActive
-                            ? 'bg-purple-100 text-purple-900'
-                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                        )
-                      }
-                    >
-                      <item.icon className="mr-3 h-5 w-5" />
-                      {item.name}
-                    </NavLink>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </nav>
-        </div>
+        {onClose && (
+          <Button variant="ghost" size="icon" onClick={onClose} className="md:hidden">
+            <X className="h-5 w-5" />
+          </Button>
+        )}
+      </div>
+
+      {/* Nav */}
+      <nav className="flex-1 px-3 pb-4 space-y-4 overflow-y-auto">
+        {navigation.map(section => (
+          <div key={section.name}>
+            <h3 className="px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
+              {section.name}
+            </h3>
+            <div className="space-y-0.5">
+              {section.items.map(item => (
+                <NavLink
+                  key={item.name}
+                  to={item.href}
+                  end={item.href === '/gerencial'}
+                  onClick={onClose}
+                  className={({ isActive }) =>
+                    cn(
+                      'flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors',
+                      isActive
+                        ? 'bg-[hsl(var(--sidebar-active-bg))] text-[hsl(var(--sidebar-active-text))]'
+                        : 'text-[hsl(var(--sidebar-text))] hover:bg-accent hover:text-accent-foreground'
+                    )
+                  }
+                >
+                  <item.icon className="h-4 w-4 flex-shrink-0" />
+                  {item.name}
+                </NavLink>
+              ))}
+            </div>
+          </div>
+        ))}
+      </nav>
+
+      {/* Footer */}
+      <div className="px-4 py-3 border-t flex-shrink-0">
+        <p className="text-xs text-gray-400">MKD.pro © 2026</p>
       </div>
     </div>
+  )
+}
+
+export function Sidebar() {
+  const [mobileOpen, setMobileOpen] = useState(false)
+
+  return (
+    <>
+      {/* Desktop sidebar */}
+      <div className="hidden md:flex md:w-56 md:flex-col md:flex-shrink-0">
+        <SidebarContent />
+      </div>
+
+      {/* Mobile: botão hamburguer no header */}
+      <div className="md:hidden fixed top-3 left-4 z-50">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setMobileOpen(true)}
+          className="bg-white shadow-sm border"
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
+      </div>
+
+      {/* Mobile: overlay + drawer */}
+      {mobileOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black/50 md:hidden"
+            onClick={() => setMobileOpen(false)}
+          />
+          <div className="fixed inset-y-0 left-0 z-50 w-64 md:hidden">
+            <SidebarContent onClose={() => setMobileOpen(false)} />
+          </div>
+        </>
+      )}
+    </>
   )
 }

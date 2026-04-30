@@ -2,58 +2,206 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   SISTEMA DE TEMAS — Escalas Ministeriais
+   4 temas: Luz | Escuro | Midnight | Sepia
+   ============================================================ */
+
 @layer base {
+
+  /* ── TEMA LUZ (padrão) ─────────────────────────────────── */
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-    --radius: 0.5rem;
+    --background:          0 0% 98%;
+    --foreground:          240 10% 10%;
+    --card:                0 0% 100%;
+    --card-foreground:     240 10% 10%;
+    --popover:             0 0% 100%;
+    --popover-foreground:  240 10% 10%;
+    --primary:             270 91% 55%;
+    --primary-foreground:  0 0% 100%;
+    --secondary:           270 30% 96%;
+    --secondary-foreground:270 40% 30%;
+    --muted:               240 5% 96%;
+    --muted-foreground:    240 5% 50%;
+    --accent:              270 30% 94%;
+    --accent-foreground:   270 60% 40%;
+    --destructive:         0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border:              240 6% 90%;
+    --input:               240 6% 90%;
+    --ring:                270 91% 55%;
+    --radius:              0.625rem;
+
+    /* Sidebar */
+    --sidebar-bg:          0 0% 100%;
+    --sidebar-border:      240 6% 90%;
+    --sidebar-active-bg:   270 30% 94%;
+    --sidebar-active-text: 270 60% 35%;
+    --sidebar-text:        240 5% 45%;
+
+    /* Header */
+    --header-bg:           0 0% 100%;
+    --header-border:       240 6% 90%;
+
+    /* Login gradient */
+    --login-from:          270 100% 97%;
+    --login-to:            220 100% 97%;
   }
 
+  /* ── TEMA ESCURO ───────────────────────────────────────── */
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-  }
-}
+    --background:          224 71% 4%;
+    --foreground:          213 31% 91%;
+    --card:                224 71% 7%;
+    --card-foreground:     213 31% 91%;
+    --popover:             224 71% 7%;
+    --popover-foreground:  213 31% 91%;
+    --primary:             270 80% 65%;
+    --primary-foreground:  0 0% 100%;
+    --secondary:           215 28% 17%;
+    --secondary-foreground:213 31% 91%;
+    --muted:               215 28% 14%;
+    --muted-foreground:    215 20% 55%;
+    --accent:              215 28% 17%;
+    --accent-foreground:   270 80% 75%;
+    --destructive:         0 63% 45%;
+    --destructive-foreground: 0 0% 100%;
+    --border:              215 28% 17%;
+    --input:               215 28% 17%;
+    --ring:                270 80% 65%;
 
-@layer base {
+    --sidebar-bg:          224 71% 5%;
+    --sidebar-border:      215 28% 14%;
+    --sidebar-active-bg:   270 40% 18%;
+    --sidebar-active-text: 270 80% 75%;
+    --sidebar-text:        215 20% 60%;
+
+    --header-bg:           224 71% 5%;
+    --header-border:       215 28% 14%;
+
+    --login-from:          224 71% 6%;
+    --login-to:            270 40% 10%;
+  }
+
+  /* ── TEMA MIDNIGHT ─────────────────────────────────────── */
+  .theme-midnight {
+    --background:          213 100% 5%;
+    --foreground:          210 40% 92%;
+    --card:                213 80% 8%;
+    --card-foreground:     210 40% 92%;
+    --popover:             213 80% 8%;
+    --popover-foreground:  210 40% 92%;
+    --primary:             217 91% 60%;
+    --primary-foreground:  0 0% 100%;
+    --secondary:           213 50% 14%;
+    --secondary-foreground:210 40% 92%;
+    --muted:               213 50% 11%;
+    --muted-foreground:    213 20% 55%;
+    --accent:              213 50% 14%;
+    --accent-foreground:   217 91% 70%;
+    --destructive:         0 63% 45%;
+    --destructive-foreground: 0 0% 100%;
+    --border:              213 50% 14%;
+    --input:               213 50% 14%;
+    --ring:                217 91% 60%;
+
+    --sidebar-bg:          213 100% 4%;
+    --sidebar-border:      213 50% 11%;
+    --sidebar-active-bg:   217 60% 18%;
+    --sidebar-active-text: 217 91% 75%;
+    --sidebar-text:        213 20% 60%;
+
+    --header-bg:           213 100% 4%;
+    --header-border:       213 50% 11%;
+
+    --login-from:          213 100% 5%;
+    --login-to:            217 60% 10%;
+  }
+
+  /* ── TEMA SEPIA ────────────────────────────────────────── */
+  .theme-sepia {
+    --background:          40 33% 97%;
+    --foreground:          25 30% 15%;
+    --card:                40 33% 100%;
+    --card-foreground:     25 30% 15%;
+    --popover:             40 33% 100%;
+    --popover-foreground:  25 30% 15%;
+    --primary:             30 90% 40%;
+    --primary-foreground:  0 0% 100%;
+    --secondary:           40 30% 92%;
+    --secondary-foreground:25 30% 25%;
+    --muted:               40 20% 93%;
+    --muted-foreground:    25 15% 50%;
+    --accent:              40 30% 90%;
+    --accent-foreground:   30 70% 35%;
+    --destructive:         0 84% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border:              35 20% 85%;
+    --input:               35 20% 85%;
+    --ring:                30 90% 40%;
+
+    --sidebar-bg:          40 33% 98%;
+    --sidebar-border:      35 20% 85%;
+    --sidebar-active-bg:   30 40% 92%;
+    --sidebar-active-text: 30 80% 30%;
+    --sidebar-text:        25 15% 50%;
+
+    --header-bg:           40 33% 98%;
+    --header-border:       35 20% 85%;
+
+    --login-from:          40 50% 95%;
+    --login-to:            30 50% 92%;
+  }
+
+  /* ── BASE ──────────────────────────────────────────────── */
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Transição suave ao trocar tema */
+  html {
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  /* Scrollbar customizada */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+  }
+}
+
+/* ── UTILITÁRIOS DE TEMA ─────────────────────────────────── */
+@layer utilities {
+  .sidebar-bg {
+    background-color: hsl(var(--sidebar-bg));
+    border-color: hsl(var(--sidebar-border));
+  }
+  .header-bg {
+    background-color: hsl(var(--header-bg));
+    border-color: hsl(var(--header-border));
+  }
+  .login-gradient {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--login-from)) 0%,
+      hsl(var(--login-to)) 100%
+    );
   }
 }

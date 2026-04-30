@@ -59,15 +59,13 @@ export const userService = {
   async createUser(userData: UserFormData) {
     try {
       // 1. Criar usuário no auth.users usando a função SQL
-      const { data: authResult, error: authError } = await supabase.rpc(
-        'create_user_with_auth',
-        {
+      const { data: authResult, error: authError } = await (supabase as any)
+        .rpc('create_user_with_auth', {
           p_nome: userData.nome,
           p_email: userData.email,
           p_password: userData.password || 'senha123',
           p_telefone: userData.telefone || null,
-        }
-      )
+        })
 
       if (authError) {
         console.error('Erro ao criar usuário no auth:', authError)
@@ -83,7 +81,7 @@ export const userService = {
           profile_id: profileId,
         }))
 
-        const { error: userProfilesError } = await supabase
+        const { error: userProfilesError } = await (supabase as any)
           .from('user_profiles')
           .insert(userProfiles)
 
@@ -105,7 +103,7 @@ export const userService = {
         throw new Error('Erro ao buscar dados do usuário criado')
       }
 
-      return profileData
+      return profileData as UserProfile
     } catch (error: any) {
       console.error('Erro completo ao criar usuário:', error)
       throw error
@@ -113,7 +111,7 @@ export const userService = {
   },
 
   async updateUser(userId: string, userData: Partial<UserFormData>) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('users_profile')
       .update({
         nome: userData.nome,
@@ -127,17 +125,15 @@ export const userService = {
 
     // Atualizar perfis se fornecido
     if (userData.profiles) {
-      // Remover perfis existentes
-      await supabase.from('user_profiles').delete().eq('user_id', userId)
+      await (supabase as any).from('user_profiles').delete().eq('user_id', userId)
 
-      // Adicionar novos perfis
       if (userData.profiles.length > 0) {
         const userProfiles = userData.profiles.map((profileId) => ({
           user_id: userId,
           profile_id: profileId,
         }))
 
-        const { error: userProfilesError } = await supabase
+        const { error: userProfilesError } = await (supabase as any)
           .from('user_profiles')
           .insert(userProfiles)
 
@@ -145,11 +141,11 @@ export const userService = {
       }
     }
 
-    return data
+    return data as UserProfile
   },
 
   async deactivateUser(userId: string) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('users_profile')
       .update({ ativo: false })
       .eq('id', userId)
@@ -157,7 +153,7 @@ export const userService = {
       .single()
 
     if (error) throw error
-    return data
+    return data as UserProfile
   },
 
   async getProfiles() {

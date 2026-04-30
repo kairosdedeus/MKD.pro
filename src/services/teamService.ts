@@ -52,7 +52,6 @@ export const teamService = {
         )
       `)
       .in('team_id', teamIds)
-      .eq('ativo', true)
 
     if (membersError) console.error('Erro ao buscar membros:', membersError)
     console.log('Membros encontrados:', allMembers?.length, allMembers)
@@ -102,7 +101,7 @@ export const teamService = {
         )
       `)
       .eq('team_id', id)
-      .eq('ativo', true)
+      .order('created_at')
 
     return {
       ...team,
@@ -126,18 +125,30 @@ export const teamService = {
 
     if (teamError) throw teamError
 
-    // Adicionar membros
-    if (teamData.member_ids.length > 0) {
-      const members = teamData.member_ids.map((userId) => ({
+    // Montar lista de membros: líder + membros selecionados (sem duplicatas)
+    const allMemberIds = Array.from(
+      new Set([teamData.leader_id, ...teamData.member_ids])
+    )
+
+    console.log('Criando equipe:', team.id, 'com membros:', allMemberIds)
+
+    if (allMemberIds.length > 0) {
+      const members = allMemberIds.map((userId) => ({
         team_id: team.id,
         user_id: userId,
+        ativo: true,
       }))
 
       const { error: membersError } = await supabase
         .from('team_members')
         .insert(members)
 
-      if (membersError) throw membersError
+      if (membersError) {
+        console.error('Erro ao inserir membros:', membersError)
+        throw membersError
+      }
+
+      console.log('Membros inseridos com sucesso:', allMemberIds.length)
     }
 
     return team

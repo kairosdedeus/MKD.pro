@@ -1,10 +1,11 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Pencil, Trash2, Calendar, Users, Music, FileText } from 'lucide-react'
+import { Pencil, Trash2, Calendar, Users, Music, FileText, Download } from 'lucide-react'
 import { Schedule } from '@/types'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { exportScheduleToPdf } from '@/lib/exportPdf'
 
 interface ScheduleDetailModalProps {
   open: boolean
@@ -137,6 +138,14 @@ export function ScheduleDetailModal({
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Fechar
+          </Button>
+          <Button
+            variant="outline"
+            className="text-purple-600 border-purple-200 hover:bg-purple-50"
+            onClick={() => exportScheduleToPdf(schedule, schedule.team?.nome || 'Louvor')}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Exportar PDF
           </Button>
           <Button
             variant="outline"

@@ -1,9 +1,18 @@
 import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Plus, Calendar, Users, Music, ChevronLeft, ChevronRight, Pencil, Trash2, Eye } from 'lucide-react'
+import { Plus, Calendar, Users, Music, ChevronLeft, ChevronRight, Pencil, Trash2, Eye, MoreVertical } from 'lucide-react'
 import { CreateScheduleModal } from '@/components/features/schedules/CreateScheduleModal'
 import { ScheduleDetailModal } from '@/components/features/schedules/ScheduleDetailModal'
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+  AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuSeparator, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { useSchedules, useDeleteSchedule } from '@/hooks/useSchedules'
 import { useTeams } from '@/hooks/useTeams'
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner'
@@ -27,6 +36,7 @@ export function WorshipDashboard() {
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(null)
   const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null)
+  const [deletingSchedule, setDeletingSchedule] = useState<Schedule | null>(null)
 
   const { teams, loading: loadingTeams } = useTeams()
   const worshipTeam = teams.find(t => t.team_type?.codigo === 'louvor')
@@ -52,10 +62,10 @@ export function WorshipDashboard() {
   )
 
   const handleDeleteSchedule = async (schedule: Schedule) => {
-    if (!confirm(`Excluir a escala "${schedule.title || format(parseISO(schedule.date), "dd/MM/yyyy")}"?`)) return
     try {
       await deleteSchedule.mutateAsync(schedule.id)
       toast({ title: 'Escala excluída com sucesso!' })
+      setDeletingSchedule(null)
       refetch()
     } catch {
       toast({ variant: 'destructive', title: 'Erro ao excluir escala' })
@@ -379,30 +389,28 @@ export function WorshipDashboard() {
                       </div>
                     </div>
                     <div className="flex gap-1">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-8 w-8 p-0 text-purple-600 hover:bg-purple-50"
-                        onClick={() => handleViewSchedule(schedule)}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-50"
-                        onClick={() => handleEditSchedule(schedule)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-8 w-8 p-0 text-red-500 hover:bg-red-50"
-                        onClick={() => handleDeleteSchedule(schedule)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleViewSchedule(schedule)}>
+                            <Eye className="h-4 w-4 mr-2 text-purple-600" /> Ver detalhes
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleEditSchedule(schedule)}>
+                            <Pencil className="h-4 w-4 mr-2 text-blue-600" /> Editar
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="text-red-600 focus:text-red-600"
+                            onClick={() => setDeletingSchedule(schedule)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" /> Excluir
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
                 )
@@ -437,10 +445,32 @@ export function WorshipDashboard() {
           }}
           onDelete={() => {
             setShowDetailModal(false)
-            handleDeleteSchedule(selectedSchedule)
+            setDeletingSchedule(selectedSchedule)
           }}
         />
       )}
+
+      {/* AlertDialog de confirmação de exclusão */}
+      <AlertDialog open={!!deletingSchedule} onOpenChange={open => !open && setDeletingSchedule(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir escala?</AlertDialogTitle>
+            <AlertDialogDescription>
+              A escala <strong>"{deletingSchedule?.title || (deletingSchedule ? format(parseISO(deletingSchedule.date), "dd/MM/yyyy") : '')}"</strong> será excluída permanentemente.
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700"
+              onClick={() => deletingSchedule && handleDeleteSchedule(deletingSchedule)}
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

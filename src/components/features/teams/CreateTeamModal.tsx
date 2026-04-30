@@ -71,6 +71,17 @@ export function CreateTeamModal({ open, onOpenChange, onSuccess }: CreateTeamMod
     loadFunctions(teamTypeId)
   }, [teamTypeId])
 
+  // Quando o líder muda, garantir que ele está na lista de membros
+  useEffect(() => {
+    if (!leaderId) return
+    const leaderUser = users?.find(u => u.id === leaderId)
+    if (!leaderUser) return
+    setMembers(prev => {
+      if (prev.find(m => m.userId === leaderId)) return prev
+      return [...prev, { userId: leaderId, nome: leaderUser.nome, functionIds: [], expanded: false }]
+    })
+  }, [leaderId, users])
+
   // Resetar ao fechar
   useEffect(() => {
     if (!open) {
@@ -256,32 +267,47 @@ export function CreateTeamModal({ open, onOpenChange, onSuccess }: CreateTeamMod
 
             <div className="border rounded-lg divide-y max-h-72 overflow-y-auto">
               {users
-                ?.filter(u => u.id !== leaderId)
-                .map(user => {
+                ?.map(user => {
+                  const isLeader = user.id === leaderId
                   const member = members.find(m => m.userId === user.id)
-                  const isSelected = !!member
+                  // Líder é sempre incluído automaticamente
+                  const isSelected = isLeader || !!member
 
                   return (
-                    <div key={user.id} className="p-3">
+                    <div key={user.id} className={`p-3 ${isLeader ? 'bg-purple-50' : ''}`}>
                       {/* Linha do membro */}
                       <div className="flex items-center gap-3">
-                        <Checkbox
-                          checked={isSelected}
-                          onCheckedChange={() => toggleMember(user)}
-                        />
+                        {isLeader ? (
+                          // Líder: sempre selecionado, não pode desmarcar
+                          <div className="w-5 h-5 rounded bg-purple-600 flex items-center justify-center flex-shrink-0">
+                            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                        ) : (
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => toggleMember(user)}
+                          />
+                        )}
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-xs font-semibold text-gray-600">
+                            <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold ${isLeader ? 'bg-purple-200 text-purple-700' : 'bg-gray-200 text-gray-600'}`}>
                               {user.nome.charAt(0).toUpperCase()}
                             </div>
                             <span className="text-sm font-medium">{user.nome}</span>
+                            {isLeader && (
+                              <span className="text-xs bg-purple-600 text-white px-1.5 py-0.5 rounded-full">
+                                Líder
+                              </span>
+                            )}
                           </div>
                         </div>
 
                         {/* Funções selecionadas (resumo) */}
-                        {isSelected && member!.functionIds.length > 0 && (
+                        {isSelected && (isLeader ? members.find(m => m.userId === user.id) : member)?.functionIds?.length > 0 && (
                           <div className="flex gap-1 flex-wrap">
-                            {member!.functionIds.map(fId => {
+                            {(isLeader ? members.find(m => m.userId === user.id) : member)!.functionIds.map(fId => {
                               const fn = teamFunctions.find(f => f.id === fId)
                               return fn ? (
                                 <span key={fId} className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded">
@@ -299,7 +325,7 @@ export function CreateTeamModal({ open, onOpenChange, onSuccess }: CreateTeamMod
                             onClick={() => toggleExpand(user.id)}
                             className="text-gray-400 hover:text-gray-600 ml-1"
                           >
-                            {member!.expanded
+                            {(isLeader ? members.find(m => m.userId === user.id) : member)?.expanded
                               ? <ChevronUp className="h-4 w-4" />
                               : <ChevronDown className="h-4 w-4" />
                             }
@@ -308,7 +334,7 @@ export function CreateTeamModal({ open, onOpenChange, onSuccess }: CreateTeamMod
                       </div>
 
                       {/* Funções expandidas */}
-                      {isSelected && member!.expanded && teamFunctions.length > 0 && (
+                      {isSelected && (isLeader ? members.find(m => m.userId === user.id) : member)?.expanded && teamFunctions.length > 0 && (
                         <div className="mt-2 ml-10 p-2 bg-gray-50 rounded-lg">
                           <p className="text-xs text-gray-500 mb-2">Funções:</p>
                           <div className="flex flex-wrap gap-2">
@@ -321,7 +347,7 @@ export function CreateTeamModal({ open, onOpenChange, onSuccess }: CreateTeamMod
                                   className="flex items-center gap-1.5 text-sm cursor-pointer"
                                 >
                                   <Checkbox
-                                    checked={member!.functionIds.includes(fn.id)}
+                                    checked={(isLeader ? members.find(m => m.userId === user.id) : member)?.functionIds.includes(fn.id)}
                                     onCheckedChange={() => toggleMemberFunction(user.id, fn.id)}
                                   />
                                   <span className="flex items-center gap-1">
@@ -338,16 +364,16 @@ export function CreateTeamModal({ open, onOpenChange, onSuccess }: CreateTeamMod
                   )
                 })}
 
-              {users?.filter(u => u.id !== leaderId).length === 0 && (
+              {!users?.length && (
                 <div className="p-4 text-center text-sm text-gray-400">
                   Nenhum usuário disponível. Crie usuários primeiro.
                 </div>
               )}
             </div>
 
-            {teamFunctions.length > 0 && members.length > 0 && (
+            {teamFunctions.length > 0 && (
               <p className="text-xs text-gray-400">
-                💡 Clique na seta ▼ ao lado do membro para atribuir funções
+                💡 Clique na seta ▼ ao lado do membro para atribuir funções. O líder é adicionado automaticamente.
               </p>
             )}
           </div>
