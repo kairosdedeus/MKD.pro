@@ -13,7 +13,7 @@ export function Breadcrumbs() {
   const { pathname } = useLocation()
   const segments = pathname.split('/').filter(Boolean)
 
-  if (segments.length <= 1) return null // Não mostrar na raiz
+  if (segments.length <= 1) return null
 
   const crumbs = segments.map((seg, i) => ({
     label: ROUTE_LABELS[seg] || seg.charAt(0).toUpperCase() + seg.slice(1),
@@ -22,17 +22,17 @@ export function Breadcrumbs() {
   }))
 
   return (
-    <nav className="flex items-center gap-1 text-sm text-gray-500 px-6 py-2 border-b bg-gray-50/50">
-      <Link to="/gerencial" className="flex items-center hover:text-purple-600 transition-colors">
+    <nav className="flex items-center gap-1 text-sm text-muted-foreground px-6 py-2 border-b border-border bg-muted/30">
+      <Link to="/gerencial" className="flex items-center hover:text-primary transition-colors">
         <Home className="h-3.5 w-3.5" />
       </Link>
       {crumbs.map(crumb => (
         <span key={crumb.href} className="flex items-center gap-1">
-          <ChevronRight className="h-3.5 w-3.5 text-gray-300" />
+          <ChevronRight className="h-3.5 w-3.5 text-border" />
           {crumb.isLast ? (
-            <span className="text-gray-900 font-medium">{crumb.label}</span>
+            <span className="text-foreground font-medium">{crumb.label}</span>
           ) : (
-            <Link to={crumb.href} className="hover:text-purple-600 transition-colors">
+            <Link to={crumb.href} className="hover:text-primary transition-colors">
               {crumb.label}
             </Link>
           )}

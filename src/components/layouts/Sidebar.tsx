@@ -30,8 +30,8 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
       {/* Logo */}
       <div className="flex items-center justify-between px-4 pt-5 pb-4 flex-shrink-0">
         <div>
-          <h1 className="text-lg font-bold text-gray-900">Escalas</h1>
-          <p className="text-xs text-purple-600 font-medium">Ministeriais</p>
+          <h1 className="text-lg font-bold text-foreground">Escalas</h1>
+          <p className="text-xs font-medium" style={{ color: `hsl(var(--primary))` }}>Ministeriais</p>
         </div>
         {onClose && (
           <Button variant="ghost" size="icon" onClick={onClose} className="md:hidden">
@@ -44,7 +44,8 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
       <nav className="flex-1 px-3 pb-4 space-y-4 overflow-y-auto">
         {navigation.map(section => (
           <div key={section.name}>
-            <h3 className="px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
+            <h3 className="px-2 text-[10px] font-semibold uppercase tracking-widest mb-1"
+              style={{ color: 'hsl(var(--sidebar-text))' }}>
               {section.name}
             </h3>
             <div className="space-y-0.5">
@@ -56,10 +57,10 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
                   onClick={onClose}
                   className={({ isActive }) =>
                     cn(
-                      'flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors',
+                      'flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-all',
                       isActive
-                        ? 'bg-[hsl(var(--sidebar-active-bg))] text-[hsl(var(--sidebar-active-text))]'
-                        : 'text-[hsl(var(--sidebar-text))] hover:bg-accent hover:text-accent-foreground'
+                        ? 'bg-[hsl(var(--sidebar-active-bg))] text-[hsl(var(--sidebar-active-text))] font-semibold'
+                        : 'text-[hsl(var(--sidebar-text))] hover:bg-accent hover:text-foreground'
                     )
                   }
                 >
@@ -73,8 +74,8 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
       </nav>
 
       {/* Footer */}
-      <div className="px-4 py-3 border-t flex-shrink-0">
-        <p className="text-xs text-gray-400">MKD.pro © 2026</p>
+      <div className="px-4 py-3 border-t border-[hsl(var(--sidebar-border))] flex-shrink-0">
+        <p className="text-[11px]" style={{ color: 'hsl(var(--sidebar-text))' }}>MKD.pro © 2026</p>
       </div>
     </div>
   )
@@ -96,7 +97,7 @@ export function Sidebar() {
           variant="ghost"
           size="icon"
           onClick={() => setMobileOpen(true)}
-          className="bg-white shadow-sm border"
+          className="bg-background shadow-sm border border-border"
         >
           <Menu className="h-5 w-5" />
         </Button>

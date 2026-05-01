@@ -1,77 +1,79 @@
 import { useState, useEffect } from 'react'
 
-export type ThemeId = 'light' | 'dark' | 'midnight' | 'sepia'
+// ── Modo base: claro ou escuro ────────────────────────────────
+export type ModeId = 'light' | 'dark'
 
-export interface Theme {
-  id: ThemeId
+// ── Paleta de cor de destaque ─────────────────────────────────
+export type PaletteId = 'violet' | 'blue' | 'emerald' | 'rose' | 'amber'
+
+export interface Palette {
+  id: PaletteId
   name: string
-  description: string
-  preview: string[]  // cores de preview [bg, accent, text]
+  color: string      // hex para preview
+  hsl: string        // valor HSL para CSS var
 }
 
-export const THEMES: Theme[] = [
-  {
-    id: 'light',
-    name: 'Luz',
-    description: 'Claro e limpo',
-    preview: ['#ffffff', '#9333ea', '#1a1a2e'],
-  },
-  {
-    id: 'dark',
-    name: 'Escuro',
-    description: 'Profissional',
-    preview: ['#0f172a', '#a855f7', '#e2e8f0'],
-  },
-  {
-    id: 'midnight',
-    name: 'Midnight',
-    description: 'Azul elegante',
-    preview: ['#0d1b2a', '#3b82f6', '#bfdbfe'],
-  },
-  {
-    id: 'sepia',
-    name: 'Sepia',
-    description: 'Tom quente',
-    preview: ['#fdf6e3', '#b45309', '#3d2b1f'],
-  },
+export const PALETTES: Palette[] = [
+  { id: 'violet',  name: 'Violeta',  color: '#8b5cf6', hsl: '263 70% 58%' },
+  { id: 'blue',    name: 'Azul',     color: '#3b82f6', hsl: '217 91% 60%' },
+  { id: 'emerald', name: 'Verde',    color: '#10b981', hsl: '160 84% 39%' },
+  { id: 'rose',    name: 'Rosa',     color: '#f43f5e', hsl: '350 89% 60%' },
+  { id: 'amber',   name: 'Âmbar',   color: '#f59e0b', hsl: '38 92% 50%'  },
 ]
 
+export interface ThemeConfig {
+  mode: ModeId
+  palette: PaletteId
+}
+
 export function useTheme() {
-  const [theme, setThemeState] = useState<ThemeId>(() => {
-    return (localStorage.getItem('theme') as ThemeId) || 'light'
-  })
+  const [mode, setModeState] = useState<ModeId>(() =>
+    (localStorage.getItem('theme-mode') as ModeId) || 'light'
+  )
+  const [palette, setPaletteState] = useState<PaletteId>(() =>
+    (localStorage.getItem('theme-palette') as PaletteId) || 'violet'
+  )
 
   useEffect(() => {
-    applyTheme(theme)
-  }, [theme])
+    applyTheme(mode, palette)
+  }, [mode, palette])
 
-  const setTheme = (id: ThemeId) => {
-    setThemeState(id)
-    localStorage.setItem('theme', id)
+  const setMode = (m: ModeId) => {
+    setModeState(m)
+    localStorage.setItem('theme-mode', m)
   }
 
-  return { theme, setTheme, themes: THEMES }
+  const setPalette = (p: PaletteId) => {
+    setPaletteState(p)
+    localStorage.setItem('theme-palette', p)
+  }
+
+  return { mode, palette, setMode, setPalette, palettes: PALETTES }
 }
 
-export function applyTheme(theme: ThemeId) {
+export function applyTheme(mode: ModeId, palette: PaletteId) {
   const root = document.documentElement
-  // Remove todos os temas
-  root.classList.remove('dark', 'theme-midnight', 'theme-sepia')
 
-  switch (theme) {
-    case 'dark':
-      root.classList.add('dark')
-      break
-    case 'midnight':
-      root.classList.add('dark', 'theme-midnight')
-      break
-    case 'sepia':
-      root.classList.add('theme-sepia')
-      break
-    // 'light' é o padrão, sem classes
+  // ── Modo ──────────────────────────────────────────────────
+  if (mode === 'dark') {
+    root.classList.add('dark')
+  } else {
+    root.classList.remove('dark')
   }
+
+  // ── Paleta de cor primária ────────────────────────────────
+  const p = PALETTES.find(p => p.id === palette) || PALETTES[0]
+  root.style.setProperty('--primary', p.hsl)
+
+  // Foreground do primary sempre branco (exceto âmbar)
+  const primaryFg = palette === 'amber' ? '20 14% 10%' : '0 0% 100%'
+  root.style.setProperty('--primary-foreground', primaryFg)
+
+  // Ring = primary
+  root.style.setProperty('--ring', p.hsl)
 }
 
-// Inicializar tema ao carregar
-const savedTheme = (localStorage.getItem('theme') as ThemeId) || 'light'
-applyTheme(savedTheme)
+// Inicializar ao carregar
+const savedMode    = (localStorage.getItem('theme-mode')    as ModeId)    || 'light'
+const savedPalette = (localStorage.getItem('theme-palette') as PaletteId) || 'violet'
+applyTheme(savedMode, savedPalette)

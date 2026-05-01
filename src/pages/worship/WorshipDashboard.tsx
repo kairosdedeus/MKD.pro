@@ -23,9 +23,9 @@ import { Schedule } from '@/types'
 import { useToast } from '@/components/ui/use-toast'
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  draft:     { label: 'Rascunho',  color: 'bg-gray-100 text-gray-700' },
-  published: { label: 'Publicada', color: 'bg-green-100 text-green-700' },
-  completed: { label: 'Concluída', color: 'bg-blue-100 text-blue-700' },
+  draft:     { label: 'Rascunho',  color: 'bg-muted text-muted-foreground' },
+  published: { label: 'Publicada', color: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' },
+  completed: { label: 'Concluída', color: 'bg-primary/15 text-primary' },
 }
 
 export function WorshipDashboard() {
@@ -48,11 +48,10 @@ export function WorshipDashboard() {
 
   const deleteSchedule = useDeleteSchedule()
 
-  // Gerar dias do calendário
   const monthStart = startOfMonth(currentMonth)
   const monthEnd = endOfMonth(currentMonth)
   const days = eachDayOfInterval({ start: monthStart, end: monthEnd })
-  const startWeekday = getDay(monthStart) // 0=Dom, 1=Seg...
+  const startWeekday = getDay(monthStart)
 
   const getSchedulesForDay = (day: Date) =>
     schedules.filter(s => s.date === format(day, 'yyyy-MM-dd'))
@@ -86,7 +85,7 @@ export function WorshipDashboard() {
     return <div className="flex items-center justify-center h-64"><LoadingSpinner /></div>
   }
 
-    if (!worshipTeam) {
+  if (!worshipTeam) {
     return (
       <EmptyState
         icon={Users}
@@ -101,15 +100,12 @@ export function WorshipDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-purple-900">🎵 Louvor</h1>
-          <p className="text-gray-500 mt-1">
+          <h1 className="text-3xl font-bold text-foreground">🎵 Louvor</h1>
+          <p className="text-muted-foreground mt-1">
             {worshipTeam.nome} · {worshipTeam.members?.length || 0} membros
           </p>
         </div>
-        <Button
-          className="bg-purple-600 hover:bg-purple-700 text-white gap-2"
-          onClick={() => { setEditingSchedule(null); setShowCreateModal(true) }}
-        >
+        <Button className="gap-2" onClick={() => { setEditingSchedule(null); setShowCreateModal(true) }}>
           <Plus className="h-4 w-4" />
           Nova Escala
         </Button>
@@ -117,47 +113,25 @@ export function WorshipDashboard() {
 
       {/* Stats rápidas */}
       <div className="grid grid-cols-3 gap-4">
-        <Card className="border-purple-100">
-          <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Calendar className="h-5 w-5 text-purple-600" />
+        {[
+          { icon: Calendar, value: schedules.length, label: 'Escalas este mês' },
+          { icon: Users, value: worshipTeam.members?.length || 0, label: 'Membros na equipe' },
+          { icon: Music, value: schedules.reduce((acc, s) => acc + (s.songs?.length || 0), 0), label: 'Músicas escaladas' },
+        ].map(({ icon: Icon, value, label }) => (
+          <Card key={label}>
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Icon className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-foreground">{value}</p>
+                  <p className="text-xs text-muted-foreground">{label}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-2xl font-bold text-purple-900">{schedules.length}</p>
-                <p className="text-xs text-gray-500">Escalas este mês</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-purple-100">
-          <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Users className="h-5 w-5 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-purple-900">{worshipTeam.members?.length || 0}</p>
-                <p className="text-xs text-gray-500">Membros na equipe</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-purple-100">
-          <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Music className="h-5 w-5 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-purple-900">
-                  {schedules.reduce((acc, s) => acc + (s.songs?.length || 0), 0)}
-                </p>
-                <p className="text-xs text-gray-500">Músicas escaladas</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -180,16 +154,13 @@ export function WorshipDashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            {/* Cabeçalho dos dias da semana */}
             <div className="grid grid-cols-7 mb-2">
               {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(d => (
-                <div key={d} className="text-center text-xs font-medium text-gray-400 py-1">{d}</div>
+                <div key={d} className="text-center text-xs font-medium text-muted-foreground py-1">{d}</div>
               ))}
             </div>
 
-            {/* Grid de dias */}
             <div className="grid grid-cols-7 gap-1">
-              {/* Células vazias antes do primeiro dia */}
               {Array.from({ length: startWeekday }).map((_, i) => (
                 <div key={`empty-${i}`} />
               ))}
@@ -206,8 +177,8 @@ export function WorshipDashboard() {
                     onClick={() => setSelectedDate(day)}
                     className={`
                       relative aspect-square flex flex-col items-center justify-start pt-1 rounded-lg text-sm transition-all
-                      ${isSelected ? 'bg-purple-600 text-white' : 'hover:bg-purple-50'}
-                      ${isToday && !isSelected ? 'border-2 border-purple-400 font-bold' : ''}
+                      ${isSelected ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}
+                      ${isToday && !isSelected ? 'border-2 border-primary font-bold' : ''}
                     `}
                   >
                     <span>{format(day, 'd')}</span>
@@ -216,7 +187,7 @@ export function WorshipDashboard() {
                         {daySchedules.slice(0, 3).map(s => (
                           <div
                             key={s.id}
-                            className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white' : 'bg-purple-500'}`}
+                            className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-primary-foreground' : 'bg-primary'}`}
                           />
                         ))}
                       </div>
@@ -226,11 +197,10 @@ export function WorshipDashboard() {
               })}
             </div>
 
-            {/* Botão criar escala para o dia selecionado */}
-            <div className="mt-4 pt-4 border-t">
+            <div className="mt-4 pt-4 border-t border-border">
               <Button
                 variant="outline"
-                className="w-full border-purple-200 text-purple-700 hover:bg-purple-50"
+                className="w-full"
                 onClick={() => { setEditingSchedule(null); setShowCreateModal(true) }}
               >
                 <Plus className="h-4 w-4 mr-2" />
@@ -251,52 +221,38 @@ export function WorshipDashboard() {
             {loadingSchedules ? (
               <div className="flex justify-center py-8"><LoadingSpinner /></div>
             ) : selectedDaySchedules.length === 0 ? (
-              <div className="py-8 text-center text-sm text-gray-400">Nenhuma escala para este dia</div>
+              <div className="py-8 text-center text-sm text-muted-foreground">Nenhuma escala para este dia</div>
             ) : (
               <div className="space-y-3">
                 {selectedDaySchedules.map(schedule => {
                   const status = STATUS_LABELS[schedule.status] || STATUS_LABELS.draft
                   return (
-                    <div key={schedule.id} className="border border-purple-100 rounded-lg p-3 space-y-2">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm truncate">
-                            {schedule.title || 'Escala sem título'}
-                          </p>
-                          <span className={`inline-block text-xs px-2 py-0.5 rounded-full mt-1 ${status.color}`}>
-                            {status.label}
-                          </span>
-                        </div>
+                    <div key={schedule.id} className="border border-border rounded-lg p-3 space-y-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">
+                          {schedule.title || 'Escala sem título'}
+                        </p>
+                        <span className={`inline-block text-xs px-2 py-0.5 rounded-full mt-1 ${status.color}`}>
+                          {status.label}
+                        </span>
                       </div>
-                      <div className="flex gap-1 text-xs text-gray-500">
+                      <div className="flex gap-1 text-xs text-muted-foreground">
                         <span>{schedule.members?.length || 0} membros</span>
                         {(schedule.songs?.length || 0) > 0 && (
                           <span>· {schedule.songs!.length} músicas</span>
                         )}
                       </div>
                       <div className="flex gap-1 pt-1">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-7 px-2 text-xs text-purple-600 hover:bg-purple-50"
-                          onClick={() => handleViewSchedule(schedule)}
-                        >
+                        <Button size="sm" variant="ghost" className="h-7 px-2 text-xs"
+                          onClick={() => handleViewSchedule(schedule)}>
                           <Eye className="h-3 w-3 mr-1" /> Ver
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-7 px-2 text-xs text-blue-600 hover:bg-blue-50"
-                          onClick={() => handleEditSchedule(schedule)}
-                        >
+                        <Button size="sm" variant="ghost" className="h-7 px-2 text-xs"
+                          onClick={() => handleEditSchedule(schedule)}>
                           <Pencil className="h-3 w-3 mr-1" /> Editar
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-7 px-2 text-xs text-red-600 hover:bg-red-50"
-                          onClick={() => handleDeleteSchedule(schedule)}
-                        >
+                        <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-destructive hover:text-destructive"
+                          onClick={() => setDeletingSchedule(schedule)}>
                           <Trash2 className="h-3 w-3 mr-1" /> Excluir
                         </Button>
                       </div>
@@ -313,21 +269,21 @@ export function WorshipDashboard() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Users className="h-5 w-5 text-purple-600" />
+            <Users className="h-5 w-5 text-primary" />
             Membros da Equipe — {worshipTeam.nome}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {!worshipTeam.members || worshipTeam.members.length === 0 ? (
-            <div className="py-8 text-center text-sm text-gray-400">
+            <div className="py-8 text-center text-sm text-muted-foreground">
               Adicione membros à equipe de louvor em Gerencial → Equipes
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
               {worshipTeam.members.map(member => (
-                <div key={member.id} className="border border-purple-100 rounded-lg p-3 hover:bg-purple-50 transition-colors">
+                <div key={member.id} className="border border-border rounded-lg p-3 hover:bg-accent transition-colors">
                   <div className="flex items-center gap-2 mb-1">
-                    <div className="w-8 h-8 rounded-full bg-purple-200 flex items-center justify-center text-purple-700 font-semibold text-sm">
+                    <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center text-primary font-semibold text-sm">
                       {member.user?.nome?.charAt(0).toUpperCase() || '?'}
                     </div>
                     <p className="font-medium text-sm truncate">{member.user?.nome}</p>
@@ -335,7 +291,7 @@ export function WorshipDashboard() {
                   {member.functions && member.functions.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-1">
                       {member.functions.map(f => (
-                        <span key={f.id} className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded">
+                        <span key={f.id} className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded">
                           {f.nome}
                         </span>
                       ))}
@@ -353,7 +309,7 @@ export function WorshipDashboard() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <Calendar className="h-5 w-5 text-purple-600" />
+              <Calendar className="h-5 w-5 text-primary" />
               Todas as Escalas — {format(currentMonth, 'MMMM yyyy', { locale: ptBR })}
             </CardTitle>
           </CardHeader>
@@ -362,16 +318,15 @@ export function WorshipDashboard() {
               {schedules.map(schedule => {
                 const status = STATUS_LABELS[schedule.status] || STATUS_LABELS.draft
                 return (
-                  <div
-                    key={schedule.id}
-                    className="flex items-center justify-between p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors"
+                  <div key={schedule.id}
+                    className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-accent transition-colors"
                   >
                     <div className="flex items-center gap-3">
                       <div className="text-center min-w-[48px]">
-                        <p className="text-xs text-gray-400 uppercase">
+                        <p className="text-xs text-muted-foreground uppercase">
                           {format(parseISO(schedule.date), 'EEE', { locale: ptBR })}
                         </p>
-                        <p className="text-lg font-bold text-purple-700">
+                        <p className="text-lg font-bold text-primary">
                           {format(parseISO(schedule.date), 'dd')}
                         </p>
                       </div>
@@ -381,37 +336,33 @@ export function WorshipDashboard() {
                           <span className={`text-xs px-2 py-0.5 rounded-full ${status.color}`}>
                             {status.label}
                           </span>
-                          <span className="text-xs text-gray-400">
+                          <span className="text-xs text-muted-foreground">
                             {schedule.members?.length || 0} membros
                             {(schedule.songs?.length || 0) > 0 && ` · ${schedule.songs!.length} músicas`}
                           </span>
                         </div>
                       </div>
                     </div>
-                    <div className="flex gap-1">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleViewSchedule(schedule)}>
-                            <Eye className="h-4 w-4 mr-2 text-purple-600" /> Ver detalhes
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleEditSchedule(schedule)}>
-                            <Pencil className="h-4 w-4 mr-2 text-blue-600" /> Editar
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            className="text-red-600 focus:text-red-600"
-                            onClick={() => setDeletingSchedule(schedule)}
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" /> Excluir
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleViewSchedule(schedule)}>
+                          <Eye className="h-4 w-4 mr-2" /> Ver detalhes
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEditSchedule(schedule)}>
+                          <Pencil className="h-4 w-4 mr-2" /> Editar
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="text-destructive focus:text-destructive"
+                          onClick={() => setDeletingSchedule(schedule)}>
+                          <Trash2 className="h-4 w-4 mr-2" /> Excluir
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 )
               })}
@@ -420,52 +371,37 @@ export function WorshipDashboard() {
         </Card>
       )}
 
-      {/* Modal criar/editar escala */}
       <CreateScheduleModal
         open={showCreateModal}
-        onOpenChange={(open) => {
-          setShowCreateModal(open)
-          if (!open) setEditingSchedule(null)
-        }}
+        onOpenChange={(open) => { setShowCreateModal(open); if (!open) setEditingSchedule(null) }}
         teamId={worshipTeam.id}
         selectedDate={format(selectedDate, 'yyyy-MM-dd')}
         schedule={editingSchedule}
         onSuccess={() => { refetch(); setEditingSchedule(null) }}
       />
 
-      {/* Modal de detalhes */}
       {selectedSchedule && (
         <ScheduleDetailModal
           open={showDetailModal}
           onOpenChange={setShowDetailModal}
           schedule={selectedSchedule}
-          onEdit={() => {
-            setShowDetailModal(false)
-            handleEditSchedule(selectedSchedule)
-          }}
-          onDelete={() => {
-            setShowDetailModal(false)
-            setDeletingSchedule(selectedSchedule)
-          }}
+          onEdit={() => { setShowDetailModal(false); handleEditSchedule(selectedSchedule) }}
+          onDelete={() => { setShowDetailModal(false); setDeletingSchedule(selectedSchedule) }}
         />
       )}
 
-      {/* AlertDialog de confirmação de exclusão */}
       <AlertDialog open={!!deletingSchedule} onOpenChange={open => !open && setDeletingSchedule(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir escala?</AlertDialogTitle>
             <AlertDialogDescription>
               A escala <strong>"{deletingSchedule?.title || (deletingSchedule ? format(parseISO(deletingSchedule.date), "dd/MM/yyyy") : '')}"</strong> será excluída permanentemente.
-              Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-red-600 hover:bg-red-700"
-              onClick={() => deletingSchedule && handleDeleteSchedule(deletingSchedule)}
-            >
+            <AlertDialogAction className="bg-destructive hover:bg-destructive/90"
+              onClick={() => deletingSchedule && handleDeleteSchedule(deletingSchedule)}>
               Excluir
             </AlertDialogAction>
           </AlertDialogFooter>

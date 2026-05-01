@@ -26,11 +26,11 @@ import { supabase } from '@/lib/supabaseClient'
 import { Team } from '@/types'
 
 const MINISTRY_COLORS: Record<string, string> = {
-  louvor:   'bg-purple-100 text-purple-700',
-  danca:    'bg-pink-100 text-pink-700',
-  midia:    'bg-blue-100 text-blue-700',
-  obreiros: 'bg-green-100 text-green-700',
-  celula:   'bg-orange-100 text-orange-700',
+  louvor:   'bg-primary/10 text-primary',
+  danca:    'bg-pink-500/10 text-pink-600 dark:text-pink-400',
+  midia:    'bg-blue-500/10 text-blue-600 dark:text-blue-400',
+  obreiros: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+  celula:   'bg-orange-500/10 text-orange-600 dark:text-orange-400',
 }
 
 export function TeamsPage() {
@@ -66,10 +66,10 @@ export function TeamsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Equipes</h1>
-          <p className="text-gray-600 mt-2">Gerencie as equipes dos ministérios</p>
+          <h1 className="text-3xl font-bold text-foreground">Equipes</h1>
+          <p className="text-muted-foreground mt-2">Gerencie as equipes dos ministérios</p>
         </div>
-        <Button onClick={() => setCreateModalOpen(true)} className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700">
+        <Button onClick={() => setCreateModalOpen(true)} className="flex items-center gap-2">
           <Plus className="h-4 w-4" /> Nova Equipe
         </Button>
       </div>

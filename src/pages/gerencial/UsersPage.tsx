@@ -184,10 +184,10 @@ export function UsersPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Usuários</h1>
-          <p className="text-gray-600 mt-2">Gerencie os usuários do sistema</p>
+          <h1 className="text-3xl font-bold text-foreground">Usuários</h1>
+          <p className="text-muted-foreground mt-2">Gerencie os usuários do sistema</p>
         </div>
-        <Button onClick={() => setCreateModalOpen(true)} className="gap-2 bg-purple-600 hover:bg-purple-700">
+        <Button onClick={() => setCreateModalOpen(true)} className="gap-2">
           <Plus className="h-4 w-4" /> Novo Usuário
         </Button>
       </div>
@@ -197,7 +197,7 @@ export function UsersPage() {
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span>Todos os Usuários</span>
-            <span className="text-sm font-normal text-gray-400">{users?.length || 0} usuário(s)</span>
+            <span className="text-sm font-normal text-muted-foreground">{users?.length || 0} usuário(s)</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -219,7 +219,7 @@ export function UsersPage() {
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0 ${
-                          user.ativo ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-500'
+                          user.ativo ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'
                         }`}>
                           {user.nome.charAt(0).toUpperCase()}
                         </div>
@@ -229,8 +229,8 @@ export function UsersPage() {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="text-gray-500 text-sm hide-mobile">{user.email}</TableCell>
-                    <TableCell className="text-gray-500 text-sm hide-mobile">{user.telefone || '—'}</TableCell>
+                    <TableCell className="text-muted-foreground text-sm hide-mobile">{user.email}</TableCell>
+                    <TableCell className="text-muted-foreground text-sm hide-mobile">{user.telefone || '—'}</TableCell>
                     <TableCell>
                       <Badge variant={user.ativo ? 'default' : 'secondary'}>
                         {user.ativo ? 'Ativo' : 'Inativo'}
@@ -244,12 +244,12 @@ export function UsersPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48">
-                          <DropdownMenuLabel className="text-xs text-gray-400">Ações</DropdownMenuLabel>
+                          <DropdownMenuLabel className="text-xs text-muted-foreground">Ações</DropdownMenuLabel>
                           <DropdownMenuItem onClick={() => setEditingUser(user)}>
-                            <Pencil className="h-4 w-4 mr-2 text-blue-600" /> Editar
+                            <Pencil className="h-4 w-4 mr-2" /> Editar
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleViewHistory(user)}>
-                            <History className="h-4 w-4 mr-2 text-purple-600" /> Histórico de Escalas
+                            <History className="h-4 w-4 mr-2" /> Histórico de Escalas
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => { setResetPasswordUser(user); setNewPassword('') }}>
                             <KeyRound className="h-4 w-4 mr-2 text-amber-600" /> Redefinir Senha
@@ -356,9 +356,9 @@ export function UsersPage() {
             <DialogTitle>🔑 Redefinir Senha</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            <div className="p-3 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-600">Usuário: <strong>{resetPasswordUser?.nome}</strong></p>
-              <p className="text-sm text-gray-600">Email: <strong>{resetPasswordUser?.email}</strong></p>
+            <div className="p-3 bg-muted rounded-lg">
+              <p className="text-sm text-muted-foreground">Usuário: <strong className="text-foreground">{resetPasswordUser?.nome}</strong></p>
+              <p className="text-sm text-muted-foreground">Email: <strong className="text-foreground">{resetPasswordUser?.email}</strong></p>
             </div>
             <div className="space-y-2">
               <Label>Nova Senha *</Label>
@@ -402,7 +402,7 @@ export function UsersPage() {
           {loadingHistory ? (
             <div className="flex justify-center py-8"><LoadingSpinner /></div>
           ) : historyData.length === 0 ? (
-            <div className="py-8 text-center text-gray-400">
+            <div className="py-8 text-center text-muted-foreground">
               <History className="h-10 w-10 mx-auto mb-2 opacity-30" />
               <p>Nenhuma escala encontrada para este usuário</p>
             </div>
@@ -415,23 +415,23 @@ export function UsersPage() {
                 return (
                   <div key={item.id} className="flex items-center gap-3 p-3 border rounded-lg">
                     <div className="text-center min-w-[48px]">
-                      <p className="text-xs text-gray-400 uppercase">
+                      <p className="text-xs text-muted-foreground uppercase">
                         {format(parseISO(schedule.date), 'EEE', { locale: ptBR })}
                       </p>
-                      <p className="text-lg font-bold text-purple-700">
+                      <p className="text-lg font-bold text-primary">
                         {format(parseISO(schedule.date), 'dd')}
                       </p>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-muted-foreground">
                         {format(parseISO(schedule.date), 'MMM', { locale: ptBR })}
                       </p>
                     </div>
                     <div className="flex-1">
                       <p className="font-medium text-sm">{schedule.title || 'Escala sem título'}</p>
-                      <p className="text-xs text-gray-400">{schedule.team?.nome}</p>
+                      <p className="text-xs text-muted-foreground">{schedule.team?.nome}</p>
                       {fns.length > 0 && (
                         <div className="flex gap-1 mt-1">
                           {fns.map((fn: string) => (
-                            <span key={fn} className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded">
+                            <span key={fn} className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded">
                               {fn}
                             </span>
                           ))}

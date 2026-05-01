@@ -4,157 +4,132 @@
 
 /* ============================================================
    SISTEMA DE TEMAS — Escalas Ministeriais
-   4 temas: Luz | Escuro | Midnight | Sepia
+   
+   Arquitetura:
+   • 2 modos base: Claro | Escuro (Instagram-style)
+   • 5 paletas de cor primária: Violeta | Azul | Verde | Rosa | Âmbar
+   • Paleta aplicada via JS (--primary dinâmico)
    ============================================================ */
 
 @layer base {
 
-  /* ── TEMA LUZ (padrão) ─────────────────────────────────── */
-  :root {    --background:          0 0% 98%;
-    --foreground:          240 10% 10%;
-    --card:                0 0% 100%;
-    --card-foreground:     240 10% 10%;
-    --popover:             0 0% 100%;
-    --popover-foreground:  240 10% 10%;
-    --primary:             270 91% 55%;
-    --primary-foreground:  0 0% 100%;
-    --secondary:           270 30% 96%;
-    --secondary-foreground:270 40% 30%;
-    --muted:               240 5% 96%;
-    --muted-foreground:    240 5% 50%;
-    --accent:              270 30% 94%;
-    --accent-foreground:   270 60% 40%;
-    --destructive:         0 84% 60%;
+  /* ── MODO CLARO ────────────────────────────────────────────
+     Fundo branco puro, bordas sutis, texto escuro
+  ─────────────────────────────────────────────────────────── */
+  :root {
+    /* Superfícies */
+    --background:           0 0% 98%;
+    --foreground:           0 0% 9%;
+    --card:                 0 0% 100%;
+    --card-foreground:      0 0% 9%;
+    --popover:              0 0% 100%;
+    --popover-foreground:   0 0% 9%;
+
+    /* Primária — sobrescrita pelo JS com a paleta escolhida */
+    --primary:              263 70% 58%;
+    --primary-foreground:   0 0% 100%;
+
+    /* Secundária — cinza muito suave */
+    --secondary:            0 0% 95%;
+    --secondary-foreground: 0 0% 20%;
+
+    /* Muted — texto de apoio */
+    --muted:                0 0% 95%;
+    --muted-foreground:     0 0% 45%;
+
+    /* Accent — hover states */
+    --accent:               0 0% 93%;
+    --accent-foreground:    0 0% 9%;
+
+    /* Destrutivo */
+    --destructive:          0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-    --border:              240 6% 90%;
-    --input:               240 6% 90%;
-    --ring:                270 91% 55%;
-    --radius:              0.625rem;
+
+    /* Bordas e inputs */
+    --border:               0 0% 89%;
+    --input:                0 0% 89%;
+    --ring:                 263 70% 58%;
+    --radius:               0.5rem;
 
     /* Sidebar */
-    --sidebar-bg:          0 0% 100%;
-    --sidebar-border:      240 6% 90%;
-    --sidebar-active-bg:   270 30% 94%;
-    --sidebar-active-text: 270 60% 35%;
-    --sidebar-text:        240 5% 45%;
+    --sidebar-bg:           0 0% 100%;
+    --sidebar-border:       0 0% 91%;
+    --sidebar-text:         0 0% 40%;
+    --sidebar-active-bg:    0 0% 94%;
+    --sidebar-active-text:  0 0% 9%;
 
     /* Header */
-    --header-bg:           0 0% 100%;
-    --header-border:       240 6% 90%;
-
-    /* Login gradient */
-    --login-from:          270 100% 97%;
-    --login-to:            220 100% 97%;
+    --header-bg:            0 0% 100%;
+    --header-border:        0 0% 91%;
   }
 
-  /* ── TEMA ESCURO ───────────────────────────────────────── */
+  /* ── MODO ESCURO — Instagram Style ────────────────────────
+     
+     Referência: Instagram Dark Mode
+     • Fundo principal:  #000000 (preto puro)
+     • Superfície card:  #1c1c1c (cinza muito escuro)
+     • Superfície elevada: #262626
+     • Borda:            #363636
+     • Texto primário:   #f5f5f5
+     • Texto secundário: #a8a8a8
+     • Sem azul/roxo nos fundos — neutro puro
+  ─────────────────────────────────────────────────────────── */
   .dark {
-    --background:          224 71% 4%;
-    --foreground:          213 31% 91%;
-    --card:                224 71% 7%;
-    --card-foreground:     213 31% 91%;
-    --popover:             224 71% 7%;
-    --popover-foreground:  213 31% 91%;
-    --primary:             270 80% 65%;
-    --primary-foreground:  0 0% 100%;
-    --secondary:           215 28% 17%;
-    --secondary-foreground:213 31% 91%;
-    --muted:               215 28% 14%;
-    --muted-foreground:    215 20% 55%;
-    --accent:              215 28% 17%;
-    --accent-foreground:   270 80% 75%;
-    --destructive:         0 63% 45%;
+    /* Superfícies — cinzas neutros puros */
+    --background:           0 0% 0%;       /* #000000 — preto puro */
+    --foreground:           0 0% 96%;      /* #f5f5f5 — branco suave */
+    --card:                 0 0% 11%;      /* #1c1c1c — card escuro */
+    --card-foreground:      0 0% 96%;
+    --popover:              0 0% 15%;      /* #262626 — popover elevado */
+    --popover-foreground:   0 0% 96%;
+
+    /* Primária — sobrescrita pelo JS */
+    --primary:              263 70% 58%;
+    --primary-foreground:   0 0% 100%;
+
+    /* Secundária */
+    --secondary:            0 0% 15%;      /* #262626 */
+    --secondary-foreground: 0 0% 96%;
+
+    /* Muted */
+    --muted:                0 0% 15%;      /* #262626 */
+    --muted-foreground:     0 0% 66%;      /* #a8a8a8 */
+
+    /* Accent — hover */
+    --accent:               0 0% 18%;      /* #2e2e2e */
+    --accent-foreground:    0 0% 96%;
+
+    /* Destrutivo */
+    --destructive:          0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-    --border:              215 28% 17%;
-    --input:               215 28% 17%;
-    --ring:                270 80% 65%;
 
-    --sidebar-bg:          224 71% 5%;
-    --sidebar-border:      215 28% 14%;
-    --sidebar-active-bg:   270 40% 18%;
-    --sidebar-active-text: 270 80% 75%;
-    --sidebar-text:        215 20% 60%;
+    /* Bordas — cinza escuro sutil */
+    --border:               0 0% 21%;      /* #363636 */
+    --input:                0 0% 18%;      /* #2e2e2e */
+    --ring:                 263 70% 58%;
 
-    --header-bg:           224 71% 5%;
-    --header-border:       215 28% 14%;
+    /* Sidebar — levemente mais escuro que o card */
+    --sidebar-bg:           0 0% 7%;       /* #121212 */
+    --sidebar-border:       0 0% 18%;      /* #2e2e2e */
+    --sidebar-text:         0 0% 66%;      /* #a8a8a8 */
+    --sidebar-active-bg:    0 0% 18%;      /* #2e2e2e */
+    --sidebar-active-text:  0 0% 96%;      /* #f5f5f5 */
 
-    --login-from:          224 71% 6%;
-    --login-to:            270 40% 10%;
-  }
-
-  /* ── TEMA MIDNIGHT ─────────────────────────────────────── */
-  .theme-midnight {
-    --background:          213 100% 5%;
-    --foreground:          210 40% 92%;
-    --card:                213 80% 8%;
-    --card-foreground:     210 40% 92%;
-    --popover:             213 80% 8%;
-    --popover-foreground:  210 40% 92%;
-    --primary:             217 91% 60%;
-    --primary-foreground:  0 0% 100%;
-    --secondary:           213 50% 14%;
-    --secondary-foreground:210 40% 92%;
-    --muted:               213 50% 11%;
-    --muted-foreground:    213 20% 55%;
-    --accent:              213 50% 14%;
-    --accent-foreground:   217 91% 70%;
-    --destructive:         0 63% 45%;
-    --destructive-foreground: 0 0% 100%;
-    --border:              213 50% 14%;
-    --input:               213 50% 14%;
-    --ring:                217 91% 60%;
-
-    --sidebar-bg:          213 100% 4%;
-    --sidebar-border:      213 50% 11%;
-    --sidebar-active-bg:   217 60% 18%;
-    --sidebar-active-text: 217 91% 75%;
-    --sidebar-text:        213 20% 60%;
-
-    --header-bg:           213 100% 4%;
-    --header-border:       213 50% 11%;
-
-    --login-from:          213 100% 5%;
-    --login-to:            217 60% 10%;
-  }
-
-  /* ── TEMA SEPIA ────────────────────────────────────────── */
-  .theme-sepia {
-    --background:          40 33% 97%;
-    --foreground:          25 30% 15%;
-    --card:                40 33% 100%;
-    --card-foreground:     25 30% 15%;
-    --popover:             40 33% 100%;
-    --popover-foreground:  25 30% 15%;
-    --primary:             30 90% 40%;
-    --primary-foreground:  0 0% 100%;
-    --secondary:           40 30% 92%;
-    --secondary-foreground:25 30% 25%;
-    --muted:               40 20% 93%;
-    --muted-foreground:    25 15% 50%;
-    --accent:              40 30% 90%;
-    --accent-foreground:   30 70% 35%;
-    --destructive:         0 84% 55%;
-    --destructive-foreground: 0 0% 100%;
-    --border:              35 20% 85%;
-    --input:               35 20% 85%;
-    --ring:                30 90% 40%;
-
-    --sidebar-bg:          40 33% 98%;
-    --sidebar-border:      35 20% 85%;
-    --sidebar-active-bg:   30 40% 92%;
-    --sidebar-active-text: 30 80% 30%;
-    --sidebar-text:        25 15% 50%;
-
-    --header-bg:           40 33% 98%;
-    --header-border:       35 20% 85%;
-
-    --login-from:          40 50% 95%;
-    --login-to:            30 50% 92%;
+    /* Header */
+    --header-bg:            0 0% 7%;       /* #121212 */
+    --header-border:        0 0% 18%;      /* #2e2e2e */
   }
 
   /* ── BASE ──────────────────────────────────────────────── */
   * {
     @apply border-border;
+  }
+
+  html {
+    /* Transição suave ao trocar tema */
+    transition:
+      background-color 0.15s ease,
+      color 0.15s ease;
   }
 
   body {
@@ -164,25 +139,20 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Transição suave ao trocar tema */
-  html {
-    transition: background-color 0.2s ease, color 0.2s ease;
-  }
-
-  /* Scrollbar customizada */
+  /* Scrollbar — minimalista */
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 5px;
+    height: 5px;
   }
   ::-webkit-scrollbar-track {
-    background: hsl(var(--muted));
+    background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: hsl(var(--muted-foreground) / 0.3);
-    border-radius: 3px;
+    background: hsl(var(--border));
+    border-radius: 99px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--muted-foreground) / 0.5);
+    background: hsl(var(--muted-foreground) / 0.4);
   }
 }
 
@@ -196,26 +166,30 @@
     background-color: hsl(var(--header-bg));
     border-color: hsl(var(--header-border));
   }
+
+  /* Login — gradiente suave baseado no modo */
   .login-gradient {
-    background: linear-gradient(
-      135deg,
-      hsl(var(--login-from)) 0%,
-      hsl(var(--login-to)) 100%
-    );
+    background-color: hsl(var(--background));
+  }
+  .dark .login-gradient {
+    background-color: hsl(0 0% 0%);
+  }
+
+  /* Elevação de superfície no dark mode */
+  .dark .surface-elevated {
+    background-color: hsl(0 0% 15%);
   }
 }
 
 /* ── RESPONSIVIDADE MOBILE ───────────────────────────────── */
 @layer utilities {
-  /* Tabelas responsivas com scroll horizontal */
   .table-responsive {
-    @apply w-full overflow-x-auto -mx-0;
+    @apply w-full overflow-x-auto;
   }
   .table-responsive table {
     @apply min-w-[600px];
   }
 
-  /* Modais full-screen no mobile */
   @media (max-width: 640px) {
     [data-radix-dialog-content] {
       max-height: 95dvh !important;
@@ -224,28 +198,15 @@
     }
   }
 
-  /* Cards em grid responsivo */
   .stats-grid {
     @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4;
   }
 
-  /* Padding responsivo para main */
   .main-content {
     @apply p-3 sm:p-4 md:p-6;
   }
 
-  /* Texto truncado em mobile */
-  .mobile-truncate {
-    @apply truncate max-w-[120px] sm:max-w-none;
-  }
-
-  /* Ocultar colunas em mobile */
   .hide-mobile {
     @apply hidden sm:table-cell;
-  }
-
-  /* Header responsivo */
-  .header-title {
-    @apply text-sm sm:text-base;
   }
 }
