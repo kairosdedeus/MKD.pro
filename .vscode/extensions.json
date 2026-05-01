@@ -5,6 +5,7 @@
     "bradlc.vscode-tailwindcss",
     "ms-vscode.vscode-typescript-next",
     "formulahendry.auto-rename-tag",
-    "dsznajder.es7-react-js-snippets"
+    "dsznajder.es7-react-js-snippets",
+    "openai.chatgpt"
   ]
 }

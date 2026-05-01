@@ -6,6 +6,10 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import App from './App'
 import './index.css'
 
+const routerBaseName = ['/', './'].includes(import.meta.env.BASE_URL)
+  ? undefined
+  : import.meta.env.BASE_URL
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -19,7 +23,7 @@ const queryClient = new QueryClient({
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
+      <BrowserRouter basename={routerBaseName}>
         <App />
       </BrowserRouter>
       <ReactQueryDevtools initialIsOpen={false} />
