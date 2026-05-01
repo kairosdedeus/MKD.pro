@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+﻿import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/stores/authStore'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -124,16 +124,6 @@ export function LoginPage() {
               ) : 'Entrar'}
             </Button>
           </form>
-
-          {/* Link de diagnóstico */}
-          <div className="mt-6 text-center">
-            <Link
-              to="/test-connection"
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Testar conexão com Supabase
-            </Link>
-          </div>
         </div>
       </div>
     </div>

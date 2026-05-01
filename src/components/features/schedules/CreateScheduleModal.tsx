@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -20,6 +20,7 @@ interface CreateScheduleModalProps {
   onOpenChange: (open: boolean) => void
   teamId: string
   selectedDate?: string
+  initialFixedTeamId?: string | null
   schedule?: Schedule | null
   onSuccess?: () => void
 }
@@ -29,17 +30,6 @@ interface SelectedMember {
   member_name: string
   function_ids: string[]
   notes?: string
-}
-
-interface FixedTeamTemplateMember {
-  name: string
-  role: 'Vocal' | 'BackVocal'
-}
-
-interface FixedTeamTemplate {
-  id: string
-  name: string
-  members: FixedTeamTemplateMember[]
 }
 
 interface SelectedSong {
@@ -68,94 +58,12 @@ function getFunctionColor(nome: string) {
   return FUNCTION_COLORS[nome] || 'bg-gray-100 text-gray-700 border-gray-300'
 }
 
-const OFFICIAL_WORSHIP_TEAMS: FixedTeamTemplate[] = [
-  {
-    id: 'official-a-1',
-    name: 'Equipe A-1',
-    members: [
-      { name: 'Pr Tchucky', role: 'Vocal' },
-      { name: 'Madu', role: 'Vocal' },
-      { name: 'Jhonata', role: 'BackVocal' },
-      { name: 'Lais', role: 'BackVocal' },
-    ],
-  },
-  {
-    id: 'official-a-2',
-    name: 'Equipe A-2',
-    members: [
-      { name: 'Jhonata', role: 'Vocal' },
-      { name: 'Lais', role: 'Vocal' },
-      { name: 'Pr Tchucky', role: 'BackVocal' },
-      { name: 'Madu', role: 'BackVocal' },
-    ],
-  },
-  {
-    id: 'official-b-1',
-    name: 'Equipe B-1',
-    members: [
-      { name: 'Alice', role: 'Vocal' },
-      { name: 'Jhonata', role: 'Vocal' },
-      { name: 'Senna', role: 'BackVocal' },
-      { name: 'Maria', role: 'BackVocal' },
-    ],
-  },
-  {
-    id: 'official-b-2',
-    name: 'Equipe B-2',
-    members: [
-      { name: 'Senna', role: 'Vocal' },
-      { name: 'Maria', role: 'Vocal' },
-      { name: 'Alice', role: 'BackVocal' },
-      { name: 'Jhonata', role: 'BackVocal' },
-    ],
-  },
-  {
-    id: 'official-c-1',
-    name: 'Equipe C-1',
-    members: [
-      { name: 'Wallesca', role: 'Vocal' },
-      { name: 'Joao', role: 'Vocal' },
-      { name: 'Lucas', role: 'BackVocal' },
-      { name: 'Isabel', role: 'BackVocal' },
-    ],
-  },
-  {
-    id: 'official-c-2',
-    name: 'Equipe C-2',
-    members: [
-      { name: 'Lucas', role: 'Vocal' },
-      { name: 'Isabel', role: 'Vocal' },
-      { name: 'Wallesca', role: 'BackVocal' },
-      { name: 'Joao', role: 'BackVocal' },
-    ],
-  },
-  {
-    id: 'official-x',
-    name: 'Equipe X',
-    members: [
-      { name: 'Michael', role: 'Vocal' },
-      { name: 'Vinicius', role: 'Vocal' },
-      { name: 'Joao', role: 'BackVocal' },
-      { name: 'Wallesca', role: 'BackVocal' },
-      { name: 'Alice', role: 'BackVocal' },
-    ],
-  },
-]
-
-function normalizeName(value: string) {
-  return value
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, ' ')
-    .trim()
-}
-
 export function CreateScheduleModal({
   open,
   onOpenChange,
   teamId,
   selectedDate,
+  initialFixedTeamId,
   schedule,
   onSuccess,
 }: CreateScheduleModalProps) {
@@ -249,32 +157,6 @@ export function CreateScheduleModal({
     }).catch(() => setDateConflict(false))
   }, [date, teamId, isEditing])
 
-  const functionByName = useMemo(() => {
-    const map = new Map<string, TeamFunction>()
-    teamFunctions.forEach(fn => map.set(normalizeName(fn.nome), fn))
-    return map
-  }, [teamFunctions])
-
-  const memberByName = useMemo(() => {
-    const map = new Map<string, TeamMember>()
-    teamMembers.forEach(member => {
-      const normalized = normalizeName(member.user?.nome || '')
-      if (normalized) map.set(normalized, member)
-    })
-    return map
-  }, [teamMembers])
-
-  const findTeamMemberByTemplateName = (name: string) => {
-    const normalized = normalizeName(name)
-    const exact = memberByName.get(normalized)
-    if (exact) return exact
-
-    return teamMembers.find(member => {
-      const memberName = normalizeName(member.user?.nome || '')
-      return !!memberName && (memberName.includes(normalized) || normalized.includes(memberName))
-    })
-  }
-
   const loadData = async () => {
     try {
       setLoadingData(true)
@@ -365,39 +247,6 @@ export function CreateScheduleModal({
     toast({ title: `${presetName} selecionada na escala` })
   }
 
-  const applyOfficialTeam = (template: FixedTeamTemplate) => {
-    const missingMembers: string[] = []
-    const missingFunctions = new Set<string>()
-
-    const members = template.members.map(item => {
-      const member = findTeamMemberByTemplateName(item.name)
-      const fn = functionByName.get(normalizeName(item.role))
-
-      if (!member) missingMembers.push(item.name)
-      if (!fn) missingFunctions.add(item.role)
-      if (!member || !fn) return null
-
-      return {
-        team_member_id: member.id,
-        member_name: member.user?.nome || item.name,
-        function_ids: [fn.id],
-      }
-    }).filter(Boolean) as SelectedMember[]
-
-    if (missingMembers.length > 0 || missingFunctions.size > 0) {
-      toast({
-        variant: 'destructive',
-        title: 'Equipe fixa incompleta',
-        description: [
-          missingMembers.length ? `Membros nao encontrados: ${missingMembers.join(', ')}` : '',
-          missingFunctions.size ? `Funcoes nao encontradas: ${Array.from(missingFunctions).join(', ')}` : '',
-        ].filter(Boolean).join(' | '),
-      })
-    }
-
-    applySelectedMembers(members, template.name)
-  }
-
   const applySavedFixedTeam = (preset: WorshipFixedTeam) => {
     const grouped = new Map<string, SelectedMember>()
 
@@ -431,7 +280,7 @@ export function CreateScheduleModal({
       return
     }
     if (selectedMembers.some(member => member.function_ids.length === 0)) {
-      toast({ variant: 'destructive', title: 'Todos os membros precisam ter funcao' })
+      toast({ variant: 'destructive', title: 'Todos os membros precisam ter função' })
       return
     }
 
@@ -623,7 +472,7 @@ export function CreateScheduleModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto p-0">
+      <DialogContent className="w-[calc(100vw-1rem)] max-w-3xl max-h-[92vh] overflow-y-auto p-0">
         {/* Header */}
         <DialogHeader className="px-6 pt-6 pb-4 border-b">
           <DialogTitle className="text-xl">
@@ -690,8 +539,8 @@ export function CreateScheduleModal({
             </div>
 
             <div className="space-y-3 rounded-xl border border-purple-200 bg-purple-50/60 p-4">
-              <div className="flex items-center justify-between gap-3">
-                <div>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
                   <Label className="text-base font-semibold">Equipes fixas do Louvor</Label>
                   <p className="text-xs text-gray-500 mt-0.5">
                     Clique em uma equipe para preencher automaticamente ministros e BackVocals.
@@ -702,37 +551,17 @@ export function CreateScheduleModal({
                   variant="outline"
                   size="sm"
                   onClick={() => setShowFixedTeamForm(prev => !prev)}
-                  className="gap-2 bg-white"
+                  className="gap-2 bg-white w-full sm:w-auto"
                 >
                   <Save className="h-4 w-4" />
                   Salvar atual
                 </Button>
               </div>
 
-              <div className="space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-wide text-purple-700">
-                  Oficiais
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {OFFICIAL_WORSHIP_TEAMS.map(template => (
-                    <Button
-                      key={template.id}
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => applyOfficialTeam(template)}
-                      className="bg-white hover:bg-purple-100"
-                    >
-                      {template.name}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-
-              {fixedTeams.length > 0 && (
+              {fixedTeams.length > 0 ? (
                 <div className="space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-wide text-purple-700">
-                    Criadas no sistema
+                    Cadastradas no dashboard
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {fixedTeams.map(preset => (
@@ -742,12 +571,16 @@ export function CreateScheduleModal({
                         variant="outline"
                         size="sm"
                         onClick={() => applySavedFixedTeam(preset)}
-                        className="bg-white hover:bg-purple-100"
+                        className="bg-white hover:bg-purple-100 max-w-full whitespace-normal text-left"
                       >
                         {preset.nome}
                       </Button>
                     ))}
                   </div>
+                </div>
+              ) : (
+                <div className="rounded-lg border border-dashed bg-white/70 p-3 text-sm text-gray-500">
+                  Nenhuma equipe fixa cadastrada. Crie no Dashboard do Louvor ou use o botão "Salvar atual" depois de selecionar os membros.
                 </div>
               )}
 
@@ -763,7 +596,7 @@ export function CreateScheduleModal({
                     type="button"
                     onClick={handleSaveFixedTeam}
                     disabled={savingFixedTeam}
-                    className="bg-purple-600 hover:bg-purple-700"
+                    className="bg-purple-600 hover:bg-purple-700 w-full sm:w-auto"
                   >
                     {savingFixedTeam ? 'Salvando...' : 'Salvar equipe'}
                   </Button>
@@ -773,7 +606,7 @@ export function CreateScheduleModal({
 
             {/* ── Membros ── */}
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                 <Label className="text-base font-semibold">
                   👥 Membros da Escala
                 </Label>

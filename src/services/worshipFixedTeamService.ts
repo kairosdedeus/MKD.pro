@@ -84,4 +84,46 @@ export const worshipFixedTeamService = {
 
     return preset
   },
+
+  async update(presetId: string, nome: string, members: WorshipFixedTeamMemberInput[]) {
+    const { error: presetError } = await (supabase as any)
+      .from('worship_fixed_teams')
+      .update({ nome: nome.trim() })
+      .eq('id', presetId)
+
+    if (presetError) throw presetError
+
+    const { error: deleteError } = await (supabase as any)
+      .from('worship_fixed_team_members')
+      .delete()
+      .eq('preset_id', presetId)
+
+    if (deleteError) throw deleteError
+
+    const rows = members.flatMap((member, memberIndex) =>
+      member.function_ids.map((functionId) => ({
+        preset_id: presetId,
+        team_member_id: member.team_member_id,
+        function_id: functionId,
+        sort_order: memberIndex,
+      }))
+    )
+
+    if (rows.length > 0) {
+      const { error: membersError } = await (supabase as any)
+        .from('worship_fixed_team_members')
+        .insert(rows)
+
+      if (membersError) throw membersError
+    }
+  },
+
+  async delete(presetId: string) {
+    const { error } = await (supabase as any)
+      .from('worship_fixed_teams')
+      .delete()
+      .eq('id', presetId)
+
+    if (error) throw error
+  },
 }
