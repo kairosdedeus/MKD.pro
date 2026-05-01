@@ -4,6 +4,10 @@ import { useAuthStore } from './stores/authStore'
 import { DashboardLayout } from './components/layouts/DashboardLayout'
 import { Toaster } from './components/ui/toaster'
 import { LoadingSpinner } from './components/shared/LoadingSpinner'
+import { isGerencial, isMember } from './lib/permissions'
+import { TeamTypeCode } from './types'
+import { useTeams } from './hooks/useTeams'
+import { TEAM_TYPE_ROUTES } from './lib/team-flow'
 
 // ── Lazy loading de todas as páginas ─────────────────────────
 const LoginPage         = lazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })))
@@ -13,6 +17,11 @@ const TeamsPage          = lazy(() => import('./pages/gerencial/TeamsPage').then
 const UsersPage          = lazy(() => import('./pages/gerencial/UsersPage').then(m => ({ default: m.UsersPage })))
 const SongsPage          = lazy(() => import('./pages/songs/SongsPage').then(m => ({ default: m.SongsPage })))
 const WorshipDashboard   = lazy(() => import('./pages/worship/WorshipDashboard').then(m => ({ default: m.WorshipDashboard })))
+const DanceDashboard     = lazy(() => import('./pages/dance/DanceDashboard').then(m => ({ default: m.DanceDashboard })))
+const MediaDashboard     = lazy(() => import('./pages/media/MediaDashboard').then(m => ({ default: m.MediaDashboard })))
+const UshersDashboard    = lazy(() => import('./pages/ushers/UshersDashboard').then(m => ({ default: m.UshersDashboard })))
+const CellsDashboard     = lazy(() => import('./pages/cells/CellsDashboard').then(m => ({ default: m.CellsDashboard })))
+const AccessDeniedPage   = lazy(() => import('./pages/AccessDeniedPage').then(m => ({ default: m.AccessDeniedPage })))
 
 // ── Fallback de carregamento ──────────────────────────────────
 function PageLoader() {
@@ -23,18 +32,83 @@ function PageLoader() {
   )
 }
 
+function RouteLoader() {
+  return (
+    <div className="flex h-screen items-center justify-center bg-background">
+      <LoadingSpinner />
+    </div>
+  )
+}
+
+function ProtectedGerencialRoute({ children }: { children: React.ReactNode }) {
+  const { profiles } = useAuthStore()
+
+  if (!isGerencial(profiles)) {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <AccessDeniedPage />
+      </Suspense>
+    )
+  }
+
+  return <>{children}</>
+}
+
+function ProtectedMinistryRoute({
+  teamType,
+  children,
+}: {
+  teamType: TeamTypeCode
+  children: React.ReactNode
+}) {
+  const { user, profiles } = useAuthStore()
+  const { teams, loading } = useTeams()
+
+  if (loading) return <PageLoader />
+
+  const hasTeamMembership = teams.some(team =>
+    team.team_type?.codigo === teamType &&
+    team.members?.some(member => member.user_id === user?.id),
+  )
+
+  const allowed = isGerencial(profiles) || (isMember(profiles, teamType) && hasTeamMembership)
+
+  if (!allowed) {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <AccessDeniedPage />
+      </Suspense>
+    )
+  }
+
+  return <>{children}</>
+}
+
+function DefaultRedirect() {
+  const { user, profiles } = useAuthStore()
+  const { teams, loading } = useTeams()
+
+  if (isGerencial(profiles)) return <Navigate to="/gerencial" replace />
+  if (loading) return <PageLoader />
+
+  const firstAllowedTeam = teams.find(team =>
+    team.team_type?.codigo &&
+    isMember(profiles, team.team_type.codigo) &&
+    team.members?.some(member => member.user_id === user?.id),
+  )
+
+  const route = firstAllowedTeam?.team_type?.codigo
+    ? TEAM_TYPE_ROUTES[firstAllowedTeam.team_type.codigo]
+    : null
+
+  return <Navigate to={route || '/acesso-negado'} replace />
+}
+
 function App() {
   const { user, loading } = useAuthStore()
 
   if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-3">
-          <LoadingSpinner />
-          <p className="text-sm text-muted-foreground">Carregando...</p>
-        </div>
-      </div>
-    )
+    return <RouteLoader />
   }
 
   if (!user) {
@@ -56,21 +130,54 @@ function App() {
     <>
       <Routes>
         <Route path="/" element={<DashboardLayout />}>
-          <Route index element={<Navigate to="/gerencial" replace />} />
+          <Route index element={<DefaultRedirect />} />
           <Route path="gerencial" element={
-            <Suspense fallback={<PageLoader />}><GerencialDashboard /></Suspense>
+            <ProtectedGerencialRoute>
+              <Suspense fallback={<PageLoader />}><GerencialDashboard /></Suspense>
+            </ProtectedGerencialRoute>
           } />
           <Route path="gerencial/equipes" element={
-            <Suspense fallback={<PageLoader />}><TeamsPage /></Suspense>
+            <ProtectedGerencialRoute>
+              <Suspense fallback={<PageLoader />}><TeamsPage /></Suspense>
+            </ProtectedGerencialRoute>
           } />
           <Route path="gerencial/usuarios" element={
-            <Suspense fallback={<PageLoader />}><UsersPage /></Suspense>
+            <ProtectedGerencialRoute>
+              <Suspense fallback={<PageLoader />}><UsersPage /></Suspense>
+            </ProtectedGerencialRoute>
           } />
           <Route path="gerencial/musicas" element={
-            <Suspense fallback={<PageLoader />}><SongsPage /></Suspense>
+            <ProtectedGerencialRoute>
+              <Suspense fallback={<PageLoader />}><SongsPage /></Suspense>
+            </ProtectedGerencialRoute>
           } />
           <Route path="louvor" element={
-            <Suspense fallback={<PageLoader />}><WorshipDashboard /></Suspense>
+            <ProtectedMinistryRoute teamType="louvor">
+              <Suspense fallback={<PageLoader />}><WorshipDashboard /></Suspense>
+            </ProtectedMinistryRoute>
+          } />
+          <Route path="danca" element={
+            <ProtectedMinistryRoute teamType="danca">
+              <Suspense fallback={<PageLoader />}><DanceDashboard /></Suspense>
+            </ProtectedMinistryRoute>
+          } />
+          <Route path="midia" element={
+            <ProtectedMinistryRoute teamType="midia">
+              <Suspense fallback={<PageLoader />}><MediaDashboard /></Suspense>
+            </ProtectedMinistryRoute>
+          } />
+          <Route path="obreiros" element={
+            <ProtectedMinistryRoute teamType="obreiros">
+              <Suspense fallback={<PageLoader />}><UshersDashboard /></Suspense>
+            </ProtectedMinistryRoute>
+          } />
+          <Route path="celulas" element={
+            <ProtectedMinistryRoute teamType="celula">
+              <Suspense fallback={<PageLoader />}><CellsDashboard /></Suspense>
+            </ProtectedMinistryRoute>
+          } />
+          <Route path="acesso-negado" element={
+            <Suspense fallback={<PageLoader />}><AccessDeniedPage /></Suspense>
           } />
           <Route path="test-connection" element={
             <Suspense fallback={<PageLoader />}><TestConnectionPage /></Suspense>
