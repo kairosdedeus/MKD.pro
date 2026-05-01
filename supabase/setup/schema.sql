@@ -111,6 +111,26 @@ CREATE TABLE schedule_member_functions (
     CONSTRAINT unique_schedule_member_function UNIQUE (schedule_member_id, function_id)
 );
 
+CREATE TABLE worship_fixed_teams (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    team_id UUID REFERENCES teams(id) ON DELETE CASCADE,
+    nome TEXT NOT NULL,
+    ativo BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    CONSTRAINT unique_worship_fixed_team UNIQUE (team_id, nome)
+);
+
+CREATE TABLE worship_fixed_team_members (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    preset_id UUID REFERENCES worship_fixed_teams(id) ON DELETE CASCADE,
+    team_member_id UUID REFERENCES team_members(id) ON DELETE CASCADE,
+    function_id UUID REFERENCES team_functions(id) ON DELETE CASCADE,
+    sort_order INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    CONSTRAINT unique_worship_fixed_team_member_function UNIQUE (preset_id, team_member_id, function_id)
+);
+
 CREATE TABLE songs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name TEXT NOT NULL,
@@ -193,6 +213,8 @@ CREATE INDEX idx_team_functions_type ON team_functions(team_type_id);
 CREATE INDEX idx_schedules_team ON schedules(team_id);
 CREATE INDEX idx_schedules_date ON schedules(date);
 CREATE INDEX idx_schedule_members_schedule ON schedule_members(schedule_id);
+CREATE INDEX idx_worship_fixed_teams_team ON worship_fixed_teams(team_id);
+CREATE INDEX idx_worship_fixed_team_members_preset ON worship_fixed_team_members(preset_id);
 CREATE INDEX idx_schedule_songs_schedule ON schedule_songs(schedule_id);
 CREATE INDEX idx_schedule_songs_song ON schedule_songs(song_id);
 CREATE INDEX idx_songs_name ON songs(name);
@@ -219,6 +241,8 @@ CREATE TRIGGER update_users_profile_updated_at BEFORE UPDATE ON users_profile
 CREATE TRIGGER update_teams_updated_at BEFORE UPDATE ON teams
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_schedules_updated_at BEFORE UPDATE ON schedules
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_worship_fixed_teams_updated_at BEFORE UPDATE ON worship_fixed_teams
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_songs_updated_at BEFORE UPDATE ON songs
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

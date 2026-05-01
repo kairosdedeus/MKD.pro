@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -9,9 +9,10 @@ import { useToast } from '@/components/ui/use-toast'
 import { scheduleService } from '@/services/scheduleService'
 import { teamService } from '@/services/teamService'
 import { songService } from '@/services/songService'
+import { worshipFixedTeamService, WorshipFixedTeam } from '@/services/worshipFixedTeamService'
 import { ScheduleFormData, TeamMember, TeamFunction, Song, ScheduleStatus, Schedule } from '@/types'
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner'
-import { X, Search, Music, GripVertical, UserPlus, Check, ChevronDown, Plus } from 'lucide-react'
+import { X, Search, Music, GripVertical, UserPlus, Check, ChevronDown, Plus, Save } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 
 interface CreateScheduleModalProps {
@@ -30,6 +31,17 @@ interface SelectedMember {
   notes?: string
 }
 
+interface FixedTeamTemplateMember {
+  name: string
+  role: 'Vocal' | 'BackVocal'
+}
+
+interface FixedTeamTemplate {
+  id: string
+  name: string
+  members: FixedTeamTemplateMember[]
+}
+
 interface SelectedSong {
   song_id: string
   song_name: string
@@ -42,6 +54,7 @@ interface SelectedSong {
 
 const FUNCTION_COLORS: Record<string, string> = {
   'Vocal':       'bg-purple-100 text-purple-700 border-purple-300',
+  'BackVocal':   'bg-fuchsia-100 text-fuchsia-700 border-fuchsia-300',
   'Guitarra':    'bg-orange-100 text-orange-700 border-orange-300',
   'Baixo':       'bg-blue-100 text-blue-700 border-blue-300',
   'Bateria':     'bg-red-100 text-red-700 border-red-300',
@@ -53,6 +66,89 @@ const FUNCTION_COLORS: Record<string, string> = {
 
 function getFunctionColor(nome: string) {
   return FUNCTION_COLORS[nome] || 'bg-gray-100 text-gray-700 border-gray-300'
+}
+
+const OFFICIAL_WORSHIP_TEAMS: FixedTeamTemplate[] = [
+  {
+    id: 'official-a-1',
+    name: 'Equipe A-1',
+    members: [
+      { name: 'Pr Tchucky', role: 'Vocal' },
+      { name: 'Madu', role: 'Vocal' },
+      { name: 'Jhonata', role: 'BackVocal' },
+      { name: 'Lais', role: 'BackVocal' },
+    ],
+  },
+  {
+    id: 'official-a-2',
+    name: 'Equipe A-2',
+    members: [
+      { name: 'Jhonata', role: 'Vocal' },
+      { name: 'Lais', role: 'Vocal' },
+      { name: 'Pr Tchucky', role: 'BackVocal' },
+      { name: 'Madu', role: 'BackVocal' },
+    ],
+  },
+  {
+    id: 'official-b-1',
+    name: 'Equipe B-1',
+    members: [
+      { name: 'Alice', role: 'Vocal' },
+      { name: 'Jhonata', role: 'Vocal' },
+      { name: 'Senna', role: 'BackVocal' },
+      { name: 'Maria', role: 'BackVocal' },
+    ],
+  },
+  {
+    id: 'official-b-2',
+    name: 'Equipe B-2',
+    members: [
+      { name: 'Senna', role: 'Vocal' },
+      { name: 'Maria', role: 'Vocal' },
+      { name: 'Alice', role: 'BackVocal' },
+      { name: 'Jhonata', role: 'BackVocal' },
+    ],
+  },
+  {
+    id: 'official-c-1',
+    name: 'Equipe C-1',
+    members: [
+      { name: 'Wallesca', role: 'Vocal' },
+      { name: 'Joao', role: 'Vocal' },
+      { name: 'Lucas', role: 'BackVocal' },
+      { name: 'Isabel', role: 'BackVocal' },
+    ],
+  },
+  {
+    id: 'official-c-2',
+    name: 'Equipe C-2',
+    members: [
+      { name: 'Lucas', role: 'Vocal' },
+      { name: 'Isabel', role: 'Vocal' },
+      { name: 'Wallesca', role: 'BackVocal' },
+      { name: 'Joao', role: 'BackVocal' },
+    ],
+  },
+  {
+    id: 'official-x',
+    name: 'Equipe X',
+    members: [
+      { name: 'Michael', role: 'Vocal' },
+      { name: 'Vinicius', role: 'Vocal' },
+      { name: 'Joao', role: 'BackVocal' },
+      { name: 'Wallesca', role: 'BackVocal' },
+      { name: 'Alice', role: 'BackVocal' },
+    ],
+  },
+]
+
+function normalizeName(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
 }
 
 export function CreateScheduleModal({
@@ -77,6 +173,7 @@ export function CreateScheduleModal({
   // Data
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
   const [teamFunctions, setTeamFunctions] = useState<TeamFunction[]>([])
+  const [fixedTeams, setFixedTeams] = useState<WorshipFixedTeam[]>([])
 
   // Selections
   const [selectedMembers, setSelectedMembers] = useState<SelectedMember[]>([])
@@ -99,6 +196,9 @@ export function CreateScheduleModal({
   const [dragIndex, setDragIndex] = useState<number | null>(null)
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
   const [dateConflict, setDateConflict] = useState(false)
+  const [showFixedTeamForm, setShowFixedTeamForm] = useState(false)
+  const [fixedTeamName, setFixedTeamName] = useState('')
+  const [savingFixedTeam, setSavingFixedTeam] = useState(false)
 
   useEffect(() => {
     if (open) loadData()
@@ -149,14 +249,42 @@ export function CreateScheduleModal({
     }).catch(() => setDateConflict(false))
   }, [date, teamId, isEditing])
 
+  const functionByName = useMemo(() => {
+    const map = new Map<string, TeamFunction>()
+    teamFunctions.forEach(fn => map.set(normalizeName(fn.nome), fn))
+    return map
+  }, [teamFunctions])
+
+  const memberByName = useMemo(() => {
+    const map = new Map<string, TeamMember>()
+    teamMembers.forEach(member => {
+      const normalized = normalizeName(member.user?.nome || '')
+      if (normalized) map.set(normalized, member)
+    })
+    return map
+  }, [teamMembers])
+
+  const findTeamMemberByTemplateName = (name: string) => {
+    const normalized = normalizeName(name)
+    const exact = memberByName.get(normalized)
+    if (exact) return exact
+
+    return teamMembers.find(member => {
+      const memberName = normalizeName(member.user?.nome || '')
+      return !!memberName && (memberName.includes(normalized) || normalized.includes(memberName))
+    })
+  }
+
   const loadData = async () => {
     try {
       setLoadingData(true)
-      const [members, team] = await Promise.all([
+      const [members, team, presets] = await Promise.all([
         teamService.getTeamMembers(teamId),
         teamService.getTeamById(teamId),
+        worshipFixedTeamService.getByTeamId(teamId),
       ])
       setTeamMembers(members)
+      setFixedTeams(presets)
       // Buscar funções pelo team_type_id
       if (team?.team_type_id) {
         const fns = await teamService.getTeamFunctions(team.team_type_id)
@@ -184,6 +312,8 @@ export function CreateScheduleModal({
     setQuickSongArtist('')
     setQuickSongKey('')
     setExpandedMember(null)
+    setShowFixedTeamForm(false)
+    setFixedTeamName('')
   }
 
   // ── Membros ──────────────────────────────────────────────────────────────
@@ -218,6 +348,110 @@ export function CreateScheduleModal({
           : [...m.function_ids, fnId],
       }
     }))
+  }
+
+  const applySelectedMembers = (members: SelectedMember[], presetName: string) => {
+    if (members.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Equipe fixa sem membros encontrados',
+        description: 'Confira se os usuarios existem e estao cadastrados como membros da equipe de Louvor.',
+      })
+      return
+    }
+
+    setSelectedMembers(members)
+    setExpandedMember(null)
+    toast({ title: `${presetName} selecionada na escala` })
+  }
+
+  const applyOfficialTeam = (template: FixedTeamTemplate) => {
+    const missingMembers: string[] = []
+    const missingFunctions = new Set<string>()
+
+    const members = template.members.map(item => {
+      const member = findTeamMemberByTemplateName(item.name)
+      const fn = functionByName.get(normalizeName(item.role))
+
+      if (!member) missingMembers.push(item.name)
+      if (!fn) missingFunctions.add(item.role)
+      if (!member || !fn) return null
+
+      return {
+        team_member_id: member.id,
+        member_name: member.user?.nome || item.name,
+        function_ids: [fn.id],
+      }
+    }).filter(Boolean) as SelectedMember[]
+
+    if (missingMembers.length > 0 || missingFunctions.size > 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Equipe fixa incompleta',
+        description: [
+          missingMembers.length ? `Membros nao encontrados: ${missingMembers.join(', ')}` : '',
+          missingFunctions.size ? `Funcoes nao encontradas: ${Array.from(missingFunctions).join(', ')}` : '',
+        ].filter(Boolean).join(' | '),
+      })
+    }
+
+    applySelectedMembers(members, template.name)
+  }
+
+  const applySavedFixedTeam = (preset: WorshipFixedTeam) => {
+    const grouped = new Map<string, SelectedMember>()
+
+    preset.members.forEach(item => {
+      const member = teamMembers.find(tm => tm.id === item.team_member_id)
+      if (!member) return
+
+      const current = grouped.get(item.team_member_id) || {
+        team_member_id: item.team_member_id,
+        member_name: member.user?.nome || '',
+        function_ids: [],
+      }
+
+      if (!current.function_ids.includes(item.function_id)) {
+        current.function_ids.push(item.function_id)
+      }
+
+      grouped.set(item.team_member_id, current)
+    })
+
+    applySelectedMembers(Array.from(grouped.values()), preset.nome)
+  }
+
+  const handleSaveFixedTeam = async () => {
+    if (!fixedTeamName.trim()) {
+      toast({ variant: 'destructive', title: 'Informe o nome da equipe fixa' })
+      return
+    }
+    if (selectedMembers.length === 0) {
+      toast({ variant: 'destructive', title: 'Selecione membros antes de salvar' })
+      return
+    }
+    if (selectedMembers.some(member => member.function_ids.length === 0)) {
+      toast({ variant: 'destructive', title: 'Todos os membros precisam ter funcao' })
+      return
+    }
+
+    try {
+      setSavingFixedTeam(true)
+      await worshipFixedTeamService.create(teamId, fixedTeamName, selectedMembers)
+      const presets = await worshipFixedTeamService.getByTeamId(teamId)
+      setFixedTeams(presets)
+      setShowFixedTeamForm(false)
+      setFixedTeamName('')
+      toast({ title: 'Equipe fixa salva!' })
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao salvar equipe fixa',
+        description: error.message,
+      })
+    } finally {
+      setSavingFixedTeam(false)
+    }
   }
 
   // ── Músicas ───────────────────────────────────────────────────────────────
@@ -453,6 +687,88 @@ export function CreateScheduleModal({
                 onChange={e => setNotes(e.target.value)}
                 rows={2}
               />
+            </div>
+
+            <div className="space-y-3 rounded-xl border border-purple-200 bg-purple-50/60 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <Label className="text-base font-semibold">Equipes fixas do Louvor</Label>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Clique em uma equipe para preencher automaticamente ministros e BackVocals.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowFixedTeamForm(prev => !prev)}
+                  className="gap-2 bg-white"
+                >
+                  <Save className="h-4 w-4" />
+                  Salvar atual
+                </Button>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-wide text-purple-700">
+                  Oficiais
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {OFFICIAL_WORSHIP_TEAMS.map(template => (
+                    <Button
+                      key={template.id}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => applyOfficialTeam(template)}
+                      className="bg-white hover:bg-purple-100"
+                    >
+                      {template.name}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {fixedTeams.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-purple-700">
+                    Criadas no sistema
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {fixedTeams.map(preset => (
+                      <Button
+                        key={preset.id}
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => applySavedFixedTeam(preset)}
+                        className="bg-white hover:bg-purple-100"
+                      >
+                        {preset.nome}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {showFixedTeamForm && (
+                <div className="grid gap-2 rounded-lg border bg-white p-3 sm:grid-cols-[1fr_auto]">
+                  <Input
+                    placeholder="Nome da equipe fixa. Ex: Equipe D-1"
+                    value={fixedTeamName}
+                    onChange={e => setFixedTeamName(e.target.value)}
+                    autoComplete="off"
+                  />
+                  <Button
+                    type="button"
+                    onClick={handleSaveFixedTeam}
+                    disabled={savingFixedTeam}
+                    className="bg-purple-600 hover:bg-purple-700"
+                  >
+                    {savingFixedTeam ? 'Salvando...' : 'Salvar equipe'}
+                  </Button>
+                </div>
+              )}
             </div>
 
             {/* ── Membros ── */}

@@ -30,7 +30,7 @@ ON CONFLICT (codigo) DO NOTHING;
 
 -- 3. Funções de Louvor
 INSERT INTO team_functions (nome, team_type_id)
-SELECT unnest(ARRAY['Vocal','Guitarra','Baixo','Bateria','Teclado']), id
+SELECT unnest(ARRAY['Vocal','BackVocal','Guitarra','Baixo','Bateria','Teclado']), id
 FROM team_types WHERE codigo = 'louvor'
 ON CONFLICT DO NOTHING;
 
