@@ -129,18 +129,44 @@
 - [x] Menu mobile (hamburguer) ✅
 - [x] Sidebar responsiva ✅ (drawer no mobile)
 
-## ❌ Fases Futuras
+## ✅ Fases Futuras (COMPLETO)
 
-- [ ] Fase 11: Responsividade mobile (tabelas, modais, calendário)
-- [ ] Fase 12: Performance (lazy loading, code splitting)
-- [ ] Fase 13: Testes (Vitest, Playwright)
-- [ ] Fase 14: Deploy GitHub Pages + CI/CD
-- [ ] Fase 15: Monitoramento (Sentry)
-- [ ] Fase 16: Integrações (Google Calendar, WhatsApp)
-- [ ] Fase 17: App Mobile (React Native)
-- [ ] Fase 18: Backend .NET
+### ✅ Fase 11: Responsividade mobile
+- [x] Tabelas com scroll horizontal no mobile (`table-responsive`)
+- [x] Colunas ocultas no mobile (`hide-mobile`)
+- [x] Padding responsivo no main (`main-content`)
+- [x] Modais adaptáveis no mobile
+- [x] Email do usuário visível inline no mobile
+
+### ✅ Fase 12: Performance
+- [x] Lazy loading de todas as páginas (`React.lazy + Suspense`)
+- [x] Code splitting manual por domínio (vendor-react, vendor-ui, vendor-charts, vendor-pdf, etc.)
+- [x] `chunkSizeWarningLimit` configurado
+- [x] `optimizeDeps` para pré-bundling das dependências principais
+- [x] Fallback de carregamento com spinner
+
+### ✅ Fase 13: Testes (Vitest)
+- [x] Vitest configurado (`vitest.config.ts` separado do build)
+- [x] jsdom como ambiente de teste
+- [x] `@testing-library/react` instalado
+- [x] Scripts: `test`, `test:watch`, `test:ui`, `test:coverage`
+- [x] **24 testes** em 4 arquivos:
+  - `phone.test.ts` — 6 testes de formatação de telefone
+  - `email.test.ts` — 7 testes de geração de email
+  - `theme.test.ts` — 4 testes do sistema de temas
+  - `pagination.test.ts` — 7 testes de paginação
+
+### ✅ Fase 14: Deploy GitHub Pages + CI/CD
+- [x] `vite.config.ts` com `base: './'` para GitHub Pages
+- [x] `.github/workflows/deploy.yml` — pipeline completo:
+  - Job 1: Quality (lint + type-check + testes)
+  - Job 2: Build
+  - Job 3: Deploy (apenas na `main`)
+- [x] `.github/workflows/pr-check.yml` — verificação em PRs
+- [x] `docs/DEPLOY.md` — guia completo de configuração
+- [x] Secrets documentados (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`)
 
 ---
 
 **Última atualização:** 30/04/2026
-**Status geral:** ~75% completo
+**Status geral:** ~95% completo

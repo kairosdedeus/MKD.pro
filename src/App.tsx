@@ -1,22 +1,38 @@
+import { lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './stores/authStore'
-import { LoginPage } from './pages/LoginPage'
-import { TestConnectionPage } from './pages/TestConnectionPage'
 import { DashboardLayout } from './components/layouts/DashboardLayout'
-import { GerencialDashboard } from './pages/gerencial/GerencialDashboard'
-import { TeamsPage } from './pages/gerencial/TeamsPage'
-import { UsersPage } from './pages/gerencial/UsersPage'
-import { WorshipDashboard } from './pages/worship/WorshipDashboard'
-import { SongsPage } from './pages/songs/SongsPage'
 import { Toaster } from './components/ui/toaster'
+import { LoadingSpinner } from './components/shared/LoadingSpinner'
+
+// ── Lazy loading de todas as páginas ─────────────────────────
+const LoginPage         = lazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })))
+const TestConnectionPage = lazy(() => import('./pages/TestConnectionPage').then(m => ({ default: m.TestConnectionPage })))
+const GerencialDashboard = lazy(() => import('./pages/gerencial/GerencialDashboard').then(m => ({ default: m.GerencialDashboard })))
+const TeamsPage          = lazy(() => import('./pages/gerencial/TeamsPage').then(m => ({ default: m.TeamsPage })))
+const UsersPage          = lazy(() => import('./pages/gerencial/UsersPage').then(m => ({ default: m.UsersPage })))
+const SongsPage          = lazy(() => import('./pages/songs/SongsPage').then(m => ({ default: m.SongsPage })))
+const WorshipDashboard   = lazy(() => import('./pages/worship/WorshipDashboard').then(m => ({ default: m.WorshipDashboard })))
+
+// ── Fallback de carregamento ──────────────────────────────────
+function PageLoader() {
+  return (
+    <div className="flex h-full min-h-[300px] items-center justify-center">
+      <LoadingSpinner />
+    </div>
+  )
+}
 
 function App() {
   const { user, loading } = useAuthStore()
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="text-lg">Carregando...</div>
+      <div className="flex h-screen items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-3">
+          <LoadingSpinner />
+          <p className="text-sm text-muted-foreground">Carregando...</p>
+        </div>
       </div>
     )
   }
@@ -24,11 +40,13 @@ function App() {
   if (!user) {
     return (
       <>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/test-connection" element={<TestConnectionPage />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/test-connection" element={<TestConnectionPage />} />
+            <Route path="*" element={<Navigate to="/login" replace />} />
+          </Routes>
+        </Suspense>
         <Toaster />
       </>
     )
@@ -39,12 +57,24 @@ function App() {
       <Routes>
         <Route path="/" element={<DashboardLayout />}>
           <Route index element={<Navigate to="/gerencial" replace />} />
-          <Route path="gerencial" element={<GerencialDashboard />} />
-          <Route path="gerencial/equipes" element={<TeamsPage />} />
-          <Route path="gerencial/usuarios" element={<UsersPage />} />
-          <Route path="gerencial/musicas" element={<SongsPage />} />
-          <Route path="louvor" element={<WorshipDashboard />} />
-          <Route path="test-connection" element={<TestConnectionPage />} />
+          <Route path="gerencial" element={
+            <Suspense fallback={<PageLoader />}><GerencialDashboard /></Suspense>
+          } />
+          <Route path="gerencial/equipes" element={
+            <Suspense fallback={<PageLoader />}><TeamsPage /></Suspense>
+          } />
+          <Route path="gerencial/usuarios" element={
+            <Suspense fallback={<PageLoader />}><UsersPage /></Suspense>
+          } />
+          <Route path="gerencial/musicas" element={
+            <Suspense fallback={<PageLoader />}><SongsPage /></Suspense>
+          } />
+          <Route path="louvor" element={
+            <Suspense fallback={<PageLoader />}><WorshipDashboard /></Suspense>
+          } />
+          <Route path="test-connection" element={
+            <Suspense fallback={<PageLoader />}><TestConnectionPage /></Suspense>
+          } />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

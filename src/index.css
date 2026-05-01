@@ -10,8 +10,7 @@
 @layer base {
 
   /* ── TEMA LUZ (padrão) ─────────────────────────────────── */
-  :root {
-    --background:          0 0% 98%;
+  :root {    --background:          0 0% 98%;
     --foreground:          240 10% 10%;
     --card:                0 0% 100%;
     --card-foreground:     240 10% 10%;
@@ -203,5 +202,50 @@
       hsl(var(--login-from)) 0%,
       hsl(var(--login-to)) 100%
     );
+  }
+}
+
+/* ── RESPONSIVIDADE MOBILE ───────────────────────────────── */
+@layer utilities {
+  /* Tabelas responsivas com scroll horizontal */
+  .table-responsive {
+    @apply w-full overflow-x-auto -mx-0;
+  }
+  .table-responsive table {
+    @apply min-w-[600px];
+  }
+
+  /* Modais full-screen no mobile */
+  @media (max-width: 640px) {
+    [data-radix-dialog-content] {
+      max-height: 95dvh !important;
+      margin: 0.5rem !important;
+      border-radius: 1rem !important;
+    }
+  }
+
+  /* Cards em grid responsivo */
+  .stats-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4;
+  }
+
+  /* Padding responsivo para main */
+  .main-content {
+    @apply p-3 sm:p-4 md:p-6;
+  }
+
+  /* Texto truncado em mobile */
+  .mobile-truncate {
+    @apply truncate max-w-[120px] sm:max-w-none;
+  }
+
+  /* Ocultar colunas em mobile */
+  .hide-mobile {
+    @apply hidden sm:table-cell;
+  }
+
+  /* Header responsivo */
+  .header-title {
+    @apply text-sm sm:text-base;
   }
 }

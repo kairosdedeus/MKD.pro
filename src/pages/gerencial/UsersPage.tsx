@@ -202,12 +202,13 @@ export function UsersPage() {
         </CardHeader>
         <CardContent>
           {users && users.length > 0 ? (
+            <div className="table-responsive">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Nome</TableHead>
-                  <TableHead>Email / Login</TableHead>
-                  <TableHead>Telefone</TableHead>
+                  <TableHead className="hide-mobile">Email / Login</TableHead>
+                  <TableHead className="hide-mobile">Telefone</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="w-12" />
                 </TableRow>
@@ -222,11 +223,14 @@ export function UsersPage() {
                         }`}>
                           {user.nome.charAt(0).toUpperCase()}
                         </div>
-                        <span className="font-medium">{user.nome}</span>
+                        <div className="min-w-0">
+                          <span className="font-medium block truncate">{user.nome}</span>
+                          <span className="text-xs text-muted-foreground sm:hidden truncate block">{user.email}</span>
+                        </div>
                       </div>
                     </TableCell>
-                    <TableCell className="text-gray-500 text-sm">{user.email}</TableCell>
-                    <TableCell className="text-gray-500 text-sm">{user.telefone || '—'}</TableCell>
+                    <TableCell className="text-gray-500 text-sm hide-mobile">{user.email}</TableCell>
+                    <TableCell className="text-gray-500 text-sm hide-mobile">{user.telefone || '—'}</TableCell>
                     <TableCell>
                       <Badge variant={user.ativo ? 'default' : 'secondary'}>
                         {user.ativo ? 'Ativo' : 'Inativo'}
@@ -270,6 +274,7 @@ export function UsersPage() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           ) : (
             <EmptyState
               icon={User}
