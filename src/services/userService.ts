@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabaseClient'
 import { UserFormData, UserProfile, UserProfileWithProfiles } from '@/types'
+import { isDuplicateGeneratedEmailError } from '@/lib/user-email'
 
 export const userService = {
   async getUsers() {
@@ -69,6 +70,9 @@ export const userService = {
 
       if (authError) {
         console.error('Erro ao criar usuário no auth:', authError)
+        if (isDuplicateGeneratedEmailError(authError)) {
+          throw new Error('Este login ja existe. Tente novamente para usar o proximo login disponivel.')
+        }
         throw new Error('Erro ao criar credenciais de login: ' + authError.message)
       }
 
@@ -106,6 +110,9 @@ export const userService = {
       return profileData as UserProfile
     } catch (error: any) {
       console.error('Erro completo ao criar usuário:', error)
+      if (isDuplicateGeneratedEmailError(error)) {
+        throw new Error('Este login ja existe. Tente novamente para usar o proximo login disponivel.')
+      }
       throw error
     }
   },

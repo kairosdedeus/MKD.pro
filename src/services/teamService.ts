@@ -118,16 +118,16 @@ export const teamService = {
       .insert({
         nome: teamData.nome,
         team_type_id: teamData.team_type_id,
-        leader_id: teamData.leader_id,
+        leader_id: teamData.leader_id || null,
       })
       .select()
       .single()
 
     if (teamError) throw teamError
 
-    // Montar lista de membros: líder + membros selecionados (sem duplicatas)
+    // Montar lista de membros: líder, quando houver, + membros selecionados (sem duplicatas)
     const allMemberIds = Array.from(
-      new Set([teamData.leader_id, ...teamData.member_ids])
+      new Set([teamData.leader_id, ...teamData.member_ids].filter(Boolean))
     )
 
     console.log('Criando equipe:', team.id, 'com membros:', allMemberIds)
@@ -155,12 +155,13 @@ export const teamService = {
   },
 
   async updateTeam(teamId: string, teamData: Partial<TeamFormData>) {
+    const updatePayload: { nome?: string; leader_id?: string | null } = {}
+    if (teamData.nome !== undefined) updatePayload.nome = teamData.nome
+    if ('leader_id' in teamData) updatePayload.leader_id = teamData.leader_id || null
+
     const { data, error } = await supabase
       .from('teams')
-      .update({
-        nome: teamData.nome,
-        leader_id: teamData.leader_id,
-      })
+      .update(updatePayload)
       .eq('id', teamId)
       .select()
       .single()

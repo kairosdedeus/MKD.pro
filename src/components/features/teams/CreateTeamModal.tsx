@@ -23,7 +23,7 @@ import { useCreateTeam, useTeamTypes } from '@/hooks/useTeams'
 import { useUsers } from '@/hooks/useUsers'
 import { teamService } from '@/services/teamService'
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner'
-import { TeamFunction, TeamType } from '@/types'
+import { TeamFunction } from '@/types'
 import { Music, Users, ChevronDown, ChevronUp } from 'lucide-react'
 
 interface MemberWithFunctions {
@@ -140,16 +140,11 @@ export function CreateTeamModal({ open, onOpenChange, onSuccess }: CreateTeamMod
       toast({ variant: 'destructive', title: 'Tipo obrigatório', description: 'Selecione o tipo de equipe.' })
       return
     }
-    if (!leaderId) {
-      toast({ variant: 'destructive', title: 'Líder obrigatório', description: 'Selecione o líder da equipe.' })
-      return
-    }
-
     try {
       const team = await createTeam.mutateAsync({
         nome,
         team_type_id: teamTypeId,
-        leader_id: leaderId,
+        leader_id: leaderId || null,
         member_ids: members.map(m => m.userId),
       })
 
@@ -243,10 +238,23 @@ export function CreateTeamModal({ open, onOpenChange, onSuccess }: CreateTeamMod
 
           {/* Líder */}
           <div className="space-y-2">
-            <Label>Líder da Equipe *</Label>
+            <div className="flex items-center justify-between">
+              <Label>Líder da Equipe</Label>
+              {leaderId && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-xs text-muted-foreground"
+                  onClick={() => setLeaderId('')}
+                >
+                  Remover líder
+                </Button>
+              )}
+            </div>
             <Select value={leaderId} onValueChange={setLeaderId}>
               <SelectTrigger>
-                <SelectValue placeholder="Selecione o líder" />
+                <SelectValue placeholder="Selecione o líder (opcional)" />
               </SelectTrigger>
               <SelectContent>
                 {users?.map(user => (
@@ -373,7 +381,7 @@ export function CreateTeamModal({ open, onOpenChange, onSuccess }: CreateTeamMod
 
             {teamFunctions.length > 0 && (
               <p className="text-xs text-gray-400">
-                💡 Clique na seta ▼ ao lado do membro para atribuir funções. O líder é adicionado automaticamente.
+                💡 Clique na seta ▼ ao lado do membro para atribuir funções. Se houver líder, ele será adicionado automaticamente.
               </p>
             )}
           </div>

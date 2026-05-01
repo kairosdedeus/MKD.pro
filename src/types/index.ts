@@ -203,7 +203,7 @@ export interface UserFormData {
 export interface TeamFormData {
   nome: string
   team_type_id: string
-  leader_id: string
+  leader_id: string | null
   member_ids: string[]
 }
 
