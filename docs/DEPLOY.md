@@ -13,6 +13,8 @@ Este projeto esta configurado para publicar o app Vite/React no GitHub Pages usa
 | `VITE_SUPABASE_URL` | URL do projeto Supabase |
 | `VITE_SUPABASE_ANON_KEY` | Chave anon/public do Supabase |
 
+Se preferir, esses mesmos nomes tambem podem ser criados em **Variables**. O workflow aceita os dois, mas secrets e o mais indicado.
+
 ## URL base
 
 Por padrao, o workflow usa o nome do repositorio como base path:
