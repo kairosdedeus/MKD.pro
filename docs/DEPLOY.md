@@ -1,94 +1,65 @@
-# 🚀 Deploy — GitHub Pages
+# Deploy - GitHub Pages
 
-## Configuração Inicial (uma vez)
+Este projeto esta configurado para publicar o app Vite/React no GitHub Pages usando GitHub Actions.
 
-### 1. Criar repositório no GitHub
-```bash
-git init
-git add .
-git commit -m "feat: initial commit"
-git remote add origin https://github.com/SEU_USUARIO/escalas-ministeriais.git
-git push -u origin main
-```
+## Configuracao no GitHub
 
-### 2. Configurar Secrets no GitHub
-Acesse: **Settings → Secrets and variables → Actions → New repository secret**
+1. No repositorio, acesse **Settings > Pages**.
+2. Em **Build and deployment**, selecione **GitHub Actions** como source.
+3. Em **Settings > Secrets and variables > Actions > Secrets**, crie:
 
 | Secret | Valor |
-|--------|-------|
-| `VITE_SUPABASE_URL` | `https://ewuvrindvhjislkrohwh.supabase.co` |
-| `VITE_SUPABASE_ANON_KEY` | `eyJhbGci...` (sua chave anon) |
+| --- | --- |
+| `VITE_SUPABASE_URL` | URL do projeto Supabase |
+| `VITE_SUPABASE_ANON_KEY` | Chave anon/public do Supabase |
 
-### 3. Habilitar GitHub Pages
-Acesse: **Settings → Pages**
-- Source: **GitHub Actions**
-- Clique em **Save**
+## URL base
 
----
+Por padrao, o workflow usa o nome do repositorio como base path:
 
-## Deploy Automático
-
-O deploy acontece automaticamente ao fazer push na branch `main`:
-
-```
-push → main
-  ↓
-✅ Quality Check (lint + type-check + testes)
-  ↓
-🔨 Build (vite build)
-  ↓
-🌐 Deploy GitHub Pages
+```text
+https://SEU_USUARIO.github.io/NOME_DO_REPOSITORIO/
 ```
 
-**URL do sistema:** `https://SEU_USUARIO.github.io/escalas-ministeriais/`
+Para este repositorio, a base esperada e:
 
----
+```text
+/MKD.pro/
+```
 
-## Deploy Manual
+Se usar dominio customizado ou publicar em um repositorio de usuario/organizacao, crie a repository variable `VITE_BASE_PATH` com o valor:
+
+```text
+/
+```
+
+## Deploy automatico
+
+O deploy roda automaticamente em todo push para `main`.
+
+```text
+push main -> npm ci -> npm run build:pages -> deploy-pages
+```
+
+O script `build:pages` executa o build do Vite e copia `dist/index.html` para `dist/404.html`. Isso permite que rotas internas do React Router continuem funcionando ao recarregar a pagina no GitHub Pages.
+
+## Deploy manual
+
+Tambem e possivel executar o workflow manualmente em **Actions > Deploy GitHub Pages > Run workflow**.
+
+## Validacao local
 
 ```bash
-# Build local
-npm run build
-
-# Preview local do build
-npm run preview
+npm run build:pages
 ```
 
----
+Para simular o caminho do GitHub Pages localmente:
 
-## Testes
-
-```bash
-# Rodar testes uma vez
-npm run test
-
-# Modo watch (desenvolvimento)
-npm run test:watch
-
-# Interface visual
-npm run test:ui
-
-# Com cobertura
-npm run test:coverage
+```powershell
+$env:VITE_BASE_PATH='/MKD.pro/'
+npm run build:pages
 ```
 
----
+## Observacao sobre checagens
 
-## Estrutura de Branches
-
-| Branch | Propósito |
-|--------|-----------|
-| `main` | Produção — deploy automático |
-| `develop` | Desenvolvimento |
-| `feature/*` | Novas funcionalidades |
-| `fix/*` | Correções de bugs |
-
----
-
-## Checklist de Deploy
-
-- [ ] Variáveis de ambiente configuradas nos Secrets
-- [ ] GitHub Pages habilitado (Source: GitHub Actions)
-- [ ] Testes passando (`npm run test`)
-- [ ] Build sem erros (`npm run build`)
-- [ ] Push na branch `main`
+O workflow de deploy empacota o app com Vite para garantir publicacao no Pages. As checagens estritas de TypeScript, lint e testes continuam no workflow de PR.
