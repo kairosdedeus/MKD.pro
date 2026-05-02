@@ -14,8 +14,8 @@ export interface Palette {
 }
 
 export const PALETTES: Palette[] = [
-  { id: 'violet',  name: 'Violeta',  color: '#8b5cf6', hsl: '263 70% 58%' },
   { id: 'blue',    name: 'Azul',     color: '#3b82f6', hsl: '217 91% 60%' },
+  { id: 'violet',  name: 'Violeta',  color: '#8b5cf6', hsl: '263 70% 58%' },
   { id: 'emerald', name: 'Verde',    color: '#10b981', hsl: '160 84% 39%' },
   { id: 'rose',    name: 'Rosa',     color: '#f43f5e', hsl: '350 89% 60%' },
   { id: 'amber',   name: 'Âmbar',   color: '#f59e0b', hsl: '38 92% 50%'  },
@@ -31,7 +31,7 @@ export function useTheme() {
     (localStorage.getItem('theme-mode') as ModeId) || 'light'
   )
   const [palette, setPaletteState] = useState<PaletteId>(() =>
-    (localStorage.getItem('theme-palette') as PaletteId) || 'violet'
+    (localStorage.getItem('theme-palette') as PaletteId) || 'blue'
   )
 
   useEffect(() => {
@@ -75,5 +75,5 @@ export function applyTheme(mode: ModeId, palette: PaletteId) {
 
 // Inicializar ao carregar
 const savedMode    = (localStorage.getItem('theme-mode')    as ModeId)    || 'light'
-const savedPalette = (localStorage.getItem('theme-palette') as PaletteId) || 'violet'
+const savedPalette = (localStorage.getItem('theme-palette') as PaletteId) || 'blue'
 applyTheme(savedMode, savedPalette)

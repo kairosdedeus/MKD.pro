@@ -2,7 +2,6 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import './index.css'
 
 const routerBaseName = ['/', './'].includes(import.meta.env.BASE_URL)
@@ -54,7 +53,6 @@ async function bootstrap() {
       <BrowserRouter basename={routerBaseName}>
         <App />
       </BrowserRouter>
-      <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>,
   )
 }

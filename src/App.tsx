@@ -54,6 +54,30 @@ function ProtectedGerencialRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
+function ProtectedSongsRoute({ children }: { children: React.ReactNode }) {
+  const { user, profiles } = useAuthStore()
+  const { teams, loading } = useTeams()
+
+  if (loading) return <PageLoader />
+
+  const hasWorshipMembership = teams.some(team =>
+    team.team_type?.codigo === 'louvor' &&
+    team.members?.some(member => member.user_id === user?.id),
+  )
+
+  const allowed = isGerencial(profiles) || (isMember(profiles, 'louvor') && hasWorshipMembership)
+
+  if (!allowed) {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <AccessDeniedPage />
+      </Suspense>
+    )
+  }
+
+  return <>{children}</>
+}
+
 function ProtectedMinistryRoute({
   teamType,
   children,
@@ -147,9 +171,9 @@ function App() {
             </ProtectedGerencialRoute>
           } />
           <Route path="gerencial/musicas" element={
-            <ProtectedGerencialRoute>
+            <ProtectedSongsRoute>
               <Suspense fallback={<PageLoader />}><SongsPage /></Suspense>
-            </ProtectedGerencialRoute>
+            </ProtectedSongsRoute>
           } />
           <Route path="louvor" element={
             <ProtectedMinistryRoute teamType="louvor">
