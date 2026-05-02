@@ -167,6 +167,33 @@ export function CreateScheduleModal({
       ])
       setTeamMembers(members)
       setFixedTeams(presets)
+      if (initialFixedTeamId && !schedule) {
+        const preset = presets.find(item => item.id === initialFixedTeamId)
+        if (preset) {
+          const grouped = new Map<string, SelectedMember>()
+
+          preset.members.forEach(item => {
+            const member = members.find(tm => tm.id === item.team_member_id)
+            if (!member) return
+
+            const current = grouped.get(item.team_member_id) || {
+              team_member_id: item.team_member_id,
+              member_name: member.user?.nome || '',
+              function_ids: [],
+            }
+
+            if (!current.function_ids.includes(item.function_id)) {
+              current.function_ids.push(item.function_id)
+            }
+
+            grouped.set(item.team_member_id, current)
+          })
+
+          setSelectedMembers(Array.from(grouped.values()))
+          setTitle(prev => prev || preset.nome)
+          toast({ title: `${preset.nome} selecionada na escala` })
+        }
+      }
       // Buscar funções pelo team_type_id
       if (team?.team_type_id) {
         const fns = await teamService.getTeamFunctions(team.team_type_id)

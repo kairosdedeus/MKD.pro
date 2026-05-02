@@ -21,6 +21,14 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
   const { teams } = useTeams()
 
   const isManagement = profiles.some(profile => profile.codigo === 'gerencial')
+  const isWorshipProfile = profiles.some(profile =>
+    ['lider_louvor', 'membro_louvor'].includes(profile.codigo),
+  )
+  const hasWorshipMembership = (teams as any[]).some((team: any) =>
+    team.team_type?.codigo === 'louvor' &&
+    (team.members || []).some((member: any) => member.user_id === user?.id),
+  )
+  const canAccessSongs = isManagement || (isWorshipProfile && hasWorshipMembership)
 
   const ministryItems = useMemo(() => {
     const visibleTeams = (teams as any[]).filter((team: any) => {
@@ -126,6 +134,33 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
             </div>
           </div>
         )}
+
+        {!isManagement && canAccessSongs && (
+          <div>
+            <h3 className="px-2 text-[10px] font-semibold uppercase tracking-widest mb-1"
+              style={{ color: 'hsl(var(--sidebar-text))' }}>
+              Louvor
+            </h3>
+            <div className="space-y-0.5">
+              <NavLink
+                to="/gerencial/musicas"
+                onClick={onClose}
+                className={({ isActive }) =>
+                  cn(
+                    'flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-all',
+                    isActive
+                      ? 'bg-[hsl(var(--sidebar-active-bg))] text-[hsl(var(--sidebar-active-text))] font-semibold'
+                      : 'text-[hsl(var(--sidebar-text))] hover:bg-accent hover:text-foreground',
+                  )
+                }
+              >
+                <Music2 className="h-4 w-4 flex-shrink-0" />
+                Musicas
+              </NavLink>
+            </div>
+          </div>
+        )}
+
       </nav>
 
       <div className="px-4 py-3 border-t border-[hsl(var(--sidebar-border))] flex-shrink-0">
