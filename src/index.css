@@ -6,9 +6,14 @@
    SISTEMA DE TEMAS — Escalas Ministeriais
    
    Arquitetura:
-   • 2 modos base: Claro | Escuro (Instagram-style)
+   • 2 modos base: Claro | Escuro (Instagram/YouTube-style)
    • 5 paletas de cor primária: Violeta | Azul | Verde | Rosa | Âmbar
    • Paleta aplicada via JS (--primary dinâmico)
+   
+   Inspiração Dark Mode:
+   • YouTube: #0f0f0f (fundo), #212121 (cards)
+   • Instagram: #000000 (fundo), #1c1c1c (cards)
+   • Facebook: #18191a (fundo), #242526 (cards)
    ============================================================ */
 
 @layer base {
@@ -60,63 +65,71 @@
     /* Header */
     --header-bg: 0 0% 100%;
     --header-border: 0 0% 91%;
+    --header-text: 0 0% 30%;
+    --header-text-muted: 0 0% 50%;
   }
 
-  /* ── MODO ESCURO — Instagram Style ────────────────────────
+  /* ── MODO ESCURO — YouTube/Instagram/Facebook Style ───────
      
-     Referência: Instagram Dark Mode
-     • Fundo principal:  #000000 (preto puro)
-     • Superfície card:  #1c1c1c (cinza muito escuro)
-     • Superfície elevada: #262626
-     • Borda:            #363636
-     • Texto primário:   #f5f5f5
-     • Texto secundário: #a8a8a8
-     • Sem azul/roxo nos fundos — neutro puro
+     Referências:
+     • YouTube:   #0f0f0f (fundo), #212121 (cards), #3f3f3f (bordas)
+     • Instagram: #000000 (fundo), #1c1c1c (cards), #363636 (bordas)
+     • Facebook:  #18191a (fundo), #242526 (cards), #3a3b3c (bordas)
+     
+     Escolha: Híbrido YouTube + Instagram
+     • Fundo:     #0a0a0a (quase preto, menos cansativo que #000)
+     • Cards:     #1a1a1a (cinza muito escuro)
+     • Elevado:   #242424 (hover, popover)
+     • Bordas:    #2f2f2f (sutil mas visível)
+     • Texto:     #e4e4e4 (branco suave, não puro)
+     • Secundário: #a0a0a0 (cinza médio)
   ─────────────────────────────────────────────────────────── */
   .dark {
     /* Superfícies — cinzas neutros puros */
-    --background: 0 0% 0%; /* #000000 — preto puro */
-    --foreground: 0 0% 96%; /* #f5f5f5 — branco suave */
-    --card: 0 0% 11%; /* #1c1c1c — card escuro */
-    --card-foreground: 0 0% 96%;
-    --popover: 0 0% 15%; /* #262626 — popover elevado */
-    --popover-foreground: 0 0% 96%;
+    --background: 0 0% 4%; /* #0a0a0a — quase preto */
+    --foreground: 0 0% 89%; /* #e4e4e4 — branco suave */
+    --card: 0 0% 10%; /* #1a1a1a — card escuro */
+    --card-foreground: 0 0% 89%;
+    --popover: 0 0% 14%; /* #242424 — popover elevado */
+    --popover-foreground: 0 0% 89%;
 
     /* Primária — sobrescrita pelo JS */
     --primary: 263 70% 58%;
     --primary-foreground: 0 0% 100%;
 
     /* Secundária */
-    --secondary: 0 0% 15%; /* #262626 */
-    --secondary-foreground: 0 0% 96%;
+    --secondary: 0 0% 14%; /* #242424 */
+    --secondary-foreground: 0 0% 89%;
 
     /* Muted */
-    --muted: 0 0% 15%; /* #262626 */
-    --muted-foreground: 0 0% 66%; /* #a8a8a8 */
+    --muted: 0 0% 14%; /* #242424 */
+    --muted-foreground: 0 0% 63%; /* #a0a0a0 */
 
     /* Accent — hover */
     --accent: 0 0% 18%; /* #2e2e2e */
-    --accent-foreground: 0 0% 96%;
+    --accent-foreground: 0 0% 89%;
 
     /* Destrutivo */
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
     /* Bordas — cinza escuro sutil */
-    --border: 0 0% 21%; /* #363636 */
-    --input: 0 0% 18%; /* #2e2e2e */
+    --border: 0 0% 18%; /* #2f2f2f */
+    --input: 0 0% 16%; /* #292929 */
     --ring: 263 70% 58%;
 
     /* Sidebar — levemente mais escuro que o card */
-    --sidebar-bg: 0 0% 7%; /* #121212 */
-    --sidebar-border: 0 0% 18%; /* #2e2e2e */
-    --sidebar-text: 0 0% 66%; /* #a8a8a8 */
+    --sidebar-bg: 0 0% 6%; /* #0f0f0f */
+    --sidebar-border: 0 0% 16%; /* #292929 */
+    --sidebar-text: 0 0% 63%; /* #a0a0a0 */
     --sidebar-active-bg: 0 0% 18%; /* #2e2e2e */
     --sidebar-active-text: 0 0% 96%; /* #f5f5f5 */
 
     /* Header */
-    --header-bg: 0 0% 7%; /* #121212 */
-    --header-border: 0 0% 18%; /* #2e2e2e */
+    --header-bg: 0 0% 6%; /* #0f0f0f */
+    --header-border: 0 0% 16%; /* #292929 */
+    --header-text: 0 0% 89%; /* #e4e4e4 */
+    --header-text-muted: 0 0% 63%; /* #a0a0a0 */
   }
 
   /* ── BASE ──────────────────────────────────────────────── */
@@ -127,8 +140,8 @@
   html {
     /* Transição suave ao trocar tema */
     transition:
-      background-color 0.15s ease,
-      color 0.15s ease;
+      background-color 0.2s ease,
+      color 0.2s ease;
   }
 
   body {
@@ -142,8 +155,8 @@
 
   /* Scrollbar — minimalista */
   ::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
+    width: 6px;
+    height: 6px;
   }
   ::-webkit-scrollbar-track {
     background: transparent;
@@ -153,7 +166,15 @@
     border-radius: 99px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--muted-foreground) / 0.4);
+    background: hsl(var(--muted-foreground) / 0.5);
+  }
+
+  /* Dark mode scrollbar mais visível */
+  .dark ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+  }
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.6);
   }
 }
 
@@ -173,12 +194,36 @@
     background-color: hsl(var(--background));
   }
   .dark .login-gradient {
-    background-color: hsl(0 0% 0%);
+    background: linear-gradient(135deg, hsl(0 0% 4%) 0%, hsl(0 0% 7%) 100%);
   }
 
   /* Elevação de superfície no dark mode */
+  .surface-elevated {
+    background-color: hsl(var(--card));
+  }
   .dark .surface-elevated {
-    background-color: hsl(0 0% 15%);
+    background-color: hsl(0 0% 14%);
+  }
+
+  /* Texto adaptativo */
+  .text-adaptive {
+    color: hsl(var(--foreground));
+  }
+  .text-adaptive-muted {
+    color: hsl(var(--muted-foreground));
+  }
+
+  /* Bordas adaptativas */
+  .border-adaptive {
+    border-color: hsl(var(--border));
+  }
+
+  /* Hover adaptativo */
+  .hover-adaptive {
+    transition: background-color 0.15s ease;
+  }
+  .hover-adaptive:hover {
+    background-color: hsl(var(--accent));
   }
 }
 
@@ -209,5 +254,43 @@
 
   .hide-mobile {
     @apply hidden sm:table-cell;
+  }
+}
+
+/* ── COMPONENTES ESPECÍFICOS ─────────────────────────────── */
+@layer components {
+  /* Cards com elevação no dark mode */
+  .card-elevated {
+    @apply bg-card border border-border rounded-lg;
+  }
+  .dark .card-elevated {
+    @apply bg-[hsl(0_0%_10%)] border-[hsl(0_0%_18%)];
+  }
+
+  /* Input com melhor contraste no dark */
+  .input-dark-friendly {
+    @apply bg-background border-input;
+  }
+  .dark .input-dark-friendly {
+    @apply bg-[hsl(0_0%_8%)] border-[hsl(0_0%_18%)] text-foreground;
+  }
+  .dark .input-dark-friendly::placeholder {
+    @apply text-muted-foreground/60;
+  }
+
+  /* Dropdown menu no dark mode */
+  .dark [data-radix-dropdown-menu-content],
+  .dark [data-radix-popover-content] {
+    @apply bg-[hsl(0_0%_10%)] border-[hsl(0_0%_18%)];
+  }
+
+  /* Dialog no dark mode */
+  .dark [data-radix-dialog-content] {
+    @apply bg-[hsl(0_0%_10%)] border-[hsl(0_0%_18%)];
+  }
+
+  /* Select no dark mode */
+  .dark [data-radix-select-content] {
+    @apply bg-[hsl(0_0%_10%)] border-[hsl(0_0%_18%)];
   }
 }

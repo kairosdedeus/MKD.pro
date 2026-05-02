@@ -1018,7 +1018,7 @@ export function WorshipDashboard() {
               value="fixed-teams"
               className="border rounded-lg overflow-hidden"
             >
-              <AccordionHeader className="flex items-center justify-between px-6 py-4 hover:no-underline bg-white hover:bg-accent/50">
+              <AccordionHeader className="flex items-center justify-between px-6 py-4 hover:no-underline bg-card hover:bg-accent/50">
                 <AccordionTrigger className="flex items-center gap-2 text-base font-medium">
                   <Music className="h-5 w-5 text-primary" />
                   Equipes padrão
@@ -1137,7 +1137,7 @@ export function WorshipDashboard() {
               value="members"
               className="border rounded-lg overflow-hidden"
             >
-              <AccordionHeader className="px-6 py-4 hover:no-underline bg-white hover:bg-accent/50">
+              <AccordionHeader className="px-6 py-4 hover:no-underline bg-card hover:bg-accent/50">
                 <AccordionTrigger className="flex items-center gap-2 text-base font-medium">
                   <Users className="h-5 w-5 text-primary" />
                   Membros da Equipe
@@ -1196,7 +1196,7 @@ export function WorshipDashboard() {
             value="all-schedules"
             className="border rounded-lg overflow-hidden"
           >
-            <AccordionHeader className="px-6 py-4 hover:no-underline bg-white hover:bg-accent/50">
+            <AccordionHeader className="px-6 py-4 hover:no-underline bg-card hover:bg-accent/50">
               <AccordionTrigger className="flex items-center gap-2 text-base font-medium">
                 <Calendar className="h-5 w-5 text-primary" />
                 Todas as Escalas —{" "}

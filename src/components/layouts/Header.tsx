@@ -1,153 +1,174 @@
-import { useEffect, useState } from 'react'
-import { useAuthStore } from '@/stores/authStore'
-import { Button } from '@/components/ui/button'
-import { LogOut, User, KeyRound, ChevronDown } from 'lucide-react'
-import { NotificationCenter } from '@/components/shared/NotificationCenter'
-import { ThemeSelector } from '@/components/shared/ThemeSelector'
+import { useEffect, useState } from "react";
+import { useAuthStore } from "@/stores/authStore";
+import { Button } from "@/components/ui/button";
+import { LogOut, User, KeyRound, ChevronDown } from "lucide-react";
+import { NotificationCenter } from "@/components/shared/NotificationCenter";
+import { ThemeSelector } from "@/components/shared/ThemeSelector";
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
-  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
-  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { supabase } from '@/lib/supabaseClient'
-import { useToast } from '@/components/ui/use-toast'
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { supabase } from "@/lib/supabaseClient";
+import { useToast } from "@/components/ui/use-toast";
 
 function splitName(fullName?: string | null) {
-  const parts = (fullName || '').trim().split(/\s+/).filter(Boolean)
+  const parts = (fullName || "").trim().split(/\s+/).filter(Boolean);
   return {
-    firstName: parts[0] || '',
-    lastName: parts.slice(1).join(' '),
-  }
+    firstName: parts[0] || "",
+    lastName: parts.slice(1).join(" "),
+  };
 }
 
 export function Header() {
-  const { user, logout, setUser } = useAuthStore()
-  const { toast } = useToast()
-  const [showProfileDialog, setShowProfileDialog] = useState(false)
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
-  const [email, setEmail] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [savingProfile, setSavingProfile] = useState(false)
+  const { user, logout, setUser } = useAuthStore();
+  const { toast } = useToast();
+  const [showProfileDialog, setShowProfileDialog] = useState(false);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [savingProfile, setSavingProfile] = useState(false);
 
   useEffect(() => {
-    if (!showProfileDialog || !user) return
-    const { firstName: currentFirstName, lastName: currentLastName } = splitName(user.nome)
-    setFirstName(currentFirstName)
-    setLastName(currentLastName)
-    setEmail(user.email || '')
-    setNewPassword('')
-    setConfirmPassword('')
-  }, [showProfileDialog, user])
+    if (!showProfileDialog || !user) return;
+    const { firstName: currentFirstName, lastName: currentLastName } =
+      splitName(user.nome);
+    setFirstName(currentFirstName);
+    setLastName(currentLastName);
+    setEmail(user.email || "");
+    setNewPassword("");
+    setConfirmPassword("");
+  }, [showProfileDialog, user]);
 
   const handleSaveProfile = async () => {
-    if (!user) return
+    if (!user) return;
 
-    const trimmedFirstName = firstName.trim()
-    const trimmedLastName = lastName.trim()
-    const trimmedEmail = email.trim().toLowerCase()
-    const fullName = [trimmedFirstName, trimmedLastName].filter(Boolean).join(' ')
-    const emailChanged = trimmedEmail !== user.email
-    const passwordChanged = !!newPassword || !!confirmPassword
+    const trimmedFirstName = firstName.trim();
+    const trimmedLastName = lastName.trim();
+    const trimmedEmail = email.trim().toLowerCase();
+    const fullName = [trimmedFirstName, trimmedLastName]
+      .filter(Boolean)
+      .join(" ");
+    const emailChanged = trimmedEmail !== user.email;
+    const passwordChanged = !!newPassword || !!confirmPassword;
 
     if (!trimmedFirstName) {
-      toast({ variant: 'destructive', title: 'Informe seu nome' })
-      return
+      toast({ variant: "destructive", title: "Informe seu nome" });
+      return;
     }
     if (!trimmedLastName) {
-      toast({ variant: 'destructive', title: 'Informe seu sobrenome' })
-      return
+      toast({ variant: "destructive", title: "Informe seu sobrenome" });
+      return;
     }
     if (!trimmedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
-      toast({ variant: 'destructive', title: 'Informe um email válido' })
-      return
+      toast({ variant: "destructive", title: "Informe um email válido" });
+      return;
     }
     if (passwordChanged && newPassword !== confirmPassword) {
-      toast({ variant: 'destructive', title: 'As senhas não coincidem' })
-      return
+      toast({ variant: "destructive", title: "As senhas não coincidem" });
+      return;
     }
     if (passwordChanged && newPassword.length < 8) {
-      toast({ variant: 'destructive', title: 'Senha deve ter pelo menos 8 caracteres' })
-      return
+      toast({
+        variant: "destructive",
+        title: "Senha deve ter pelo menos 8 caracteres",
+      });
+      return;
     }
 
     try {
-      setSavingProfile(true)
+      setSavingProfile(true);
 
       if (emailChanged) {
         const { data: existingEmail, error: emailCheckError } = await supabase
-          .from('users_profile')
-          .select('id')
-          .eq('email', trimmedEmail)
-          .neq('id', user.id)
-          .maybeSingle()
+          .from("users_profile")
+          .select("id")
+          .eq("email", trimmedEmail)
+          .neq("id", user.id)
+          .maybeSingle();
 
-        if (emailCheckError) throw emailCheckError
+        if (emailCheckError) throw emailCheckError;
         if (existingEmail) {
-          toast({ variant: 'destructive', title: 'Este email já está em uso' })
-          return
+          toast({ variant: "destructive", title: "Este email já está em uso" });
+          return;
         }
       }
 
-      const authUpdates: { email?: string; password?: string } = {}
-      if (emailChanged) authUpdates.email = trimmedEmail
-      if (passwordChanged) authUpdates.password = newPassword
+      const authUpdates: { email?: string; password?: string } = {};
+      if (emailChanged) authUpdates.email = trimmedEmail;
+      if (passwordChanged) authUpdates.password = newPassword;
 
       if (Object.keys(authUpdates).length > 0) {
-        const { error: authError } = await supabase.auth.updateUser(authUpdates)
-        if (authError) throw authError
+        const { error: authError } =
+          await supabase.auth.updateUser(authUpdates);
+        if (authError) throw authError;
       }
 
       const { data: updatedProfile, error: profileError } = await supabase
-        .from('users_profile')
+        .from("users_profile")
         .update({
           nome: fullName,
           email: trimmedEmail,
         })
-        .eq('id', user.id)
+        .eq("id", user.id)
         .select()
-        .single()
+        .single();
 
-      if (profileError) throw profileError
+      if (profileError) throw profileError;
 
       setUser({
         ...user,
         ...updatedProfile,
-      })
+      });
 
       toast({
-        title: 'Dados atualizados!',
+        title: "Dados atualizados!",
         description: emailChanged
-          ? 'Se o Supabase exigir confirmação, valide o novo email antes de usá-lo no login.'
+          ? "Se o Supabase exigir confirmação, valide o novo email antes de usá-lo no login."
           : undefined,
-      })
-      setShowProfileDialog(false)
+      });
+      setShowProfileDialog(false);
     } catch (error: any) {
       toast({
-        variant: 'destructive',
-        title: 'Erro ao atualizar seus dados',
+        variant: "destructive",
+        title: "Erro ao atualizar seus dados",
         description: error.message,
-      })
+      });
     } finally {
-      setSavingProfile(false)
+      setSavingProfile(false);
     }
-  }
+  };
 
   const initials = user?.nome
-    ? user.nome.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
-    : '?'
+    ? user.nome
+        .split(" ")
+        .map((n) => n[0])
+        .slice(0, 2)
+        .join("")
+        .toUpperCase()
+    : "?";
 
   return (
     <>
       <header className="header-bg border-b">
         <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6">
-          <h2 className="min-w-0 truncate text-sm font-semibold text-gray-700 sm:text-base">
-            Bem-vindo, <span className="text-purple-700">{user?.nome?.split(' ')[0]}</span>
+          <h2 className="min-w-0 truncate text-sm font-semibold text-foreground sm:text-base">
+            Bem-vindo,{" "}
+            <span className="text-primary">{user?.nome?.split(" ")[0]}</span>
           </h2>
 
           <div className="flex items-center gap-1">
@@ -156,32 +177,42 @@ export function Header() {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-2 h-9 px-2">
-                  <div className="w-7 h-7 rounded-full bg-purple-600 flex items-center justify-center text-white text-xs font-bold">
+                <Button
+                  variant="ghost"
+                  className="flex items-center gap-2 h-9 px-2"
+                >
+                  <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold">
                     {initials}
                   </div>
-                  <span className="text-sm text-gray-600 hidden sm:block max-w-48 truncate">{user?.email}</span>
-                  <ChevronDown className="h-3 w-3 text-gray-400" />
+                  <span className="text-sm text-muted-foreground hidden sm:block max-w-48 truncate">
+                    {user?.email}
+                  </span>
+                  <ChevronDown className="h-3 w-3 text-muted-foreground" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium truncate">{user?.nome}</p>
-                    <p className="text-xs text-gray-400 truncate">{user?.email}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {user?.email}
+                    </p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => setShowProfileDialog(true)}>
-                  <User className="h-4 w-4 mr-2 text-purple-600" />
+                  <User className="h-4 w-4 mr-2 text-primary" />
                   Editar meus dados
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setShowProfileDialog(true)}>
-                  <KeyRound className="h-4 w-4 mr-2 text-amber-600" />
+                  <KeyRound className="h-4 w-4 mr-2 text-amber-600 dark:text-amber-500" />
                   Alterar senha
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={logout} className="text-red-600 focus:text-red-600">
+                <DropdownMenuItem
+                  onClick={logout}
+                  className="text-red-600 dark:text-red-500 focus:text-red-600 dark:focus:text-red-500"
+                >
                   <LogOut className="h-4 w-4 mr-2" />
                   Sair
                 </DropdownMenuItem>
@@ -203,7 +234,7 @@ export function Header() {
                 <Label>Nome *</Label>
                 <Input
                   value={firstName}
-                  onChange={e => setFirstName(e.target.value)}
+                  onChange={(e) => setFirstName(e.target.value)}
                   autoComplete="given-name"
                 />
               </div>
@@ -211,7 +242,7 @@ export function Header() {
                 <Label>Sobrenome *</Label>
                 <Input
                   value={lastName}
-                  onChange={e => setLastName(e.target.value)}
+                  onChange={(e) => setLastName(e.target.value)}
                   autoComplete="family-name"
                 />
               </div>
@@ -222,7 +253,7 @@ export function Header() {
               <Input
                 type="email"
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"
               />
             </div>
@@ -237,7 +268,7 @@ export function Header() {
                   type="password"
                   placeholder="Mínimo 8 caracteres"
                   value={newPassword}
-                  onChange={e => setNewPassword(e.target.value)}
+                  onChange={(e) => setNewPassword(e.target.value)}
                   autoComplete="new-password"
                 />
               </div>
@@ -247,26 +278,37 @@ export function Header() {
                   type="password"
                   placeholder="Repita a nova senha"
                   value={confirmPassword}
-                  onChange={e => setConfirmPassword(e.target.value)}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                   autoComplete="new-password"
                 />
                 {confirmPassword && newPassword !== confirmPassword && (
-                  <p className="text-xs text-red-500">As senhas não coincidem</p>
+                  <p className="text-xs text-red-500">
+                    As senhas não coincidem
+                  </p>
                 )}
               </div>
             </div>
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="outline" onClick={() => setShowProfileDialog(false)} disabled={savingProfile} className="w-full sm:w-auto">
+            <Button
+              variant="outline"
+              onClick={() => setShowProfileDialog(false)}
+              disabled={savingProfile}
+              className="w-full sm:w-auto"
+            >
               Cancelar
             </Button>
-            <Button onClick={handleSaveProfile} disabled={savingProfile} className="w-full bg-purple-600 hover:bg-purple-700 sm:w-auto">
-              {savingProfile ? 'Salvando...' : 'Salvar alterações'}
+            <Button
+              onClick={handleSaveProfile}
+              disabled={savingProfile}
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground sm:w-auto"
+            >
+              {savingProfile ? "Salvando..." : "Salvar alterações"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
-  )
+  );
 }

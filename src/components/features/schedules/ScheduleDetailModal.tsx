@@ -272,7 +272,7 @@ export function ScheduleDetailModal({
                                 key={idx}
                                 className={`inline-flex items-center gap-1.5 pl-2.5 pr-2.5 py-1 rounded-full text-sm font-medium border ${color.pill}`}
                               >
-                                <span className="w-5 h-5 rounded-full bg-white/60 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                                <span className="w-5 h-5 rounded-full bg-primary-foreground/60 dark:bg-white/20 flex items-center justify-center text-xs font-bold flex-shrink-0">
                                   {memberName.charAt(0).toUpperCase()}
                                 </span>
                                 {memberName}

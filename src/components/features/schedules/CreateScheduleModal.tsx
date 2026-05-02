@@ -194,7 +194,7 @@ function MemberPicker({
             key={member.id}
             className={`inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full text-sm font-medium border ${style.pill} group`}
           >
-            <span className="w-5 h-5 rounded-full bg-white/60 flex items-center justify-center text-xs font-bold flex-shrink-0">
+            <span className="w-5 h-5 rounded-full bg-primary-foreground/60 dark:bg-white/20 flex items-center justify-center text-xs font-bold flex-shrink-0">
               {(member.user?.nome || "?").charAt(0).toUpperCase()}
             </span>
             {member.user?.nome}
@@ -217,7 +217,7 @@ function MemberPicker({
             ${
               open
                 ? `${style.bg} ${style.text} ${style.border} border-solid`
-                : "border-gray-300 text-gray-400 hover:border-gray-400 hover:text-gray-600"
+                : "border-border text-muted-foreground hover:border-muted-foreground hover:text-foreground"
             }`}
         >
           <Plus className="h-3.5 w-3.5" />
@@ -227,10 +227,10 @@ function MemberPicker({
 
       {/* Dropdown de busca */}
       {open && (
-        <div className="absolute left-0 top-full mt-1 z-30 w-64 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden">
-          <div className="p-2 border-b border-gray-100">
+        <div className="absolute left-0 top-full mt-1 z-30 w-64 bg-card border border-border rounded-xl shadow-xl overflow-hidden">
+          <div className="p-2 border-b border-border">
             <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-gray-400" />
+              <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
               <input
                 autoFocus
                 type="text"
@@ -243,7 +243,7 @@ function MemberPicker({
           </div>
           <div className="max-h-48 overflow-y-auto">
             {available.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-4">
+              <p className="text-sm text-muted-foreground text-center py-4">
                 {query ? "Nenhum resultado" : "Todos já adicionados"}
               </p>
             ) : (
@@ -263,7 +263,7 @@ function MemberPicker({
                   >
                     {(member.user?.nome || "?").charAt(0).toUpperCase()}
                   </span>
-                  <span className="text-sm font-medium text-gray-700">
+                  <span className="text-sm font-medium text-foreground">
                     {member.user?.nome}
                   </span>
                 </button>
@@ -798,7 +798,7 @@ export function CreateScheduleModal({
                   variant="outline"
                   size="sm"
                   onClick={() => setShowFixedTeamForm((prev) => !prev)}
-                  className="gap-2 bg-white w-full"
+                  className="gap-2 bg-card w-full"
                 >
                   <Save className="h-4 w-4" />
                   Salvar atual
@@ -814,20 +814,20 @@ export function CreateScheduleModal({
                       variant="outline"
                       size="sm"
                       onClick={() => applyPreset(preset)}
-                      className="bg-white hover:bg-purple-100 max-w-full whitespace-normal text-left"
+                      className="bg-card hover:bg-accent max-w-full whitespace-normal text-left"
                     >
                       {preset.nome}
                     </Button>
                   ))}
                 </div>
               ) : (
-                <div className="rounded-lg border border-dashed bg-white/70 p-3 text-sm text-gray-500">
+                <div className="rounded-lg border border-dashed bg-card/70 p-3 text-sm text-muted-foreground">
                   Nenhuma equipe fixa cadastrada.
                 </div>
               )}
 
               {showFixedTeamForm && (
-                <div className="space-y-2 rounded-lg border bg-white p-3">
+                <div className="space-y-2 rounded-lg border bg-card p-3">
                   <div className="space-y-1.5">
                     <Label className="text-xs font-medium">
                       Nome da equipe padrão *
@@ -866,7 +866,7 @@ export function CreateScheduleModal({
               </div>
 
               {teamFunctions.length === 0 ? (
-                <div className="border-2 border-dashed rounded-xl p-6 text-center text-gray-400">
+                <div className="border-2 border-dashed rounded-xl p-6 text-center text-muted-foreground">
                   <UserPlus className="h-8 w-8 mx-auto mb-2 opacity-40" />
                   <p className="text-sm">
                     Nenhuma função cadastrada para esta equipe
@@ -908,7 +908,7 @@ export function CreateScheduleModal({
                               {icon}
                             </span>
                             <span
-                              className={`text-sm font-semibold ${isEmpty ? "text-gray-500" : style.text}`}
+                              className={`text-sm font-semibold ${isEmpty ? "text-muted-foreground" : style.text}`}
                             >
                               {fn.nome}
                             </span>
@@ -942,7 +942,7 @@ export function CreateScheduleModal({
               </Label>
 
               <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Buscar músicas..."
                   value={songSearchQuery}
@@ -952,7 +952,7 @@ export function CreateScheduleModal({
                 />
 
                 {searchResults.length > 0 && (
-                  <div className="absolute z-20 w-full mt-1 bg-white border rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                  <div className="absolute z-20 w-full mt-1 bg-card border border-border rounded-xl shadow-lg max-h-48 overflow-y-auto">
                     {searchResults.map((song) => (
                       <button
                         key={song.id}
@@ -984,7 +984,7 @@ export function CreateScheduleModal({
                 )}
 
                 {showNoResults && !showQuickCreate && (
-                  <div className="absolute z-20 w-full mt-1 bg-white border rounded-xl shadow-lg">
+                  <div className="absolute z-20 w-full mt-1 bg-card border border-border rounded-xl shadow-lg">
                     <div className="px-4 py-3 text-center">
                       <p className="text-sm text-gray-500 mb-2">
                         Nenhuma música encontrada para{" "}
@@ -1035,7 +1035,7 @@ export function CreateScheduleModal({
                         value={quickSongName}
                         onChange={(e) => setQuickSongName(e.target.value)}
                         autoComplete="off"
-                        className="bg-white"
+                        className="bg-card"
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-3">
@@ -1046,7 +1046,7 @@ export function CreateScheduleModal({
                           value={quickSongArtist}
                           onChange={(e) => setQuickSongArtist(e.target.value)}
                           autoComplete="off"
-                          className="bg-white"
+                          className="bg-card"
                         />
                       </div>
                       <div className="space-y-1">
@@ -1056,7 +1056,7 @@ export function CreateScheduleModal({
                           value={quickSongKey}
                           onChange={(e) => setQuickSongKey(e.target.value)}
                           autoComplete="off"
-                          className="bg-white"
+                          className="bg-card"
                         />
                       </div>
                     </div>
@@ -1097,7 +1097,7 @@ export function CreateScheduleModal({
                       onDragOver={(e) => handleDragOver(e, index)}
                       onDrop={(e) => handleDrop(e, index)}
                       onDragEnd={handleDragEnd}
-                      className={`flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 p-3 bg-white transition-all cursor-grab active:cursor-grabbing ${
+                      className={`flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 p-3 bg-card transition-all cursor-grab active:cursor-grabbing ${
                         dragOverIndex === index && dragIndex !== index
                           ? "border-t-2 border-purple-400 bg-purple-50"
                           : "hover:bg-gray-50"
@@ -1148,7 +1148,7 @@ export function CreateScheduleModal({
                   ))}
                 </div>
               ) : (
-                <div className="border-2 border-dashed rounded-xl p-4 text-center text-gray-400">
+                <div className="border-2 border-dashed rounded-xl p-4 text-center text-muted-foreground">
                   <Music className="h-6 w-6 mx-auto mb-1 opacity-40" />
                   <p className="text-sm">Busque e adicione músicas acima</p>
                 </div>
