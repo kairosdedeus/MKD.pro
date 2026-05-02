@@ -381,6 +381,12 @@ export function WorshipDashboard() {
     currentMonth,
     worshipTeam?.nome || "MKD - Louvor",
   );
+  const [whatsAppPreviewText, setWhatsAppPreviewText] = useState("");
+
+  const openWhatsAppForText = (text: string) => {
+    setWhatsAppPreviewText(text);
+    setShowWhatsAppExport(true);
+  };
 
   const canManage =
     !!user &&
@@ -486,7 +492,9 @@ export function WorshipDashboard() {
 
   const handleCopyWhatsAppExport = async () => {
     try {
-      await navigator.clipboard.writeText(monthlyWhatsAppText);
+      await navigator.clipboard.writeText(
+        whatsAppPreviewText || monthlyWhatsAppText,
+      );
       toast({ title: "Escala copiada para o WhatsApp!" });
     } catch (error) {
       toast({
@@ -533,7 +541,7 @@ export function WorshipDashboard() {
               <Button
                 variant="outline"
                 className="gap-2 w-full sm:w-auto"
-                onClick={() => setShowWhatsAppExport(true)}
+                onClick={() => openWhatsAppForText(monthlyWhatsAppText)}
                 disabled={schedules.length === 0}
               >
                 <FileText className="h-4 w-4" />
@@ -1154,7 +1162,7 @@ export function WorshipDashboard() {
                           </p>
                         )}
                       </div>
-                      <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                      <div className="flex flex-wrap gap-2 text-xs text-muted-foreground items-center">
                         <span className="rounded-full bg-background px-2 py-1">
                           {group.schedules.length} dia(s)
                         </span>
@@ -1166,6 +1174,24 @@ export function WorshipDashboard() {
                             {totalSongs} música(s)
                           </span>
                         )}
+                      </div>
+                      <div className="w-full sm:w-auto sm:ml-4 flex justify-center sm:justify-start">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 px-2 text-xs"
+                          onClick={() => {
+                            const txt = buildMonthlyWhatsAppText(
+                              group.schedules,
+                              parseISO(group.schedules[0].date),
+                              worshipTeam?.nome || "MKD - Louvor",
+                            );
+                            openWhatsAppForText(txt);
+                          }}
+                        >
+                          <FileText className="mr-1 h-3 w-3" />
+                          Exportar WhatsApp
+                        </Button>
                       </div>
                     </div>
 
@@ -1271,6 +1297,22 @@ export function WorshipDashboard() {
                                 size="sm"
                                 variant="ghost"
                                 className="h-8 px-2 text-xs"
+                                onClick={() => {
+                                  const txt = buildMonthlyWhatsAppText(
+                                    [schedule],
+                                    parseISO(schedule.date),
+                                    worshipTeam?.nome || "MKD - Louvor",
+                                  );
+                                  openWhatsAppForText(txt);
+                                }}
+                              >
+                                <FileText className="mr-1 h-3 w-3" />
+                                Exportar
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-8 px-2 text-xs"
                                 onClick={() => handleEditSchedule(schedule)}
                               >
                                 <Pencil className="mr-1 h-3 w-3" />
@@ -1335,15 +1377,16 @@ export function WorshipDashboard() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5 text-primary" />
-              Exportar escala mensal para WhatsApp
+              Exportar escala para WhatsApp
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-3">
             <Textarea
               readOnly
-              value={monthlyWhatsAppText}
+              value={whatsAppPreviewText || monthlyWhatsAppText}
               className="min-h-[420px] resize-none whitespace-pre-wrap font-mono text-sm leading-relaxed"
+              onChange={(e) => setWhatsAppPreviewText(e.target.value)}
             />
             <p className="text-xs text-muted-foreground">
               Revise o texto, copie e cole no grupo do WhatsApp.
@@ -1370,6 +1413,11 @@ export function WorshipDashboard() {
           open={showDetailModal}
           onOpenChange={setShowDetailModal}
           schedule={selectedSchedule}
+          weekendSchedules={
+            monthlyScheduleGroups.find((g) =>
+              g.schedules.some((s) => s.id === selectedSchedule.id),
+            )?.schedules || [selectedSchedule]
+          }
           onEdit={() => {
             setShowDetailModal(false);
             handleEditSchedule(selectedSchedule);
