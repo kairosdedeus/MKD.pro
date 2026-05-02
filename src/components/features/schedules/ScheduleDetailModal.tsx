@@ -260,6 +260,7 @@ export function ScheduleDetailModal({
           <Button
             variant="outline"
             className="gap-2"
+            id="export-whatsapp-single-day"
             onClick={() => {
               const text = buildWeekendWhatsAppText(
                 [schedule],
@@ -270,7 +271,7 @@ export function ScheduleDetailModal({
             }}
           >
             <FileText className="h-4 w-4 mr-2" />
-            Exportar WhatsApp
+            Exportar Dia
           </Button>
           <Button
             variant="outline"
@@ -314,7 +315,11 @@ export function ScheduleDetailModal({
             >
               Fechar
             </Button>
-            <Button className="gap-2" onClick={handleCopyFromPreview}>
+            <Button
+              className="gap-2"
+              id="export-whatsapp-copy"
+              onClick={handleCopyFromPreview}
+            >
               <FileText className="h-4 w-4" />
               Copiar
             </Button>

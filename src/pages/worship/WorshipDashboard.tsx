@@ -251,9 +251,26 @@ function buildMonthlyWhatsAppText(
       a.date.localeCompare(b.date),
     );
     const mainSchedule = orderedSchedules[0];
-    const days = orderedSchedules
-      .map((schedule) => format(parseISO(schedule.date), "dd"))
-      .join(" e ");
+
+    // Songs by day
+    orderedSchedules.forEach((s) => {
+      const dayName = format(parseISO(s.date), "EEEE", {
+        locale: ptBR,
+      }).toUpperCase();
+      const dayNumber = format(parseISO(s.date), "dd");
+      lines.push(`🗓 *${dayName}* ${dayNumber}`);
+      const songs = (s.songs || []).sort(
+        (a, b) => a.order_index - b.order_index,
+      );
+      songs.forEach((ss, idx) => {
+        const key = ss.execution_key || ss.song?.original_key || "";
+        lines.push(
+          `${idx + 1} - ${ss.song?.name || "Música"}${key ? " - " + key : ""}`,
+        );
+      });
+      lines.push("");
+    });
+
     const ministers = getScheduleMembersByFunction(mainSchedule, ["Vocal"]);
     const backs = getScheduleMembersByFunction(mainSchedule, [
       "BackVocal",
@@ -265,12 +282,6 @@ function buildMonthlyWhatsAppText(
     const guitarist = getScheduleMembersByFunction(mainSchedule, ["Guitarra"]);
 
     lines.push(
-      "",
-      "",
-      `🗓 ${days}`,
-      "",
-      `🎤 Equipe ${getWhatsAppTeamName(mainSchedule)}`,
-      "",
       `🎙️ Ministros: ${formatWhatsAppNames(ministers)}`,
       `🎙️ Backs: ${formatWhatsAppNames(backs)}`,
       "",
@@ -541,6 +552,7 @@ export function WorshipDashboard() {
               <Button
                 variant="outline"
                 className="gap-2 w-full sm:w-auto"
+                id="export-whatsapp-monthly"
                 onClick={() => openWhatsAppForText(monthlyWhatsAppText)}
                 disabled={schedules.length === 0}
               >
@@ -1180,6 +1192,7 @@ export function WorshipDashboard() {
                           size="sm"
                           variant="ghost"
                           className="h-8 px-2 text-xs"
+                          id={`export-whatsapp-group-${group.schedules[0]?.id ?? "unknown"}`}
                           onClick={() => {
                             const txt = buildMonthlyWhatsAppText(
                               group.schedules,
