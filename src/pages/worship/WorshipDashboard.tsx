@@ -243,33 +243,36 @@ function buildMonthlyWhatsAppText(
     `🎶 ESCALA – ${month} / ${year}`,
     "",
     `📍 ${teamName.toUpperCase()}`,
+    "",
   ];
 
-  groups.forEach((group) => {
+  groups.forEach((group, index) => {
     const orderedSchedules = [...group.schedules].sort((a, b) =>
       a.date.localeCompare(b.date),
     );
     const mainSchedule = orderedSchedules[0];
 
-    // Songs by day
-    orderedSchedules.forEach((s) => {
-      const dayName = format(parseISO(s.date), "EEEE", {
-        locale: ptBR,
-      }).toUpperCase();
-      const dayNumber = format(parseISO(s.date), "dd");
-      lines.push(`🗓 *${dayName}* ${dayNumber}`);
-      const songs = (s.songs || []).sort(
-        (a, b) => a.order_index - b.order_index,
-      );
-      songs.forEach((ss, idx) => {
-        const key = ss.execution_key || ss.song?.original_key || "";
-        lines.push(
-          `${idx + 1} - ${ss.song?.name || "Música"}${key ? " - " + key : ""}`,
-        );
-      });
-      lines.push("");
-    });
+    // Cabeçalho do fim de semana
+    const firstDate = parseISO(orderedSchedules[0].date);
+    const lastDate = parseISO(
+      orderedSchedules[orderedSchedules.length - 1].date,
+    );
 
+    if (orderedSchedules.length === 1) {
+      const dayName = format(firstDate, "EEEE", { locale: ptBR });
+      const dayNumber = format(firstDate, "dd");
+      lines.push(`🗓 *${dayName.toUpperCase()}* - ${dayNumber}`);
+    } else {
+      const firstDay = format(firstDate, "EEEE", { locale: ptBR });
+      const firstNum = format(firstDate, "dd");
+      const lastDay = format(lastDate, "EEEE", { locale: ptBR });
+      const lastNum = format(lastDate, "dd");
+      lines.push(
+        `🗓 *${firstDay.toUpperCase()}* ${firstNum} e *${lastDay.toUpperCase()}* ${lastNum}`,
+      );
+    }
+
+    // Membros da equipe
     const ministers = getScheduleMembersByFunction(mainSchedule, ["Vocal"]);
     const backs = getScheduleMembersByFunction(mainSchedule, [
       "BackVocal",
@@ -283,12 +286,16 @@ function buildMonthlyWhatsAppText(
     lines.push(
       `🎙️ Ministros: ${formatWhatsAppNames(ministers)}`,
       `🎙️ Backs: ${formatWhatsAppNames(backs)}`,
-      "",
       `🎹 Teclado: ${formatWhatsAppNames(keyboardist)}`,
       `🎸 Guitarra: ${formatWhatsAppNames(guitarist)}`,
       `🥁 Bateria: ${formatWhatsAppNames(drummer)}`,
       `🎸 Baixo: ${formatWhatsAppNames(bassist)}`,
     );
+
+    // Separador entre fins de semana (exceto no último)
+    if (index < groups.length - 1) {
+      lines.push("");
+    }
   });
 
   return lines.join("\n").trim();
@@ -835,39 +842,89 @@ export function WorshipDashboard() {
                             <div className="space-y-2">
                               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                 <Users className="h-3.5 w-3.5" />
-                                Funções
+                                Equipe Escalada
                               </div>
-                              <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-                                {memberRows.map((row) => (
-                                  <div
-                                    key={row.id}
-                                    className="rounded-lg border bg-muted/20 p-2"
-                                  >
-                                    <p className="text-sm font-medium text-foreground">
-                                      {row.name}
-                                    </p>
-                                    <div className="mt-1 flex flex-wrap gap-1">
-                                      {row.functions.length > 0 ? (
-                                        row.functions.map((fn) => {
-                                          const Icon = getFunctionIcon(fn.nome);
-                                          return (
-                                            <span
-                                              key={fn.id}
-                                              className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary"
-                                            >
-                                              <Icon className="h-3 w-3" />
-                                              {fn.nome}
-                                            </span>
-                                          );
-                                        })
-                                      ) : (
-                                        <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-600">
-                                          Sem função
-                                        </span>
-                                      )}
-                                    </div>
-                                  </div>
-                                ))}
+                              <div className="rounded-lg border border-gray-200 overflow-hidden divide-y divide-gray-100">
+                                {(() => {
+                                  // Agrupar membros por função
+                                  const functionMap = new Map<
+                                    string,
+                                    {
+                                      functionName: string;
+                                      members: string[];
+                                      icon: any;
+                                      color: string;
+                                    }
+                                  >();
+
+                                  schedule.members?.forEach((member) => {
+                                    const memberName =
+                                      member.team_member?.user?.nome ||
+                                      "Sem nome";
+                                    (member.functions || []).forEach((fn) => {
+                                      if (!functionMap.has(fn.id)) {
+                                        functionMap.set(fn.id, {
+                                          functionName: fn.nome,
+                                          members: [],
+                                          icon: getFunctionIcon(fn.nome),
+                                          color:
+                                            getFunctionPriority(fn.nome) === 0
+                                              ? "bg-purple-50 text-purple-700"
+                                              : getFunctionPriority(fn.nome) ===
+                                                  1
+                                                ? "bg-fuchsia-50 text-fuchsia-700"
+                                                : "bg-gray-50 text-gray-700",
+                                        });
+                                      }
+                                      functionMap
+                                        .get(fn.id)!
+                                        .members.push(memberName);
+                                    });
+                                  });
+
+                                  // Ordenar funções
+                                  const sortedFunctions = Array.from(
+                                    functionMap.values(),
+                                  ).sort((a, b) => {
+                                    const priorityA = getFunctionPriority(
+                                      a.functionName,
+                                    );
+                                    const priorityB = getFunctionPriority(
+                                      b.functionName,
+                                    );
+                                    if (priorityA !== priorityB)
+                                      return priorityA - priorityB;
+                                    return a.functionName.localeCompare(
+                                      b.functionName,
+                                    );
+                                  });
+
+                                  return sortedFunctions.map(
+                                    ({
+                                      functionName,
+                                      members,
+                                      icon: Icon,
+                                      color,
+                                    }) => (
+                                      <div
+                                        key={functionName}
+                                        className={`flex items-center gap-3 px-3 py-2 ${color}`}
+                                      >
+                                        <div className="flex items-center gap-1.5 w-24 flex-shrink-0">
+                                          <Icon className="h-3.5 w-3.5" />
+                                          <span className="text-xs font-semibold">
+                                            {functionName}
+                                          </span>
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                          <p className="text-xs text-foreground truncate">
+                                            {members.join(", ")}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    ),
+                                  );
+                                })()}
                               </div>
                             </div>
                           )}

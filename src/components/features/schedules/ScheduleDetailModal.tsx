@@ -20,7 +20,6 @@ interface ScheduleDetailModalProps {
   schedule: Schedule;
   onEdit: () => void;
   onDelete: () => void;
-  weekendSchedules?: Schedule[];
 }
 
 const STATUS_LABELS: Record<
@@ -38,10 +37,12 @@ export function ScheduleDetailModal({
   schedule,
   onEdit,
   onDelete,
-  weekendSchedules = [schedule],
 }: ScheduleDetailModalProps) {
   const status = STATUS_LABELS[schedule.status] || STATUS_LABELS.draft;
   const { toast } = useToast();
+
+  const [showWhatsAppPreview, setShowWhatsAppPreview] = useState(false);
+  const [whatsAppText, setWhatsAppText] = useState("");
 
   function buildWeekendWhatsAppText(schedules: Schedule[], teamName: string) {
     const lines: string[] = [];
@@ -67,35 +68,6 @@ export function ScheduleDetailModal({
 
     return lines.join("\n").trim();
   }
-
-  const handleCopyWeekendWhatsApp = async () => {
-    try {
-      const text = buildWeekendWhatsAppText(
-        weekendSchedules || [schedule],
-        schedule.team?.nome || "MKD - Louvor",
-      );
-      await navigator.clipboard.writeText(text);
-      toast({ title: "Escala copiada para o WhatsApp!" });
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Não foi possível copiar",
-        description: "Cole manualmente o texto.",
-      });
-    }
-  };
-
-  const [showWhatsAppPreview, setShowWhatsAppPreview] = useState(false);
-  const [whatsAppText, setWhatsAppText] = useState("");
-
-  const openWhatsAppPreview = () => {
-    const text = buildWeekendWhatsAppText(
-      weekendSchedules || [schedule],
-      schedule.team?.nome || "MKD - Louvor",
-    );
-    setWhatsAppText(text);
-    setShowWhatsAppPreview(true);
-  };
 
   const handleCopyFromPreview = async () => {
     try {
@@ -152,52 +124,164 @@ export function ScheduleDetailModal({
             </div>
           )}
 
-          {/* Membros */}
+          {/* Membros por Função */}
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
               <Users className="h-4 w-4 text-purple-600" />
-              Membros ({schedule.members?.length || 0})
+              Membros da Escala
             </div>
             {!schedule.members || schedule.members.length === 0 ? (
               <p className="text-sm text-gray-400 italic">
                 Nenhum membro escalado
               </p>
             ) : (
-              <div className="space-y-2">
-                {schedule.members.map((member) => (
-                  <div
-                    key={member.id}
-                    className="flex items-center gap-3 p-2 border rounded-lg"
-                  >
-                    <div className="w-8 h-8 rounded-full bg-purple-200 flex items-center justify-center text-purple-700 font-semibold text-sm">
-                      {member.team_member?.user?.nome
-                        ?.charAt(0)
-                        .toUpperCase() || "?"}
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">
-                        {member.team_member?.user?.nome || "Sem nome"}
-                      </p>
-                      {member.functions && member.functions.length > 0 && (
-                        <div className="flex gap-1 mt-0.5">
-                          {member.functions.map((f) => (
-                            <span
-                              key={f.id}
-                              className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded"
-                            >
-                              {f.nome}
-                            </span>
-                          ))}
+              <div className="rounded-xl border border-gray-200 overflow-hidden divide-y divide-gray-100">
+                {(() => {
+                  // Agrupar membros por função
+                  const functionMap = new Map<
+                    string,
+                    {
+                      functionName: string;
+                      members: string[];
+                      icon: string;
+                      color: { bg: string; text: string; pill: string };
+                    }
+                  >();
+
+                  const FUNCTION_COLORS: Record<
+                    string,
+                    { bg: string; text: string; pill: string }
+                  > = {
+                    Vocal: {
+                      bg: "bg-purple-50",
+                      text: "text-purple-700",
+                      pill: "bg-purple-100 text-purple-700 border-purple-300",
+                    },
+                    BackVocal: {
+                      bg: "bg-fuchsia-50",
+                      text: "text-fuchsia-700",
+                      pill: "bg-fuchsia-100 text-fuchsia-700 border-fuchsia-300",
+                    },
+                    Guitarra: {
+                      bg: "bg-orange-50",
+                      text: "text-orange-700",
+                      pill: "bg-orange-100 text-orange-700 border-orange-300",
+                    },
+                    Baixo: {
+                      bg: "bg-blue-50",
+                      text: "text-blue-700",
+                      pill: "bg-blue-100 text-blue-700 border-blue-300",
+                    },
+                    Bateria: {
+                      bg: "bg-red-50",
+                      text: "text-red-700",
+                      pill: "bg-red-100 text-red-700 border-red-300",
+                    },
+                    Teclado: {
+                      bg: "bg-green-50",
+                      text: "text-green-700",
+                      pill: "bg-green-100 text-green-700 border-green-300",
+                    },
+                    Projeção: {
+                      bg: "bg-cyan-50",
+                      text: "text-cyan-700",
+                      pill: "bg-cyan-100 text-cyan-700 border-cyan-300",
+                    },
+                    Som: {
+                      bg: "bg-yellow-50",
+                      text: "text-yellow-700",
+                      pill: "bg-yellow-100 text-yellow-700 border-yellow-300",
+                    },
+                    Transmissão: {
+                      bg: "bg-pink-50",
+                      text: "text-pink-700",
+                      pill: "bg-pink-100 text-pink-700 border-pink-300",
+                    },
+                  };
+
+                  const FUNCTION_ICONS: Record<string, string> = {
+                    Vocal: "🎤",
+                    BackVocal: "🎙️",
+                    Guitarra: "🎸",
+                    Baixo: "🎸",
+                    Bateria: "🥁",
+                    Teclado: "🎹",
+                    Projeção: "📽️",
+                    Som: "🔊",
+                    Transmissão: "📡",
+                  };
+
+                  schedule.members.forEach((member) => {
+                    const memberName =
+                      member.team_member?.user?.nome || "Sem nome";
+                    (member.functions || []).forEach((fn) => {
+                      if (!functionMap.has(fn.id)) {
+                        functionMap.set(fn.id, {
+                          functionName: fn.nome,
+                          members: [],
+                          icon: FUNCTION_ICONS[fn.nome] || "🎵",
+                          color: FUNCTION_COLORS[fn.nome] || {
+                            bg: "bg-gray-50",
+                            text: "text-gray-700",
+                            pill: "bg-gray-100 text-gray-700 border-gray-300",
+                          },
+                        });
+                      }
+                      functionMap.get(fn.id)!.members.push(memberName);
+                    });
+                  });
+
+                  // Ordenar funções: Vocal, BackVocal, demais
+                  const sortedFunctions = Array.from(functionMap.values()).sort(
+                    (a, b) => {
+                      const getPriority = (nome: string) => {
+                        if (nome === "Vocal") return 0;
+                        if (nome === "BackVocal") return 1;
+                        return 2;
+                      };
+                      const priorityA = getPriority(a.functionName);
+                      const priorityB = getPriority(b.functionName);
+                      if (priorityA !== priorityB) return priorityA - priorityB;
+                      return a.functionName.localeCompare(b.functionName);
+                    },
+                  );
+
+                  return sortedFunctions.map(
+                    ({ functionName, members, icon, color }) => (
+                      <div
+                        key={functionName}
+                        className={`flex items-start gap-4 px-4 py-3 ${color.bg}`}
+                      >
+                        {/* Função label */}
+                        <div className="flex items-center gap-2 w-32 flex-shrink-0 pt-1">
+                          <span className="text-base leading-none">{icon}</span>
+                          <span
+                            className={`text-sm font-semibold ${color.text}`}
+                          >
+                            {functionName}
+                          </span>
                         </div>
-                      )}
-                    </div>
-                    {member.notes && (
-                      <p className="text-xs text-gray-400 italic">
-                        {member.notes}
-                      </p>
-                    )}
-                  </div>
-                ))}
+
+                        {/* Membros */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            {members.map((memberName, idx) => (
+                              <span
+                                key={idx}
+                                className={`inline-flex items-center gap-1.5 pl-2.5 pr-2.5 py-1 rounded-full text-sm font-medium border ${color.pill}`}
+                              >
+                                <span className="w-5 h-5 rounded-full bg-white/60 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                                  {memberName.charAt(0).toUpperCase()}
+                                </span>
+                                {memberName}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ),
+                  );
+                })()}
               </div>
             )}
           </div>
