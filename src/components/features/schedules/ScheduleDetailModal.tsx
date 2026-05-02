@@ -85,15 +85,17 @@ export function ScheduleDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-[min(100%,_720px)] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-purple-600" />
-            {schedule.title || "Escala sem título"}
+      <DialogContent className="w-[calc(100vw-0.5rem)] sm:w-full max-w-[min(calc(100vw-1rem),_720px)] h-[98vh] sm:h-auto sm:max-h-[90vh] flex flex-col p-0 gap-0">
+        <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b flex-shrink-0">
+          <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600 flex-shrink-0" />
+            <span className="truncate">
+              {schedule.title || "Escala sem título"}
+            </span>
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-5">
+        <div className="space-y-4 sm:space-y-5 px-4 sm:px-6 py-4 sm:py-5 overflow-y-auto flex-1">
           {/* Info básica */}
           <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg">
             <div>
@@ -250,10 +252,10 @@ export function ScheduleDetailModal({
                     ({ functionName, members, icon, color }) => (
                       <div
                         key={functionName}
-                        className={`flex items-start gap-4 px-4 py-3 ${color.bg}`}
+                        className={`flex flex-col sm:flex-row items-start gap-3 sm:gap-4 px-3 sm:px-4 py-3 ${color.bg}`}
                       >
                         {/* Função label */}
-                        <div className="flex items-center gap-2 w-32 flex-shrink-0 pt-1">
+                        <div className="flex items-center gap-2 w-full sm:w-32 flex-shrink-0">
                           <span className="text-base leading-none">{icon}</span>
                           <span
                             className={`text-sm font-semibold ${color.text}`}
@@ -263,7 +265,7 @@ export function ScheduleDetailModal({
                         </div>
 
                         {/* Membros */}
-                        <div className="flex-1 min-w-0">
+                        <div className="flex-1 min-w-0 w-full">
                           <div className="flex flex-wrap items-center gap-2">
                             {members.map((memberName, idx) => (
                               <span
@@ -299,12 +301,12 @@ export function ScheduleDetailModal({
                   .map((scheduleSong, index) => (
                     <div
                       key={scheduleSong.id}
-                      className="flex items-center gap-3 p-2 border rounded-lg"
+                      className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 p-2 border rounded-lg"
                     >
-                      <span className="text-xs text-gray-400 w-5 text-center">
+                      <span className="text-xs text-gray-400 w-5 text-center flex-shrink-0">
                         {index + 1}
                       </span>
-                      <div className="flex-1">
+                      <div className="flex-1 min-w-0 w-full">
                         <p className="text-sm font-medium">
                           {scheduleSong.song?.name || "Música"}
                         </p>
@@ -314,7 +316,7 @@ export function ScheduleDetailModal({
                           </p>
                         )}
                       </div>
-                      <div className="flex gap-2 text-xs text-gray-500">
+                      <div className="flex gap-2 text-xs text-gray-500 flex-wrap">
                         {scheduleSong.song?.original_key && (
                           <span>
                             Original:{" "}
@@ -337,13 +339,17 @@ export function ScheduleDetailModal({
           )}
         </div>
 
-        <DialogFooter className="gap-2 flex flex-col-reverse sm:flex-row">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="gap-2 flex flex-col-reverse sm:flex-row px-4 sm:px-6 py-3 sm:py-4 border-t bg-gray-50 flex-shrink-0">
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="w-full sm:w-auto"
+          >
             Fechar
           </Button>
           <Button
             variant="outline"
-            className="gap-2"
+            className="gap-2 w-full sm:w-auto"
             id="export-whatsapp-single-day"
             onClick={() => {
               const text = buildWeekendWhatsAppText(
@@ -354,19 +360,19 @@ export function ScheduleDetailModal({
               setShowWhatsAppPreview(true);
             }}
           >
-            <FileText className="h-4 w-4 mr-2" />
+            <FileText className="h-4 w-4" />
             Exportar Dia
           </Button>
           <Button
             variant="outline"
-            className="text-red-600 border-red-200 hover:bg-red-50"
+            className="text-red-600 border-red-200 hover:bg-red-50 w-full sm:w-auto"
             onClick={onDelete}
           >
             <Trash2 className="h-4 w-4 mr-2" />
             Excluir
           </Button>
           <Button
-            className="bg-purple-600 hover:bg-purple-700"
+            className="bg-purple-600 hover:bg-purple-700 w-full sm:w-auto"
             onClick={onEdit}
           >
             <Pencil className="h-4 w-4 mr-2" />
@@ -376,14 +382,14 @@ export function ScheduleDetailModal({
       </DialogContent>
       {/* WhatsApp preview dialog */}
       <Dialog open={showWhatsAppPreview} onOpenChange={setShowWhatsAppPreview}>
-        <DialogContent className="w-full max-w-[min(100%,_640px)]">
-          <DialogHeader>
+        <DialogContent className="w-[calc(100vw-0.5rem)] sm:w-full max-w-[min(calc(100vw-1rem),_640px)] flex flex-col p-0 gap-0 h-[98vh] sm:h-auto sm:max-h-[90vh]">
+          <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b flex-shrink-0">
             <DialogTitle>Exportar WhatsApp</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-3">
+          <div className="space-y-3 px-4 sm:px-6 py-4 overflow-y-auto flex-1">
             <textarea
-              className="w-full h-64 p-3 border rounded resize-y font-mono text-sm"
+              className="w-full h-64 sm:h-80 p-3 border rounded resize-y font-mono text-xs sm:text-sm"
               value={whatsAppText}
               onChange={(e) => setWhatsAppText(e.target.value)}
             />
@@ -392,15 +398,16 @@ export function ScheduleDetailModal({
             </p>
           </div>
 
-          <DialogFooter className="gap-2">
+          <DialogFooter className="gap-2 flex-col-reverse sm:flex-row px-4 sm:px-6 py-3 sm:py-4 border-t bg-gray-50 flex-shrink-0">
             <Button
               variant="outline"
               onClick={() => setShowWhatsAppPreview(false)}
+              className="w-full sm:w-auto"
             >
               Fechar
             </Button>
             <Button
-              className="gap-2"
+              className="gap-2 w-full sm:w-auto"
               id="export-whatsapp-copy"
               onClick={handleCopyFromPreview}
             >

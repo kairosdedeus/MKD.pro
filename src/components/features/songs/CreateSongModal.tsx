@@ -1,83 +1,94 @@
-import { useState } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Checkbox } from '@/components/ui/checkbox'
-import { useToast } from '@/components/ui/use-toast'
-import { songService } from '@/services/songService'
-import { SongFormData } from '@/types'
-import { Upload } from 'lucide-react'
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useToast } from "@/components/ui/use-toast";
+import { songService } from "@/services/songService";
+import { SongFormData } from "@/types";
+import { Upload } from "lucide-react";
 
 interface CreateSongModalProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onSuccess?: () => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
 }
 
-export function CreateSongModal({ open, onOpenChange, onSuccess }: CreateSongModalProps) {
-  const { toast } = useToast()
-  const [loading, setLoading] = useState(false)
-  
-  const [name, setName] = useState('')
-  const [artist, setArtist] = useState('')
-  const [originalKey, setOriginalKey] = useState('')
-  const [referenceUrl, setReferenceUrl] = useState('')
-  const [hasVirtualInstruments, setHasVirtualInstruments] = useState(false)
-  const [notes, setNotes] = useState('')
-  const [audioFile, setAudioFile] = useState<File | null>(null)
+export function CreateSongModal({
+  open,
+  onOpenChange,
+  onSuccess,
+}: CreateSongModalProps) {
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+
+  const [name, setName] = useState("");
+  const [artist, setArtist] = useState("");
+  const [originalKey, setOriginalKey] = useState("");
+  const [referenceUrl, setReferenceUrl] = useState("");
+  const [hasVirtualInstruments, setHasVirtualInstruments] = useState(false);
+  const [notes, setNotes] = useState("");
+  const [audioFile, setAudioFile] = useState<File | null>(null);
 
   const resetForm = () => {
-    setName('')
-    setArtist('')
-    setOriginalKey('')
-    setReferenceUrl('')
-    setHasVirtualInstruments(false)
-    setNotes('')
-    setAudioFile(null)
-  }
+    setName("");
+    setArtist("");
+    setOriginalKey("");
+    setReferenceUrl("");
+    setHasVirtualInstruments(false);
+    setNotes("");
+    setAudioFile(null);
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+    const file = e.target.files?.[0];
     if (file) {
       // Validar tipo de arquivo
-      const validTypes = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg']
+      const validTypes = ["audio/mpeg", "audio/mp3", "audio/wav", "audio/ogg"];
       if (!validTypes.includes(file.type)) {
         toast({
-          title: 'Arquivo inválido',
-          description: 'Por favor, selecione um arquivo de áudio válido (MP3, WAV, OGG)',
-          variant: 'destructive',
-        })
-        return
+          title: "Arquivo inválido",
+          description:
+            "Por favor, selecione um arquivo de áudio válido (MP3, WAV, OGG)",
+          variant: "destructive",
+        });
+        return;
       }
 
       // Validar tamanho (máximo 50MB)
       if (file.size > 50 * 1024 * 1024) {
         toast({
-          title: 'Arquivo muito grande',
-          description: 'O arquivo deve ter no máximo 50MB',
-          variant: 'destructive',
-        })
-        return
+          title: "Arquivo muito grande",
+          description: "O arquivo deve ter no máximo 50MB",
+          variant: "destructive",
+        });
+        return;
       }
 
-      setAudioFile(file)
+      setAudioFile(file);
     }
-  }
+  };
 
   const handleSubmit = async () => {
     if (!name.trim()) {
       toast({
-        title: 'Nome obrigatório',
-        description: 'Digite o nome da música',
-        variant: 'destructive',
-      })
-      return
+        title: "Nome obrigatório",
+        description: "Digite o nome da música",
+        variant: "destructive",
+      });
+      return;
     }
 
     try {
-      setLoading(true)
+      setLoading(true);
 
       const formData: SongFormData = {
         name: name.trim(),
@@ -87,38 +98,40 @@ export function CreateSongModal({ open, onOpenChange, onSuccess }: CreateSongMod
         has_virtual_instruments: hasVirtualInstruments,
         notes: notes.trim() || undefined,
         audio_file: audioFile || undefined,
-      }
+      };
 
-      await songService.createSong(formData)
+      await songService.createSong(formData);
 
       toast({
-        title: 'Música criada!',
-        description: 'A música foi adicionada ao repertório',
-      })
+        title: "Música criada!",
+        description: "A música foi adicionada ao repertório",
+      });
 
-      resetForm()
-      onOpenChange(false)
-      onSuccess?.()
+      resetForm();
+      onOpenChange(false);
+      onSuccess?.();
     } catch (error) {
-      console.error('Erro ao criar música:', error)
+      console.error("Erro ao criar música:", error);
       toast({
-        title: 'Erro',
-        description: 'Não foi possível criar a música',
-        variant: 'destructive',
-      })
+        title: "Erro",
+        description: "Não foi possível criar a música",
+        variant: "destructive",
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Nova Música</DialogTitle>
+      <DialogContent className="w-[calc(100vw-0.5rem)] sm:w-full max-w-2xl h-[98vh] sm:h-auto sm:max-h-[90vh] flex flex-col p-0 gap-0">
+        <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b flex-shrink-0">
+          <DialogTitle className="text-base sm:text-lg">
+            Nova Música
+          </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-4 px-4 sm:px-6 py-4 overflow-y-auto flex-1">
           <div className="space-y-2">
             <Label htmlFor="name">Nome da Música *</Label>
             <Input
@@ -139,7 +152,7 @@ export function CreateSongModal({ open, onOpenChange, onSuccess }: CreateSongMod
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="originalKey">Tom Original</Label>
               <Input
@@ -174,11 +187,11 @@ export function CreateSongModal({ open, onOpenChange, onSuccess }: CreateSongMod
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => document.getElementById('audioFile')?.click()}
+                onClick={() => document.getElementById("audioFile")?.click()}
                 className="w-full"
               >
                 <Upload className="h-4 w-4 mr-2" />
-                {audioFile ? audioFile.name : 'Selecionar arquivo'}
+                {audioFile ? audioFile.name : "Selecionar arquivo"}
               </Button>
             </div>
             <p className="text-xs text-muted-foreground">
@@ -190,7 +203,9 @@ export function CreateSongModal({ open, onOpenChange, onSuccess }: CreateSongMod
             <Checkbox
               id="hasVirtualInstruments"
               checked={hasVirtualInstruments}
-              onCheckedChange={(checked) => setHasVirtualInstruments(checked as boolean)}
+              onCheckedChange={(checked) =>
+                setHasVirtualInstruments(checked as boolean)
+              }
             />
             <Label htmlFor="hasVirtualInstruments" className="cursor-pointer">
               Possui instrumentos virtuais
@@ -209,15 +224,24 @@ export function CreateSongModal({ open, onOpenChange, onSuccess }: CreateSongMod
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+        <DialogFooter className="px-4 sm:px-6 py-3 sm:py-4 border-t bg-gray-50 gap-2 flex-shrink-0 flex-col-reverse sm:flex-row">
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={loading}
+            className="w-full sm:w-auto"
+          >
             Cancelar
           </Button>
-          <Button onClick={handleSubmit} disabled={loading}>
-            {loading ? 'Criando...' : 'Criar Música'}
+          <Button
+            onClick={handleSubmit}
+            disabled={loading}
+            className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700"
+          >
+            {loading ? "Criando..." : "Criar Música"}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

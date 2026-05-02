@@ -702,7 +702,7 @@ export function CreateScheduleModal({
         team_id: teamId,
         date,
         title: title || undefined,
-        notes: notes || undefined,
+        notes: notes.trim() || null,
         status: "published",
         members,
         songs: selectedSongs.map((s) => ({
@@ -736,20 +736,20 @@ export function CreateScheduleModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-1rem)] max-w-3xl max-h-[92vh] overflow-y-auto p-0">
+      <DialogContent className="w-[calc(100vw-0.5rem)] sm:w-[calc(100vw-2rem)] max-w-3xl h-[98vh] sm:h-auto sm:max-h-[92vh] flex flex-col p-0 gap-0">
         {/* Header */}
-        <DialogHeader className="px-6 pt-6 pb-4 border-b">
-          <DialogTitle className="text-xl">
+        <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b flex-shrink-0">
+          <DialogTitle className="text-lg sm:text-xl">
             {isEditing ? "✏️ Editar Escala" : "🎵 Nova Escala"}
           </DialogTitle>
         </DialogHeader>
 
         {loadingData ? (
-          <div className="flex items-center justify-center py-16">
+          <div className="flex items-center justify-center py-16 flex-1">
             <LoadingSpinner />
           </div>
         ) : (
-          <div className="px-6 py-5 space-y-6">
+          <div className="px-4 sm:px-6 py-4 sm:py-5 space-y-5 sm:space-y-6 overflow-y-auto flex-1">
             {/* ── Informações básicas ── */}
             <div className="space-y-4">
               <div className="space-y-1.5">
@@ -783,10 +783,10 @@ export function CreateScheduleModal({
             </div>
 
             {/* ── Equipes fixas ── */}
-            <div className="space-y-3 rounded-xl border border-purple-200 bg-purple-50/60 p-4">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-3 rounded-xl border border-purple-200 bg-purple-50/60 p-3 sm:p-4">
+              <div className="flex flex-col gap-2 sm:gap-3">
                 <div className="min-w-0">
-                  <Label className="text-base font-semibold">
+                  <Label className="text-sm sm:text-base font-semibold">
                     Equipes fixas
                   </Label>
                   <p className="text-xs text-gray-500 mt-0.5">
@@ -798,7 +798,7 @@ export function CreateScheduleModal({
                   variant="outline"
                   size="sm"
                   onClick={() => setShowFixedTeamForm((prev) => !prev)}
-                  className="gap-2 bg-white w-full sm:w-auto"
+                  className="gap-2 bg-white w-full"
                 >
                   <Save className="h-4 w-4" />
                   Salvar atual
@@ -853,12 +853,12 @@ export function CreateScheduleModal({
 
             {/* ── Membros por Função ── */}
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label className="text-base font-semibold">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-0">
+                <Label className="text-sm sm:text-base font-semibold">
                   👥 Membros da Escala
                 </Label>
                 {totalAssigned > 0 && (
-                  <span className="text-sm text-gray-400">
+                  <span className="text-xs sm:text-sm text-gray-400">
                     {totalAssigned} membro{totalAssigned !== 1 ? "s" : ""}{" "}
                     escalado{totalAssigned !== 1 ? "s" : ""}
                   </span>
@@ -937,12 +937,14 @@ export function CreateScheduleModal({
 
             {/* ── Músicas ── */}
             <div className="space-y-3">
-              <Label className="text-base font-semibold">🎵 Músicas</Label>
+              <Label className="text-sm sm:text-base font-semibold">
+                🎵 Músicas
+              </Label>
 
               <div className="relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                 <Input
-                  placeholder="Buscar músicas por nome ou artista..."
+                  placeholder="Buscar músicas..."
                   value={songSearchQuery}
                   onChange={(e) => handleSearchSongs(e.target.value)}
                   className="pl-9"
@@ -1095,33 +1097,35 @@ export function CreateScheduleModal({
                       onDragOver={(e) => handleDragOver(e, index)}
                       onDrop={(e) => handleDrop(e, index)}
                       onDragEnd={handleDragEnd}
-                      className={`flex items-center gap-3 p-3 bg-white transition-all cursor-grab active:cursor-grabbing ${
+                      className={`flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 p-3 bg-white transition-all cursor-grab active:cursor-grabbing ${
                         dragOverIndex === index && dragIndex !== index
                           ? "border-t-2 border-purple-400 bg-purple-50"
                           : "hover:bg-gray-50"
                       } ${dragIndex === index ? "opacity-40" : ""}`}
                     >
-                      <GripVertical className="h-4 w-4 text-gray-300 flex-shrink-0" />
-                      <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-xs font-bold text-purple-700 flex-shrink-0">
-                        {index + 1}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm truncate">
-                          {song.song_name}
-                        </p>
-                        {song.artist && (
-                          <p className="text-xs text-gray-400 truncate">
-                            {song.artist}
+                      <div className="flex items-center gap-3 w-full sm:w-auto sm:flex-1 min-w-0">
+                        <GripVertical className="h-4 w-4 text-gray-300 flex-shrink-0" />
+                        <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-xs font-bold text-purple-700 flex-shrink-0">
+                          {index + 1}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">
+                            {song.song_name}
                           </p>
-                        )}
+                          {song.artist && (
+                            <p className="text-xs text-gray-400 truncate">
+                              {song.artist}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
+                      <div className="flex items-center gap-2 w-full sm:w-auto pl-9 sm:pl-0">
                         {song.original_key && (
                           <span className="text-xs text-gray-400">
                             Original: <strong>{song.original_key}</strong>
                           </span>
                         )}
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1 flex-1 sm:flex-initial">
                           <span className="text-xs text-gray-500">Tom:</span>
                           <Input
                             value={song.execution_key || ""}
@@ -1135,7 +1139,7 @@ export function CreateScheduleModal({
                         <button
                           type="button"
                           onClick={() => removeSong(song.song_id)}
-                          className="text-gray-300 hover:text-red-500 transition-colors p-1"
+                          className="text-gray-300 hover:text-red-500 transition-colors p-1 ml-auto sm:ml-0"
                         >
                           <X className="h-4 w-4" />
                         </button>
@@ -1154,18 +1158,19 @@ export function CreateScheduleModal({
         )}
 
         {/* Footer */}
-        <DialogFooter className="px-6 py-4 border-t bg-gray-50 gap-2">
+        <DialogFooter className="px-4 sm:px-6 py-3 sm:py-4 border-t bg-gray-50 gap-2 flex-shrink-0 flex-col-reverse sm:flex-row">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={loading}
+            className="w-full sm:w-auto"
           >
             Cancelar
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={loading || loadingData || (!isEditing && dateConflict)}
-            className="bg-purple-600 hover:bg-purple-700 min-w-[140px]"
+            className="bg-purple-600 hover:bg-purple-700 w-full sm:w-auto sm:min-w-[140px]"
           >
             {loading
               ? "Salvando..."
