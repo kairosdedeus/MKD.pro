@@ -21,6 +21,7 @@
 ## 📋 Funcionalidades
 
 ### Ministérios Suportados
+
 - ✅ Louvor
 - ✅ Dança
 - ✅ Obreiros
@@ -28,12 +29,14 @@
 - ✅ Células
 
 ### Perfis de Usuário
+
 - Gerencial (acesso total)
 - Líderes de Ministério
 - Auxiliares
 - Membros de Equipe
 
 ### Recursos Principais
+
 - 📅 Calendário interativo de escalas
 - 👥 Gestão de equipes e membros
 - 🎵 Cadastro e gerenciamento de músicas
@@ -54,17 +57,20 @@
 ### 2. Configuração do Supabase
 
 #### 2.1. Criar Projeto no Supabase
+
 1. Acesse [supabase.com](https://supabase.com)
 2. Crie um novo projeto
 3. Anote a URL e a chave anônima (anon key)
 
 #### 2.2. Executar o Schema SQL
+
 1. No dashboard do Supabase, vá em **SQL Editor**
 2. Abra o arquivo `supabase/schema.sql`
 3. Copie todo o conteúdo e execute no SQL Editor
 4. Aguarde a conclusão (cria todas as tabelas, índices, triggers, RLS e dados iniciais)
 
 #### 2.3. Configurar Storage
+
 1. No dashboard do Supabase, vá em **Storage**
 2. Crie um novo bucket chamado `audio-musicas`
 3. Configure como **privado**
@@ -141,18 +147,21 @@ src/
 ### Perfis e Acessos
 
 #### Gerencial
+
 - ✅ Acesso total ao sistema
 - ✅ Cadastrar usuários e equipes
 - ✅ Gerenciar todas as escalas
 - ✅ Ver dashboard completo
 
 #### Líder de Ministério
+
 - ✅ Gerenciar suas equipes
 - ✅ Criar e editar escalas do seu ministério
 - ✅ Adicionar/remover membros
 - ✅ Definir funções dos membros
 
 #### Membro de Equipe
+
 - ✅ Visualizar suas equipes
 - ✅ Visualizar escalas
 - ✅ Editar escalas (apenas Louvor)
@@ -160,6 +169,7 @@ src/
 ### Row Level Security (RLS)
 
 Todas as tabelas possuem políticas RLS configuradas:
+
 - Usuários só veem dados das equipes que pertencem
 - Líderes gerenciam apenas suas equipes
 - Gerencial tem acesso total
@@ -198,14 +208,15 @@ Configure o `base` no `vite.config.ts` conforme seu repositório:
 
 ```typescript
 export default defineConfig({
-  base: '/nome-do-repositorio/',
+  base: "/nome-do-repositorio/",
   // ...
-})
+});
 ```
 
 ### Outras Plataformas
 
 O projeto pode ser hospedado em:
+
 - Vercel
 - Netlify
 - AWS Amplify
@@ -252,6 +263,7 @@ Este projeto está sob a licença MIT.
 ## 👥 Equipe
 
 Desenvolvido por uma equipe sênior especializada em:
+
 - Análise de Requisitos
 - Arquitetura Frontend React
 - Supabase/PostgreSQL
@@ -266,3 +278,17 @@ Para dúvidas e suporte, abra uma issue no repositório.
 ---
 
 **Nota**: Este sistema foi desenvolvido especificamente para gestão de escalas ministeriais, com foco em usabilidade, segurança e escalabilidade.
+📍 MKD - LOUVOR 🎤 Equipe X
+
+🗓 Sábado 04
+1 - Tudo se fez novo - D
+2 - Pisa - Em
+3 - Somos 1 - D
+4 - Nosso Coração Queima - A
+5 - Cristo/ Tudo que tenho é teu - A
+6 - Tu és tudo - D
+
+🗓 Domingo 05
+1 - Mil Graus - Alice
+2 - Pedra Preciosa - João
+3 - Canção do Apocalipse - Wallesca
