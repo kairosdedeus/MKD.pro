@@ -2,6 +2,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionHeader,
+} from "@/components/ui/accordion";
+import {
   Plus,
   Calendar,
   CalendarCheck2,
@@ -65,7 +72,6 @@ import {
   isSameDay,
   isSameMonth,
   startOfMonth,
-  endOfMonth,
   getDay,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -214,13 +220,6 @@ function getScheduleMembersByFunction(
     .filter(Boolean);
 }
 
-function getWhatsAppTeamName(schedule: Schedule) {
-  return (schedule.title || "Equipe")
-    .replace(/\s*-\s*Louvor\s*$/i, "")
-    .replace(/^Equipe\s+/i, "")
-    .trim();
-}
-
 function getFirstName(name: string) {
   return name.trim().split(/\s+/)[0] || name;
 }
@@ -364,7 +363,6 @@ export function WorshipDashboard() {
   }, [worshipTeam?.id]);
 
   const monthStart = startOfMonth(currentMonth);
-  const monthEnd = endOfMonth(currentMonth);
   const startWeekday = getDay(monthStart);
   const calendarDays = Array.from({ length: 42 }, (_, index) =>
     addDays(monthStart, index - startWeekday),
@@ -958,18 +956,22 @@ export function WorshipDashboard() {
         </div>
 
         <div className="flex min-h-0 flex-col gap-4">
-          <Card className="flex min-h-0 flex-col h-[300px] lg:h-[350px]">
-            <CardHeader className="shrink-0 pb-2">
-              <div className="flex items-center justify-between gap-3">
-                <CardTitle className="flex items-center gap-2 text-base">
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem
+              value="fixed-teams"
+              className="border rounded-lg overflow-hidden"
+            >
+              <AccordionHeader className="flex items-center justify-between px-6 py-4 hover:no-underline bg-white hover:bg-accent/50">
+                <AccordionTrigger className="flex items-center gap-2 text-base font-medium">
                   <Music className="h-5 w-5 text-primary" />
                   Equipes padrão
-                </CardTitle>
+                </AccordionTrigger>
                 <Button
                   variant="outline"
                   size="sm"
                   className="h-8 gap-1"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setEditingFixedTeam(null);
                     setShowFixedTeamModal(true);
                   }}
@@ -977,380 +979,396 @@ export function WorshipDashboard() {
                   <Plus className="h-3.5 w-3.5" />
                   Nova
                 </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="min-h-0 flex-1 overflow-y-auto px-3 pb-3">
-              {loadingFixedTeams ? (
-                <div className="flex justify-center py-6">
-                  <LoadingSpinner />
-                </div>
-              ) : fixedTeams.length === 0 ? (
-                <div className="rounded-lg border border-dashed p-4 text-center">
-                  <p className="text-sm font-medium text-foreground">
-                    Nenhuma equipe padrão
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Cadastre formações fixas para montar escalas mais rápido.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-1.5">
-                  {sortedFixedTeams.map((preset) => {
-                    const rows = getPresetMemberRows(
-                      preset,
-                      worshipTeam.members || [],
-                      teamFunctions,
-                    );
-                    const vocalSummary = rows
-                      .filter((row) => row.priority <= 1)
-                      .slice(0, 3)
-                      .map((row) => row.memberName)
-                      .join(", ");
+              </AccordionHeader>
+              <AccordionContent className="px-6 pb-4 border-t">
+                {loadingFixedTeams ? (
+                  <div className="flex justify-center py-6">
+                    <LoadingSpinner />
+                  </div>
+                ) : fixedTeams.length === 0 ? (
+                  <div className="rounded-lg border border-dashed p-4 text-center">
+                    <p className="text-sm font-medium text-foreground">
+                      Nenhuma equipe padrão
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Cadastre formações fixas para montar escalas mais rápido.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    {sortedFixedTeams.map((preset) => {
+                      const rows = getPresetMemberRows(
+                        preset,
+                        worshipTeam.members || [],
+                        teamFunctions,
+                      );
+                      const vocalSummary = rows
+                        .filter((row) => row.priority <= 1)
+                        .slice(0, 3)
+                        .map((row) => row.memberName)
+                        .join(", ");
 
-                    return (
-                      <div
-                        key={preset.id}
-                        className="rounded-lg border border-border p-2.5 space-y-1.5 hover:bg-accent/40 transition-colors"
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <button
-                            type="button"
-                            onClick={() => handleCreateSchedule(preset.id)}
-                            className="min-w-0 flex-1 rounded-md text-left transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                            title="Criar escala usando esta equipe padrão"
-                          >
-                            <p className="font-semibold text-[13px] leading-4 truncate">
-                              {preset.nome}
-                            </p>
-                            <p className="text-[11px] leading-4 text-muted-foreground truncate">
-                              {vocalSummary || `${rows.length} membro(s)`}
-                            </p>
-                          </button>
-                          <div className="flex gap-1">
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-6 w-6"
-                              onClick={() => {
-                                setEditingFixedTeam(preset);
-                                setShowFixedTeamModal(true);
-                              }}
+                      return (
+                        <div
+                          key={preset.id}
+                          className="rounded-lg border border-border p-2.5 space-y-1.5 hover:bg-accent/40 transition-colors"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleCreateSchedule(preset.id)}
+                              className="min-w-0 flex-1 rounded-md text-left transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                              title="Criar escala usando esta equipe padrão"
                             >
-                              <Pencil className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-6 w-6 text-destructive hover:text-destructive"
-                              onClick={() => setDeletingFixedTeam(preset)}
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
+                              <p className="font-semibold text-[13px] leading-4 truncate">
+                                {preset.nome}
+                              </p>
+                              <p className="text-[11px] leading-4 text-muted-foreground truncate">
+                                {vocalSummary || `${rows.length} membro(s)`}
+                              </p>
+                            </button>
+                            <div className="flex gap-1">
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-6 w-6"
+                                onClick={() => {
+                                  setEditingFixedTeam(preset);
+                                  setShowFixedTeamModal(true);
+                                }}
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-6 w-6 text-destructive hover:text-destructive"
+                                onClick={() => setDeletingFixedTeam(preset)}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-wrap gap-1">
+                            {rows.slice(0, 2).map((row) => (
+                              <span
+                                key={row.memberId}
+                                className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] leading-4 text-primary"
+                              >
+                                {row.functions[0]?.nome || "Função"}:{" "}
+                                {row.memberName}
+                              </span>
+                            ))}
+                            {rows.length > 2 && (
+                              <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] leading-4 text-muted-foreground">
+                                +{rows.length - 2}
+                              </span>
+                            )}
                           </div>
                         </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
 
-                        <div className="flex flex-wrap gap-1">
-                          {rows.slice(0, 2).map((row) => (
-                            <span
-                              key={row.memberId}
-                              className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] leading-4 text-primary"
-                            >
-                              {row.functions[0]?.nome || "Função"}:{" "}
-                              {row.memberName}
-                            </span>
-                          ))}
-                          {rows.length > 2 && (
-                            <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] leading-4 text-muted-foreground">
-                              +{rows.length - 2}
-                            </span>
-                          )}
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem
+              value="members"
+              className="border rounded-lg overflow-hidden"
+            >
+              <AccordionHeader className="px-6 py-4 hover:no-underline bg-white hover:bg-accent/50">
+                <AccordionTrigger className="flex items-center gap-2 text-base font-medium">
+                  <Users className="h-5 w-5 text-primary" />
+                  Membros da Equipe
+                </AccordionTrigger>
+              </AccordionHeader>
+              <AccordionContent className="px-6 pb-4 border-t">
+                {!worshipTeam.members || worshipTeam.members.length === 0 ? (
+                  <div className="rounded-lg border border-dashed p-3 text-center text-xs text-muted-foreground">
+                    Adicione membros em Gerencial → Equipes
+                  </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    {worshipTeam.members
+                      .filter((member) => member.ativo !== false)
+                      .sort((a, b) =>
+                        (a.user?.nome || "").localeCompare(
+                          b.user?.nome || "",
+                          "pt-BR",
+                          { sensitivity: "base" },
+                        ),
+                      )
+                      .map((member) => (
+                        <div
+                          key={member.id}
+                          className="flex items-center gap-2 rounded-lg border border-border bg-background px-2 py-1.5"
+                        >
+                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                            {member.user?.nome?.charAt(0).toUpperCase() || "?"}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-[13px] font-medium leading-4 text-foreground">
+                              {member.user?.nome || "Membro sem nome"}
+                            </p>
+                            <p className="truncate text-[10px] leading-3 text-muted-foreground">
+                              {member.functions && member.functions.length > 0
+                                ? member.functions
+                                    .map((fn) => fn.nome)
+                                    .join(", ")
+                                : "Sem função"}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="flex min-h-0 flex-col h-[240px] lg:h-[280px]">
-            <CardHeader className="shrink-0 pb-2">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Users className="h-5 w-5 text-primary" />
-                Membros da Equipe
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="min-h-0 flex-1 overflow-y-auto px-3 pb-3">
-              {!worshipTeam.members || worshipTeam.members.length === 0 ? (
-                <div className="rounded-lg border border-dashed p-3 text-center text-xs text-muted-foreground">
-                  Adicione membros em Gerencial → Equipes
-                </div>
-              ) : (
-                <div className="space-y-1.5">
-                  {worshipTeam.members
-                    .filter((member) => member.ativo !== false)
-                    .sort((a, b) =>
-                      (a.user?.nome || "").localeCompare(
-                        b.user?.nome || "",
-                        "pt-BR",
-                        { sensitivity: "base" },
-                      ),
-                    )
-                    .map((member) => (
-                      <div
-                        key={member.id}
-                        className="flex items-center gap-2 rounded-lg border border-border bg-background px-2 py-1.5"
-                      >
-                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-                          {member.user?.nome?.charAt(0).toUpperCase() || "?"}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-[13px] font-medium leading-4 text-foreground">
-                            {member.user?.nome || "Membro sem nome"}
-                          </p>
-                          <p className="truncate text-[10px] leading-3 text-muted-foreground">
-                            {member.functions && member.functions.length > 0
-                              ? member.functions.map((fn) => fn.nome).join(", ")
-                              : "Sem função"}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                      ))}
+                  </div>
+                )}
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
       </div>
 
       {/* Lista de todas as escalas do mês */}
       {schedules.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Calendar className="h-5 w-5 text-primary" />
-              Todas as Escalas —{" "}
-              {format(currentMonth, "MMMM yyyy", { locale: ptBR })}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {monthlyScheduleGroups.map((group) => {
-                const firstSchedule = group.schedules[0];
-                const lastSchedule =
-                  group.schedules[group.schedules.length - 1];
-                const firstDate = parseISO(firstSchedule.date);
-                const lastDate = parseISO(lastSchedule.date);
-                const sameTeam = group.schedules.every(
-                  (schedule) => schedule.title === firstSchedule.title,
-                );
-                const totalMembers = group.schedules.reduce(
-                  (acc, schedule) => acc + (schedule.members?.length || 0),
-                  0,
-                );
-                const totalSongs = group.schedules.reduce(
-                  (acc, schedule) => acc + (schedule.songs?.length || 0),
-                  0,
-                );
+        <Accordion type="single" collapsible className="w-full">
+          <AccordionItem
+            value="all-schedules"
+            className="border rounded-lg overflow-hidden"
+          >
+            <AccordionHeader className="px-6 py-4 hover:no-underline bg-white hover:bg-accent/50">
+              <AccordionTrigger className="flex items-center gap-2 text-base font-medium">
+                <Calendar className="h-5 w-5 text-primary" />
+                Todas as Escalas —{" "}
+                {format(currentMonth, "MMMM yyyy", { locale: ptBR })}
+              </AccordionTrigger>
+            </AccordionHeader>
+            <AccordionContent className="px-6 pb-4 border-t">
+              <div className="space-y-4">
+                {monthlyScheduleGroups.map((group) => {
+                  const firstSchedule = group.schedules[0];
+                  const lastSchedule =
+                    group.schedules[group.schedules.length - 1];
+                  const firstDate = parseISO(firstSchedule.date);
+                  const lastDate = parseISO(lastSchedule.date);
+                  const sameTeam = group.schedules.every(
+                    (schedule) => schedule.title === firstSchedule.title,
+                  );
+                  const totalMembers = group.schedules.reduce(
+                    (acc, schedule) => acc + (schedule.members?.length || 0),
+                    0,
+                  );
+                  const totalSongs = group.schedules.reduce(
+                    (acc, schedule) => acc + (schedule.songs?.length || 0),
+                    0,
+                  );
 
-                return (
-                  <div
-                    key={group.key}
-                    className="overflow-hidden rounded-xl border border-border bg-background shadow-sm"
-                  >
-                    <div className="flex flex-col gap-2 bg-primary/5 p-3 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="min-w-0">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-primary">
-                          Fim de semana
-                        </p>
-                        <h3 className="text-sm font-semibold text-foreground">
-                          {format(firstDate, "dd 'de' MMMM", { locale: ptBR })}
-                          {firstSchedule.date !== lastSchedule.date &&
-                            ` e ${format(lastDate, "dd", { locale: ptBR })}`}
-                        </h3>
-                        {sameTeam && (
-                          <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                            {firstSchedule.title || "Escala sem título"}
+                  return (
+                    <div
+                      key={group.key}
+                      className="overflow-hidden rounded-xl border border-border bg-background shadow-sm"
+                    >
+                      <div className="flex flex-col gap-2 bg-primary/5 p-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+                            Fim de semana
                           </p>
-                        )}
-                      </div>
-                      <div className="flex flex-wrap gap-2 text-xs text-muted-foreground items-center">
-                        <span className="rounded-full bg-background px-2 py-1">
-                          {group.schedules.length} dia(s)
-                        </span>
-                        <span className="rounded-full bg-background px-2 py-1">
-                          {totalMembers} membro(s)
-                        </span>
-                        {totalSongs > 0 && (
+                          <h3 className="text-sm font-semibold text-foreground">
+                            {format(firstDate, "dd 'de' MMMM", {
+                              locale: ptBR,
+                            })}
+                            {firstSchedule.date !== lastSchedule.date &&
+                              ` e ${format(lastDate, "dd", { locale: ptBR })}`}
+                          </h3>
+                          {sameTeam && (
+                            <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                              {firstSchedule.title || "Escala sem título"}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap gap-2 text-xs text-muted-foreground items-center">
                           <span className="rounded-full bg-background px-2 py-1">
-                            {totalSongs} música(s)
+                            {group.schedules.length} dia(s)
                           </span>
-                        )}
-                      </div>
-                      <div className="w-full sm:w-auto sm:ml-4 flex justify-center sm:justify-start">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-8 px-2 text-xs"
-                          id={`export-whatsapp-group-${group.schedules[0]?.id ?? "unknown"}`}
-                          onClick={() => {
-                            const txt = buildMonthlyWhatsAppText(
-                              group.schedules,
-                              parseISO(group.schedules[0].date),
-                              worshipTeam?.nome || "MKD - Louvor",
-                            );
-                            openWhatsAppForText(txt);
-                          }}
-                        >
-                          <FileText className="mr-1 h-3 w-3" />
-                          Exportar WhatsApp
-                        </Button>
-                      </div>
-                    </div>
-
-                    <div className="grid gap-2 p-3 md:grid-cols-2">
-                      {group.schedules.map((schedule) => {
-                        const status =
-                          STATUS_LABELS[schedule.status] || STATUS_LABELS.draft;
-                        const date = parseISO(schedule.date);
-                        const isUserScheduled = isCurrentUserScheduled([
-                          schedule,
-                        ]);
-
-                        return (
-                          <div
-                            key={schedule.id}
-                            className={`group rounded-lg border bg-card transition-colors hover:border-primary/50 hover:bg-accent/40 ${
-                              isUserScheduled
-                                ? "border-emerald-500/70 bg-emerald-500/5 shadow-sm shadow-emerald-500/10 ring-1 ring-emerald-500/25"
-                                : "border-border"
-                            }`}
+                          <span className="rounded-full bg-background px-2 py-1">
+                            {totalMembers} membro(s)
+                          </span>
+                          {totalSongs > 0 && (
+                            <span className="rounded-full bg-background px-2 py-1">
+                              {totalSongs} música(s)
+                            </span>
+                          )}
+                        </div>
+                        <div className="w-full sm:w-auto sm:ml-4 flex justify-center sm:justify-start">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 px-2 text-xs"
+                            id={`export-whatsapp-group-${group.schedules[0]?.id ?? "unknown"}`}
+                            onClick={() => {
+                              const txt = buildMonthlyWhatsAppText(
+                                group.schedules,
+                                parseISO(group.schedules[0].date),
+                                worshipTeam?.nome || "MKD - Louvor",
+                              );
+                              openWhatsAppForText(txt);
+                            }}
                           >
-                            <button
-                              type="button"
-                              onClick={() => handleViewSchedule(schedule)}
-                              className="w-full p-3 text-left"
+                            <FileText className="mr-1 h-3 w-3" />
+                            Exportar WhatsApp
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="grid gap-2 p-3 md:grid-cols-2">
+                        {group.schedules.map((schedule) => {
+                          const status =
+                            STATUS_LABELS[schedule.status] ||
+                            STATUS_LABELS.draft;
+                          const date = parseISO(schedule.date);
+                          const isUserScheduled = isCurrentUserScheduled([
+                            schedule,
+                          ]);
+
+                          return (
+                            <div
+                              key={schedule.id}
+                              className={`group rounded-lg border bg-card transition-colors hover:border-primary/50 hover:bg-accent/40 ${
+                                isUserScheduled
+                                  ? "border-emerald-500/70 bg-emerald-500/5 shadow-sm shadow-emerald-500/10 ring-1 ring-emerald-500/25"
+                                  : "border-border"
+                              }`}
                             >
-                              <div className="flex items-start gap-3">
-                                <div
-                                  className={`relative flex h-14 w-12 shrink-0 flex-col items-center justify-center rounded-lg ${
-                                    isUserScheduled
-                                      ? "bg-emerald-500/15"
-                                      : "bg-primary/10"
-                                  }`}
-                                >
-                                  {isUserScheduled && (
-                                    <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white ring-2 ring-background">
-                                      <BellRing className="h-3 w-3" />
-                                    </span>
-                                  )}
-                                  <span
-                                    className={`text-[10px] font-semibold uppercase ${
+                              <button
+                                type="button"
+                                onClick={() => handleViewSchedule(schedule)}
+                                className="w-full p-3 text-left"
+                              >
+                                <div className="flex items-start gap-3">
+                                  <div
+                                    className={`relative flex h-14 w-12 shrink-0 flex-col items-center justify-center rounded-lg ${
                                       isUserScheduled
-                                        ? "text-emerald-700 dark:text-emerald-300"
-                                        : "text-primary"
+                                        ? "bg-emerald-500/15"
+                                        : "bg-primary/10"
                                     }`}
                                   >
-                                    {format(date, "EEE", { locale: ptBR })}
-                                  </span>
-                                  <span
-                                    className={`text-xl font-bold leading-none ${
-                                      isUserScheduled
-                                        ? "text-emerald-700 dark:text-emerald-300"
-                                        : "text-primary"
-                                    }`}
-                                  >
-                                    {format(date, "dd")}
-                                  </span>
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                  <div className="flex items-center gap-2">
-                                    <p className="truncate text-sm font-semibold text-foreground">
-                                      {schedule.title || "Escala sem título"}
-                                    </p>
                                     {isUserScheduled && (
-                                      <span className="hidden shrink-0 rounded-full bg-emerald-500 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white sm:inline-flex">
-                                        Sua escala
-                                      </span>
-                                    )}
-                                  </div>
-                                  <div className="mt-1 flex flex-wrap items-center gap-2">
-                                    {isUserScheduled && (
-                                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
-                                        <UserCheck className="h-3 w-3" />
-                                        Você
+                                      <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white ring-2 ring-background">
+                                        <BellRing className="h-3 w-3" />
                                       </span>
                                     )}
                                     <span
-                                      className={`rounded-full px-2 py-0.5 text-xs ${status.color}`}
+                                      className={`text-[10px] font-semibold uppercase ${
+                                        isUserScheduled
+                                          ? "text-emerald-700 dark:text-emerald-300"
+                                          : "text-primary"
+                                      }`}
                                     >
-                                      {status.label}
+                                      {format(date, "EEE", { locale: ptBR })}
                                     </span>
-                                    <span className="text-xs text-muted-foreground">
-                                      {schedule.members?.length || 0} membro(s)
-                                      {(schedule.songs?.length || 0) > 0 &&
-                                        ` · ${schedule.songs!.length} música(s)`}
+                                    <span
+                                      className={`text-xl font-bold leading-none ${
+                                        isUserScheduled
+                                          ? "text-emerald-700 dark:text-emerald-300"
+                                          : "text-primary"
+                                      }`}
+                                    >
+                                      {format(date, "dd")}
                                     </span>
                                   </div>
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex items-center gap-2">
+                                      <p className="truncate text-sm font-semibold text-foreground">
+                                        {schedule.title || "Escala sem título"}
+                                      </p>
+                                      {isUserScheduled && (
+                                        <span className="hidden shrink-0 rounded-full bg-emerald-500 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white sm:inline-flex">
+                                          Sua escala
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="mt-1 flex flex-wrap items-center gap-2">
+                                      {isUserScheduled && (
+                                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+                                          <UserCheck className="h-3 w-3" />
+                                          Você
+                                        </span>
+                                      )}
+                                      <span
+                                        className={`rounded-full px-2 py-0.5 text-xs ${status.color}`}
+                                      >
+                                        {status.label}
+                                      </span>
+                                      <span className="text-xs text-muted-foreground">
+                                        {schedule.members?.length || 0}{" "}
+                                        membro(s)
+                                        {(schedule.songs?.length || 0) > 0 &&
+                                          ` · ${schedule.songs!.length} música(s)`}
+                                      </span>
+                                    </div>
+                                  </div>
                                 </div>
-                              </div>
-                            </button>
+                              </button>
 
-                            <div className="flex flex-wrap justify-end gap-1 border-t bg-muted/20 px-2 py-1.5">
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-8 px-2 text-xs"
-                                onClick={() => handleViewSchedule(schedule)}
-                              >
-                                <Eye className="mr-1 h-3 w-3" />
-                                Ver
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-8 px-2 text-xs"
-                                onClick={() => {
-                                  const txt = buildMonthlyWhatsAppText(
-                                    [schedule],
-                                    parseISO(schedule.date),
-                                    worshipTeam?.nome || "MKD - Louvor",
-                                  );
-                                  openWhatsAppForText(txt);
-                                }}
-                              >
-                                <FileText className="mr-1 h-3 w-3" />
-                                Exportar
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-8 px-2 text-xs"
-                                onClick={() => handleEditSchedule(schedule)}
-                              >
-                                <Pencil className="mr-1 h-3 w-3" />
-                                Editar
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-8 px-2 text-xs text-destructive hover:text-destructive"
-                                onClick={() => setDeletingSchedule(schedule)}
-                              >
-                                <Trash2 className="mr-1 h-3 w-3" />
-                                Excluir
-                              </Button>
+                              <div className="flex flex-wrap justify-end gap-1 border-t bg-muted/20 px-2 py-1.5">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-8 px-2 text-xs"
+                                  onClick={() => handleViewSchedule(schedule)}
+                                >
+                                  <Eye className="mr-1 h-3 w-3" />
+                                  Ver
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-8 px-2 text-xs"
+                                  onClick={() => {
+                                    const txt = buildMonthlyWhatsAppText(
+                                      [schedule],
+                                      parseISO(schedule.date),
+                                      worshipTeam?.nome || "MKD - Louvor",
+                                    );
+                                    openWhatsAppForText(txt);
+                                  }}
+                                >
+                                  <FileText className="mr-1 h-3 w-3" />
+                                  Exportar
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-8 px-2 text-xs"
+                                  onClick={() => handleEditSchedule(schedule)}
+                                >
+                                  <Pencil className="mr-1 h-3 w-3" />
+                                  Editar
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-8 px-2 text-xs text-destructive hover:text-destructive"
+                                  onClick={() => setDeletingSchedule(schedule)}
+                                >
+                                  <Trash2 className="mr-1 h-3 w-3" />
+                                  Excluir
+                                </Button>
+                              </div>
                             </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
+                  );
+                })}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       )}
 
       <CreateScheduleModal
