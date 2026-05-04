@@ -27,6 +27,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { KeySelector } from "@/components/ui/key-selector";
+import {
   Plus,
   Search,
   Music2,
@@ -39,6 +45,7 @@ import {
   ArrowUpDown,
   X,
   ChevronDown,
+  SlidersHorizontal,
 } from "lucide-react";
 import { useSongs } from "@/hooks/useSongs";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
@@ -247,19 +254,35 @@ export function SongsPage() {
           )}
         </div>
 
-        <Select value={filterKey} onValueChange={setFilterKey}>
-          <SelectTrigger className="w-32 h-9">
-            <SelectValue placeholder="Tom" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos os tons</SelectItem>
-            {KEYS.map((k) => (
-              <SelectItem key={k} value={k}>
-                {k}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {/* Filtro de tom — seletor visual */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="sm" className="h-9 gap-1.5">
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              {filterKey !== "all" ? (
+                <span className="font-semibold text-primary">{filterKey}</span>
+              ) : (
+                <span>Tom</span>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="start" className="w-72 p-4">
+            <KeySelector
+              value={filterKey === "all" ? "" : filterKey}
+              onChange={(k) => setFilterKey(k || "all")}
+              label="Filtrar por Tom"
+              allowEmpty
+            />
+            {filterKey !== "all" && (
+              <button
+                onClick={() => setFilterKey("all")}
+                className="mt-3 w-full text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Limpar filtro de tom
+              </button>
+            )}
+          </PopoverContent>
+        </Popover>
 
         <Select
           value={`${sortField}-${sortDir}`}

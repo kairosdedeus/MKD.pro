@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { KeySelector } from "@/components/ui/key-selector";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { scheduleService } from "@/services/scheduleService";
@@ -1049,14 +1050,12 @@ export function CreateScheduleModal({
                           className="bg-card"
                         />
                       </div>
-                      <div className="space-y-1">
-                        <Label className="text-xs">Tom Original</Label>
-                        <Input
-                          placeholder="Ex: A, Bb, C#"
+                      <div className="space-y-1 col-span-2">
+                        <KeySelector
                           value={quickSongKey}
-                          onChange={(e) => setQuickSongKey(e.target.value)}
-                          autoComplete="off"
-                          className="bg-card"
+                          onChange={setQuickSongKey}
+                          label="Tom Original"
+                          allowEmpty
                         />
                       </div>
                     </div>
