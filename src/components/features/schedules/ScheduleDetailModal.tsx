@@ -97,7 +97,7 @@ export function ScheduleDetailModal({
 
         <div className="space-y-4 sm:space-y-5 px-5 py-4">
           {/* Info básica */}
-          <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg">
+          <div className="flex items-center gap-3 p-3 bg-primary/5 rounded-xl">
             <div>
               <p className="text-sm text-gray-500">Data</p>
               <p className="font-semibold text-purple-900">

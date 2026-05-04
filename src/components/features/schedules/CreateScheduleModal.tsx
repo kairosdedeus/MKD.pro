@@ -962,7 +962,7 @@ export function CreateScheduleModal({
                         className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-left transition-colors"
                       >
                         <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
-                          <Music className="h-4 w-4 text-purple-600" />
+                          <Music className="h-4 w-4 text-primary" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-sm truncate">
@@ -1078,7 +1078,7 @@ export function CreateScheduleModal({
                       size="sm"
                       onClick={handleQuickCreateSong}
                       disabled={savingQuickSong || !quickSongName.trim()}
-                      className="flex-1 bg-purple-600 hover:bg-purple-700"
+                      className="flex-1"
                     >
                       {savingQuickSong ? "Criando..." : "✅ Criar e Adicionar"}
                     </Button>
@@ -1104,7 +1104,7 @@ export function CreateScheduleModal({
                     >
                       <div className="flex items-center gap-3 w-full sm:w-auto sm:flex-1 min-w-0">
                         <GripVertical className="h-4 w-4 text-gray-300 flex-shrink-0" />
-                        <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-xs font-bold text-purple-700 flex-shrink-0">
+                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary flex-shrink-0">
                           {index + 1}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -1125,7 +1125,9 @@ export function CreateScheduleModal({
                           </span>
                         )}
                         <div className="flex items-center gap-1 flex-1 sm:flex-initial">
-                          <span className="text-xs text-gray-500">Tom:</span>
+                          <span className="text-xs text-muted-foreground">
+                            Tom:
+                          </span>
                           <Input
                             value={song.execution_key || ""}
                             onChange={(e) =>

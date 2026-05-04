@@ -183,15 +183,19 @@ export function CreateTeamModal({
         members.some((m) => m.functionIds.length > 0)
       ) {
         // Buscar os team_members criados
-        const { data: teamMembers } = await import("@/lib/supabaseClient").then(
+        const tmResult = await import("@/lib/supabaseClient").then(
           ({ supabase }) =>
-            supabase
+            (supabase as any)
               .from("team_members")
               .select("id, user_id")
               .eq("team_id", team.id),
         );
+        const teamMembers = (tmResult?.data || []) as Array<{
+          id: string;
+          user_id: string;
+        }>;
 
-        if (teamMembers) {
+        if (teamMembers.length > 0) {
           for (const member of members) {
             if (member.functionIds.length === 0) continue;
             const tm = teamMembers.find(
@@ -374,29 +378,30 @@ export function CreateTeamModal({
                       </div>
 
                       {/* Funções selecionadas (resumo) */}
-                      {isSelected &&
-                        (isLeader
+                      {(() => {
+                        const activeMember = isLeader
                           ? members.find((m) => m.userId === user.id)
-                          : member
-                        )?.functionIds?.length > 0 && (
+                          : member;
+                        if (!activeMember || !activeMember.functionIds?.length)
+                          return null;
+                        return (
                           <div className="flex gap-1 flex-wrap">
-                            {(isLeader
-                              ? members.find((m) => m.userId === user.id)
-                              : member)!.functionIds.map((fId) => {
+                            {activeMember.functionIds.map((fId) => {
                               const fn = teamFunctions.find(
                                 (f) => f.id === fId,
                               );
                               return fn ? (
                                 <span
                                   key={fId}
-                                  className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded"
+                                  className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded"
                                 >
                                   {fn.nome}
                                 </span>
                               ) : null;
                             })}
                           </div>
-                        )}
+                        );
+                      })()}
 
                       {/* Botão expandir funções */}
                       {isSelected && teamFunctions.length > 0 && (
