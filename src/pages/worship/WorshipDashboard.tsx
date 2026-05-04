@@ -189,6 +189,55 @@ function getMembersByFunction(schedule: Schedule, names: string[]) {
     .filter(Boolean);
 }
 
+// ── Exportar fim de semana para WhatsApp ─────────────────────
+function buildWeekendWhatsAppText(
+  group: { key: string; schedules: Schedule[] },
+  teamName: string,
+  presetName?: string,
+): string {
+  const lines: string[] = [];
+
+  // Cabeçalho
+  lines.push(`📍 *${teamName.toUpperCase()}*`);
+  if (presetName) {
+    lines.push(`🎤 *${presetName} - Louvor*`);
+  }
+
+  // Cada escala do fim de semana
+  group.schedules.forEach((schedule) => {
+    const date = parseISO(schedule.date);
+    const dayNum = format(date, "dd");
+    const dayName = format(date, "EEEE", { locale: ptBR }).toUpperCase();
+
+    lines.push("");
+    lines.push(`🗓  ${dayNum} *${dayName}*`);
+
+    const songs = [...(schedule.songs || [])].sort(
+      (a, b) => a.order_index - b.order_index,
+    );
+
+    if (songs.length === 0) {
+      lines.push("_(sem músicas cadastradas)_");
+    } else {
+      songs.forEach((ss, i) => {
+        const song = ss.song;
+        if (!song) return;
+
+        const num = i + 1;
+        const name = song.name;
+        const artist = song.artist ? `(${song.artist})` : "";
+        const key = ss.execution_key || song.original_key || "";
+        const keyStr = key ? `${key},` : "";
+        const link = song.reference_url ? ` (${song.reference_url})` : "";
+
+        lines.push(`${num} - ${name} ${artist} ${keyStr}${link}`.trim());
+      });
+    }
+  });
+
+  return lines.join("\n").trim();
+}
+
 function buildWhatsAppText(
   schedules: Schedule[],
   month: Date,
@@ -396,6 +445,8 @@ export function WorshipDashboard() {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showFixedTeamModal, setShowFixedTeamModal] = useState(false);
   const [showWhatsApp, setShowWhatsApp] = useState(false);
+  const [weekendWhatsAppText, setWeekendWhatsAppText] = useState("");
+  const [showWeekendWhatsApp, setShowWeekendWhatsApp] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(
     null,
   );
@@ -1024,19 +1075,37 @@ export function WorshipDashboard() {
                         isUserInGroup ? "bg-emerald-500/10" : "bg-muted/50",
                       )}
                     >
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-foreground uppercase tracking-wide">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-xs font-bold text-foreground uppercase tracking-wide truncate">
                           Fim de semana · {rangeLabel}
                         </span>
                         {isUserInGroup && (
-                          <span className="text-[10px] font-semibold bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded-full">
-                            ✓ Você está escalado(a)
+                          <span className="flex-shrink-0 text-[10px] font-semibold bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded-full">
+                            ✓ Você
                           </span>
                         )}
                       </div>
-                      <span className="text-xs text-muted-foreground">
-                        {ss.length} escalas
-                      </span>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        {/* Botão exportar semana */}
+                        <button
+                          onClick={() => {
+                            const text = buildWeekendWhatsAppText(
+                              group,
+                              worshipTeam.nome,
+                            );
+                            setWeekendWhatsAppText(text);
+                            setShowWeekendWhatsApp(true);
+                          }}
+                          className="flex items-center gap-1 text-[10px] font-medium text-primary hover:text-primary/80 transition-colors px-1.5 py-0.5 rounded-lg hover:bg-primary/10"
+                          title="Exportar este fim de semana para WhatsApp"
+                        >
+                          <FileText className="h-3 w-3" />
+                          <span className="hidden sm:inline">Exportar</span>
+                        </button>
+                        <span className="text-xs text-muted-foreground">
+                          {ss.length} escalas
+                        </span>
+                      </div>
                     </div>
 
                     {/* Escalas do fim de semana */}
@@ -1275,11 +1344,11 @@ export function WorshipDashboard() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Dialog: exportar WhatsApp */}
+      {/* Dialog: exportar WhatsApp mensal */}
       <Dialog open={showWhatsApp} onOpenChange={setShowWhatsApp}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>📱 Exportar para WhatsApp</DialogTitle>
+            <DialogTitle>📱 Exportar Mês para WhatsApp</DialogTitle>
           </DialogHeader>
           <Textarea
             value={whatsAppText}
@@ -1293,6 +1362,40 @@ export function WorshipDashboard() {
                 try {
                   await navigator.clipboard.writeText(whatsAppText);
                   toast({ title: "Copiado para a área de transferência!" });
+                } catch {
+                  toast({
+                    variant: "destructive",
+                    title: "Não foi possível copiar",
+                  });
+                }
+              }}
+              className="w-full rounded-lg bg-primary text-primary-foreground py-2.5 text-sm font-semibold hover:bg-primary/90 transition-colors"
+            >
+              Copiar texto
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: exportar fim de semana para WhatsApp */}
+      <Dialog open={showWeekendWhatsApp} onOpenChange={setShowWeekendWhatsApp}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>📱 Exportar Fim de Semana</DialogTitle>
+          </DialogHeader>
+          <Textarea
+            value={weekendWhatsAppText}
+            readOnly
+            rows={14}
+            className="font-mono text-xs resize-none"
+          />
+          <DialogFooter>
+            <button
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(weekendWhatsAppText);
+                  toast({ title: "✅ Copiado para a área de transferência!" });
+                  setShowWeekendWhatsApp(false);
                 } catch {
                   toast({
                     variant: "destructive",
