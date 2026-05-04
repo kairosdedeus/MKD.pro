@@ -1247,7 +1247,7 @@ export function WorshipDashboard() {
             )}
           >
             <CalendarDays className="h-4 w-4" />
-            <span>AGENDA</span>
+            <span>ESCALA GERAL</span>
           </div>
         </button>
       </div>

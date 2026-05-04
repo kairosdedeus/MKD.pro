@@ -322,6 +322,7 @@ export function CreateScheduleModal({
   const [quickSongName, setQuickSongName] = useState("");
   const [quickSongArtist, setQuickSongArtist] = useState("");
   const [quickSongKey, setQuickSongKey] = useState("");
+  const [quickSongVS, setQuickSongVS] = useState(false);
   const [savingQuickSong, setSavingQuickSong] = useState(false);
 
   // UI
@@ -434,6 +435,7 @@ export function CreateScheduleModal({
     setQuickSongName("");
     setQuickSongArtist("");
     setQuickSongKey("");
+    setQuickSongVS(false);
     setShowFixedTeamForm(false);
     setFixedTeamName("");
   };
@@ -626,13 +628,14 @@ export function CreateScheduleModal({
         name: quickSongName.trim(),
         artist: quickSongArtist.trim() || undefined,
         original_key: quickSongKey.trim() || undefined,
-        has_virtual_instruments: false,
+        has_virtual_instruments: quickSongVS,
       });
       addSong(newSong);
       toast({ title: `🎵 "${newSong.name}" criada e adicionada!` });
       setQuickSongName("");
       setQuickSongArtist("");
       setQuickSongKey("");
+      setQuickSongVS(false);
       setShowQuickCreate(false);
       setSongSearchQuery("");
     } catch (error) {

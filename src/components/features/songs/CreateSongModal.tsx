@@ -193,7 +193,7 @@ export function CreateSongModal({
             </p>
           </div>
 
-          {/* Instrumentos virtuais */}
+          {/* Instrumentos sampleados */}
           <div className="flex items-center gap-2">
             <Checkbox
               id="hasVI"
@@ -201,7 +201,7 @@ export function CreateSongModal({
               onCheckedChange={(v) => setHasVirtualInstruments(v as boolean)}
             />
             <Label htmlFor="hasVI" className="cursor-pointer">
-              Possui instrumentos virtuais
+              Possui instrumentos sampleados
             </Label>
           </div>
 

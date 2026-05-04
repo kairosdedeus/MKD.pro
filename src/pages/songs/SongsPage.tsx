@@ -1,7 +1,6 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -46,6 +45,7 @@ import {
   X,
   ChevronDown,
   SlidersHorizontal,
+  Laptop,
 } from "lucide-react";
 import { useSongs } from "@/hooks/useSongs";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
@@ -420,9 +420,12 @@ export function SongsPage() {
                     </span>
                   )}
                   {song.has_virtual_instruments && (
-                    <Badge variant="secondary" className="text-xs">
-                      VI
-                    </Badge>
+                    <span
+                      title="Virtual Sample"
+                      className="flex items-center justify-center w-6 h-6 rounded-lg bg-muted text-muted-foreground"
+                    >
+                      <Laptop className="h-3.5 w-3.5" />
+                    </span>
                   )}
                   {song.reference_url && (
                     <a
