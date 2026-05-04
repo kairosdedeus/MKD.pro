@@ -255,8 +255,8 @@ export function EditUserModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-0.5rem)] sm:w-full max-w-2xl h-[98vh] sm:h-auto sm:max-h-[90vh] flex flex-col p-0 gap-0">
-        <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b flex-shrink-0">
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
           <DialogTitle className="text-base sm:text-lg">
             Editar Usuario
           </DialogTitle>
@@ -265,7 +265,7 @@ export function EditUserModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 px-4 sm:px-6 py-4 overflow-y-auto flex-1">
+        <div className="space-y-4 px-5 py-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Nome *</Label>
@@ -380,7 +380,7 @@ export function EditUserModal({
           )}
         </div>
 
-        <DialogFooter className="px-4 sm:px-6 py-3 sm:py-4 border-t bg-gray-50 gap-2 flex-shrink-0 flex-col-reverse sm:flex-row">
+        <DialogFooter>
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}

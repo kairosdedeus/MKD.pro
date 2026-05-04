@@ -737,9 +737,9 @@ export function CreateScheduleModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-0.5rem)] sm:w-[calc(100vw-2rem)] max-w-3xl h-[98vh] sm:h-auto sm:max-h-[92vh] flex flex-col p-0 gap-0">
+      <DialogContent className="max-w-3xl">
         {/* Header */}
-        <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b flex-shrink-0">
+        <DialogHeader>
           <DialogTitle className="text-lg sm:text-xl">
             {isEditing ? "✏️ Editar Escala" : "🎵 Nova Escala"}
           </DialogTitle>
@@ -750,7 +750,7 @@ export function CreateScheduleModal({
             <LoadingSpinner />
           </div>
         ) : (
-          <div className="px-4 sm:px-6 py-4 sm:py-5 space-y-5 sm:space-y-6 overflow-y-auto flex-1">
+          <div className="px-5 py-4 space-y-5 sm:space-y-6">
             {/* ── Informações básicas ── */}
             <div className="space-y-4">
               <div className="space-y-1.5">
@@ -1157,7 +1157,7 @@ export function CreateScheduleModal({
         )}
 
         {/* Footer */}
-        <DialogFooter className="px-4 sm:px-6 py-3 sm:py-4 border-t bg-gray-50 gap-2 flex-shrink-0 flex-col-reverse sm:flex-row">
+        <DialogFooter>
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}

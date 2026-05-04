@@ -85,8 +85,8 @@ export function ScheduleDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-0.5rem)] sm:w-full max-w-[min(calc(100vw-1rem),_720px)] h-[98vh] sm:h-auto sm:max-h-[90vh] flex flex-col p-0 gap-0">
-        <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b flex-shrink-0">
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
             <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600 flex-shrink-0" />
             <span className="truncate">
@@ -95,7 +95,7 @@ export function ScheduleDetailModal({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 sm:space-y-5 px-4 sm:px-6 py-4 sm:py-5 overflow-y-auto flex-1">
+        <div className="space-y-4 sm:space-y-5 px-5 py-4">
           {/* Info básica */}
           <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg">
             <div>
@@ -339,7 +339,7 @@ export function ScheduleDetailModal({
           )}
         </div>
 
-        <DialogFooter className="gap-2 flex flex-col-reverse sm:flex-row px-4 sm:px-6 py-3 sm:py-4 border-t bg-gray-50 flex-shrink-0">
+        <DialogFooter>
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
@@ -382,12 +382,12 @@ export function ScheduleDetailModal({
       </DialogContent>
       {/* WhatsApp preview dialog */}
       <Dialog open={showWhatsAppPreview} onOpenChange={setShowWhatsAppPreview}>
-        <DialogContent className="w-[calc(100vw-0.5rem)] sm:w-full max-w-[min(calc(100vw-1rem),_640px)] flex flex-col p-0 gap-0 h-[98vh] sm:h-auto sm:max-h-[90vh]">
-          <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b flex-shrink-0">
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
             <DialogTitle>Exportar WhatsApp</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-3 px-4 sm:px-6 py-4 overflow-y-auto flex-1">
+          <div className="space-y-3 px-5 py-4">
             <textarea
               className="w-full h-64 sm:h-80 p-3 border rounded resize-y font-mono text-xs sm:text-sm"
               value={whatsAppText}
@@ -398,7 +398,7 @@ export function ScheduleDetailModal({
             </p>
           </div>
 
-          <DialogFooter className="gap-2 flex-col-reverse sm:flex-row px-4 sm:px-6 py-3 sm:py-4 border-t bg-gray-50 flex-shrink-0">
+          <DialogFooter className="gap-2 flex-col-reverse sm:flex-row">
             <Button
               variant="outline"
               onClick={() => setShowWhatsAppPreview(false)}

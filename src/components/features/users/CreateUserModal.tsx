@@ -293,20 +293,13 @@ export function CreateUserModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-0.5rem)] sm:w-full max-w-2xl h-[98vh] sm:h-auto sm:max-h-[90vh] flex flex-col p-0 gap-0">
-        <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b flex-shrink-0">
-          <DialogTitle className="text-base sm:text-lg">
-            Novo Usuario
-          </DialogTitle>
-          <DialogDescription className="text-sm">
-            Crie um novo usuario no sistema
-          </DialogDescription>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Novo Usuário</DialogTitle>
+          <DialogDescription>Crie um novo usuário no sistema</DialogDescription>
         </DialogHeader>
 
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="space-y-4 px-4 sm:px-6 py-4 overflow-y-auto flex-1"
-        >
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 px-5 py-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="nome">Nome *</Label>
@@ -446,7 +439,7 @@ export function CreateUserModal({
             </div>
           )}
 
-          <DialogFooter className="px-4 sm:px-6 py-3 sm:py-4 border-t bg-gray-50 gap-2 flex-shrink-0 flex-col-reverse sm:flex-row">
+          <DialogFooter>
             <Button
               type="button"
               variant="outline"

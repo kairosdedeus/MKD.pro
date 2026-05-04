@@ -108,12 +108,12 @@ export function CreateSongModal({
         onOpenChange(o);
       }}
     >
-      <DialogContent className="w-[calc(100vw-0.5rem)] sm:w-full max-w-lg max-h-[92vh] flex flex-col p-0 gap-0">
-        <DialogHeader className="px-5 pt-5 pb-4 border-b flex-shrink-0">
+      <DialogContent>
+        <DialogHeader>
           <DialogTitle>🎵 Nova Música</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 px-5 py-4 overflow-y-auto flex-1">
+        <div className="space-y-4 px-5 py-4">
           {/* Nome */}
           <div className="space-y-1.5">
             <Label>Nome da Música *</Label>
@@ -217,7 +217,7 @@ export function CreateSongModal({
           </div>
         </div>
 
-        <DialogFooter className="px-5 py-4 border-t bg-muted/30 flex-shrink-0 gap-2">
+        <DialogFooter className="gap-2">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}

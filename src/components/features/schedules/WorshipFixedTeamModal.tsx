@@ -176,7 +176,7 @@ export function WorshipFixedTeamModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-1rem)] max-w-3xl max-h-[92vh] overflow-y-auto p-4 sm:p-6">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>
             {isEditing ? "Editar equipe padrão" : "Nova equipe padrão"}
@@ -290,6 +290,7 @@ export function WorshipFixedTeamModal({
         </div>
 
         <DialogFooter className="gap-2 sm:gap-0">
+          {" "}
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
