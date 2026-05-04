@@ -1,24 +1,19 @@
 ﻿import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-  AccordionHeader,
-} from "@/components/ui/accordion";
 import {
   Plus,
   Calendar,
-  CalendarCheck2,
+  CalendarDays,
   Users,
-  Music,
+  Music2,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Pencil,
   Trash2,
   Eye,
+  FileText,
+  Home,
   Mic2,
   Guitar,
   Drum,
@@ -27,10 +22,6 @@ import {
   MonitorPlay,
   Volume2,
   Circle,
-  UserCheck,
-  Copy,
-  FileText,
-  BellRing,
 } from "lucide-react";
 import { CreateScheduleModal } from "@/components/features/schedules/CreateScheduleModal";
 import { ScheduleDetailModal } from "@/components/features/schedules/ScheduleDetailModal";
@@ -79,7 +70,9 @@ import { Schedule, TeamFunction, TeamMember } from "@/types";
 import { useToast } from "@/components/ui/use-toast";
 import { isGerencial, isLeader } from "@/lib/permissions";
 import { useAuthStore } from "@/stores/authStore";
+import { cn } from "@/lib/utils";
 
+// ── Utilitários ──────────────────────────────────────────────
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   draft: { label: "Rascunho", color: "bg-muted text-muted-foreground" },
   published: {
@@ -89,227 +82,320 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   completed: { label: "Concluída", color: "bg-primary/15 text-primary" },
 };
 
-function normalizeText(value: string) {
-  return value
+function normalizeText(v: string) {
+  return v
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
 }
 
-function getFunctionPriority(functionName: string) {
-  const normalized = normalizeText(functionName);
-  if (normalized === "vocal") return 0;
-  if (normalized === "backvocal" || normalized === "back vocal") return 1;
+function getFunctionPriority(name: string) {
+  const n = normalizeText(name);
+  if (n === "vocal") return 0;
+  if (n === "backvocal" || n === "back vocal") return 1;
   return 2;
 }
 
-function getFunctionIcon(functionName: string) {
-  const normalized = normalizeText(functionName);
-  if (
-    normalized === "vocal" ||
-    normalized === "backvocal" ||
-    normalized === "back vocal"
-  )
-    return Mic2;
-  if (normalized === "guitarra" || normalized === "baixo") return Guitar;
-  if (normalized === "bateria") return Drum;
-  if (normalized === "teclado") return Piano;
-  if (normalized === "som") return Volume2;
-  if (normalized === "projecao") return MonitorPlay;
-  if (normalized === "transmissao") return Radio;
+function getFunctionIcon(name: string) {
+  const n = normalizeText(name);
+  if (n === "vocal" || n === "backvocal" || n === "back vocal") return Mic2;
+  if (n === "guitarra" || n === "baixo") return Guitar;
+  if (n === "bateria") return Drum;
+  if (n === "teclado") return Piano;
+  if (n === "som") return Volume2;
+  if (n === "projecao") return MonitorPlay;
+  if (n === "transmissao") return Radio;
   return Circle;
+}
+
+function sortByPriority<
+  T extends { priority: number; name?: string; memberName?: string },
+>(arr: T[]) {
+  return arr.sort((a, b) => {
+    const d = a.priority - b.priority;
+    if (d !== 0) return d;
+    const na = a.name || a.memberName || "";
+    const nb = b.name || b.memberName || "";
+    return na.localeCompare(nb, "pt-BR", { sensitivity: "base" });
+  });
+}
+
+function getScheduleMemberRows(schedule: Schedule) {
+  return sortByPriority(
+    (schedule.members || []).map((m) => {
+      const fns = [...(m.functions || [])].sort(
+        (a, b) => getFunctionPriority(a.nome) - getFunctionPriority(b.nome),
+      );
+      return {
+        id: m.id,
+        name: m.team_member?.user?.nome || "Membro removido",
+        functions: fns,
+        priority: fns[0] ? getFunctionPriority(fns[0].nome) : 99,
+      };
+    }),
+  );
 }
 
 function getPresetMemberRows(
   preset: WorshipFixedTeam,
-  teamMembers: TeamMember[] = [],
-  teamFunctions: TeamFunction[] = [],
+  members: TeamMember[] = [],
+  fns: TeamFunction[] = [],
 ) {
-  return Array.from(
-    new Set(preset.members.map((member) => member.team_member_id)),
-  )
-    .map((memberId) => {
-      const member = teamMembers.find((item) => item.id === memberId);
-      const functions = preset.members
-        .filter((item) => item.team_member_id === memberId)
-        .map((item) => teamFunctions.find((fn) => fn.id === item.function_id))
-        .filter(Boolean) as TeamFunction[];
-
-      const sortedFunctions = functions.sort((a, b) => {
-        const priorityDiff =
-          getFunctionPriority(a.nome) - getFunctionPriority(b.nome);
-        if (priorityDiff !== 0) return priorityDiff;
-        return a.nome.localeCompare(b.nome, "pt-BR", { sensitivity: "base" });
-      });
-
-      return {
-        memberId,
-        memberName: member?.user?.nome || "Membro removido",
-        functions: sortedFunctions,
-        priority: sortedFunctions[0]
-          ? getFunctionPriority(sortedFunctions[0].nome)
-          : 99,
-      };
-    })
-    .sort((a, b) => {
-      const priorityDiff = a.priority - b.priority;
-      if (priorityDiff !== 0) return priorityDiff;
-      return a.memberName.localeCompare(b.memberName, "pt-BR", {
-        sensitivity: "base",
-      });
-    });
-}
-
-function getScheduleMemberRows(schedule: Schedule) {
-  return (schedule.members || [])
-    .map((member) => {
-      const functions = [...(member.functions || [])].sort((a, b) => {
-        const priorityDiff =
-          getFunctionPriority(a.nome) - getFunctionPriority(b.nome);
-        if (priorityDiff !== 0) return priorityDiff;
-        return a.nome.localeCompare(b.nome, "pt-BR", { sensitivity: "base" });
-      });
-
-      return {
-        id: member.id,
-        name: member.team_member?.user?.nome || "Membro removido",
-        functions,
-        priority: functions[0] ? getFunctionPriority(functions[0].nome) : 99,
-      };
-    })
-    .sort((a, b) => {
-      const priorityDiff = a.priority - b.priority;
-      if (priorityDiff !== 0) return priorityDiff;
-      return a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" });
-    });
+  return sortByPriority(
+    Array.from(new Set(preset.members.map((m) => m.team_member_id))).map(
+      (id) => {
+        const member = members.find((m) => m.id === id);
+        const functions = preset.members
+          .filter((m) => m.team_member_id === id)
+          .map((m) => fns.find((f) => f.id === m.function_id))
+          .filter(Boolean) as TeamFunction[];
+        const sorted = functions.sort(
+          (a, b) => getFunctionPriority(a.nome) - getFunctionPriority(b.nome),
+        );
+        return {
+          memberId: id,
+          memberName: member?.user?.nome || "Membro removido",
+          functions: sorted,
+          priority: sorted[0] ? getFunctionPriority(sorted[0].nome) : 99,
+        };
+      },
+    ),
+  );
 }
 
 function groupSchedulesByWeekend(schedules: Schedule[]) {
   const groups = new Map<string, Schedule[]>();
-
-  schedules.forEach((schedule) => {
-    const date = parseISO(schedule.date);
-    const weekday = getDay(date);
-    const groupDate = weekday === 0 ? addDays(date, -1) : date;
-    const key = format(groupDate, "yyyy-MM-dd");
-    const current = groups.get(key) || [];
-    current.push(schedule);
-    groups.set(key, current);
+  schedules.forEach((s) => {
+    const date = parseISO(s.date);
+    const wd = getDay(date);
+    const key = format(wd === 0 ? addDays(date, -1) : date, "yyyy-MM-dd");
+    groups.set(key, [...(groups.get(key) || []), s]);
   });
-
   return Array.from(groups.entries())
-    .map(([key, groupSchedules]) => ({
+    .map(([key, ss]) => ({
       key,
-      schedules: groupSchedules.sort((a, b) => a.date.localeCompare(b.date)),
+      schedules: ss.sort((a, b) => a.date.localeCompare(b.date)),
     }))
     .sort((a, b) => a.key.localeCompare(b.key));
 }
 
-function getScheduleMembersByFunction(
-  schedule: Schedule,
-  functionNames: string[],
-) {
-  const wanted = functionNames.map(normalizeText);
+function getMembersByFunction(schedule: Schedule, names: string[]) {
+  const wanted = names.map(normalizeText);
   return (schedule.members || [])
-    .filter((member) =>
-      (member.functions || []).some((fn) =>
-        wanted.includes(normalizeText(fn.nome)),
-      ),
+    .filter((m) =>
+      (m.functions || []).some((f) => wanted.includes(normalizeText(f.nome))),
     )
-    .map((member) => member.team_member?.user?.nome || "Membro removido")
+    .map((m) => (m.team_member?.user?.nome || "").trim().split(/\s+/)[0])
     .filter(Boolean);
 }
 
-function getFirstName(name: string) {
-  return name.trim().split(/\s+/)[0] || name;
-}
-
-function formatWhatsAppNames(names: string[]) {
-  return names.length > 0 ? names.map(getFirstName).join(", ") : "-";
-}
-
-function buildMonthlyWhatsAppText(
+function buildWhatsAppText(
   schedules: Schedule[],
-  monthDate: Date,
+  month: Date,
   teamName: string,
 ) {
-  const month = format(monthDate, "MMMM", { locale: ptBR }).toUpperCase();
-  const year = format(monthDate, "yyyy");
+  const mo = format(month, "MMMM", { locale: ptBR }).toUpperCase();
+  const yr = format(month, "yyyy");
   const groups = groupSchedulesByWeekend(schedules).filter(
-    (group) => group.schedules.length > 0,
+    (g) => g.schedules.length > 0,
   );
-
   const lines = [
-    `🎶 ESCALA – ${month} / ${year}`,
+    `🎶 ESCALA – ${mo} / ${yr}`,
     "",
     `📍 ${teamName.toUpperCase()}`,
     "",
   ];
-
-  groups.forEach((group, index) => {
-    const orderedSchedules = [...group.schedules].sort((a, b) =>
-      a.date.localeCompare(b.date),
-    );
-    const mainSchedule = orderedSchedules[0];
-
-    // Cabeçalho do fim de semana
-    const firstDate = parseISO(orderedSchedules[0].date);
-    const lastDate = parseISO(
-      orderedSchedules[orderedSchedules.length - 1].date,
-    );
-
-    if (orderedSchedules.length === 1) {
-      const dayName = format(firstDate, "EEEE", { locale: ptBR });
-      const dayNumber = format(firstDate, "dd");
-      lines.push(`🗓 *${dayName.toUpperCase()}* - ${dayNumber}`);
-    } else {
-      const firstDay = format(firstDate, "EEEE", { locale: ptBR });
-      const firstNum = format(firstDate, "dd");
-      const lastDay = format(lastDate, "EEEE", { locale: ptBR });
-      const lastNum = format(lastDate, "dd");
+  groups.forEach((g, i) => {
+    const ss = g.schedules;
+    const main = ss[0];
+    const first = parseISO(ss[0].date);
+    const last = parseISO(ss[ss.length - 1].date);
+    if (ss.length === 1) {
       lines.push(
-        `🗓 *${firstDay.toUpperCase()}* ${firstNum} e *${lastDay.toUpperCase()}* ${lastNum}`,
+        `🗓 *${format(first, "EEEE", { locale: ptBR }).toUpperCase()}* - ${format(first, "dd")}`,
+      );
+    } else {
+      lines.push(
+        `🗓 *${format(first, "EEEE", { locale: ptBR }).toUpperCase()}* ${format(first, "dd")} e *${format(last, "EEEE", { locale: ptBR }).toUpperCase()}* ${format(last, "dd")}`,
       );
     }
-
-    // Membros da equipe
-    const ministers = getScheduleMembersByFunction(mainSchedule, ["Vocal"]);
-    const backs = getScheduleMembersByFunction(mainSchedule, [
-      "BackVocal",
-      "Back Vocal",
-    ]);
-    const drummer = getScheduleMembersByFunction(mainSchedule, ["Bateria"]);
-    const bassist = getScheduleMembersByFunction(mainSchedule, ["Baixo"]);
-    const keyboardist = getScheduleMembersByFunction(mainSchedule, ["Teclado"]);
-    const guitarist = getScheduleMembersByFunction(mainSchedule, ["Guitarra"]);
-
+    const fmt = (ns: string[]) => (ns.length ? ns.join(", ") : "-");
     lines.push(
-      `🎙️ Ministros: ${formatWhatsAppNames(ministers)}`,
-      `🎙️ Backs: ${formatWhatsAppNames(backs)}`,
-      `🎹 Teclado: ${formatWhatsAppNames(keyboardist)}`,
-      `🎸 Guitarra: ${formatWhatsAppNames(guitarist)}`,
-      `🥁 Bateria: ${formatWhatsAppNames(drummer)}`,
-      `🎸 Baixo: ${formatWhatsAppNames(bassist)}`,
+      `🎙️ Ministros: ${fmt(getMembersByFunction(main, ["Vocal"]))}`,
+      `🎙️ Backs: ${fmt(getMembersByFunction(main, ["BackVocal", "Back Vocal"]))}`,
+      `🎹 Teclado: ${fmt(getMembersByFunction(main, ["Teclado"]))}`,
+      `🎸 Guitarra: ${fmt(getMembersByFunction(main, ["Guitarra"]))}`,
+      `🥁 Bateria: ${fmt(getMembersByFunction(main, ["Bateria"]))}`,
+      `🎸 Baixo: ${fmt(getMembersByFunction(main, ["Baixo"]))}`,
     );
-
-    // Separador entre fins de semana (exceto no último)
-    if (index < groups.length - 1) {
-      lines.push("");
-    }
+    if (i < groups.length - 1) lines.push("");
   });
-
   return lines.join("\n").trim();
 }
 
+// ── Componente: Seção colapsável ─────────────────────────────
+interface CollapsibleSectionProps {
+  icon: React.ElementType;
+  title: string;
+  badge?: string | number;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}
+
+function CollapsibleSection({
+  icon: Icon,
+  title,
+  badge,
+  action,
+  children,
+  defaultOpen = false,
+}: CollapsibleSectionProps) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="rounded-2xl border border-border bg-card overflow-hidden">
+      {/* Header dividido: botão de toggle + action separados para evitar button>button */}
+      <div className="flex w-full items-center gap-3 px-4 py-4">
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          className="flex flex-1 items-center gap-3 text-left min-w-0"
+        >
+          <Icon className="h-5 w-5 text-primary flex-shrink-0" />
+          <span className="flex-1 font-semibold text-foreground truncate">
+            {title}
+          </span>
+          {badge !== undefined && (
+            <span className="text-xs text-muted-foreground mr-1">{badge}</span>
+          )}
+          <ChevronDown
+            className={cn(
+              "h-4 w-4 text-muted-foreground transition-transform duration-200 flex-shrink-0",
+              open && "rotate-180",
+            )}
+          />
+        </button>
+        {action && <div className="flex-shrink-0">{action}</div>}
+      </div>
+      {open && (
+        <div className="border-t border-border px-4 pb-4 pt-3">{children}</div>
+      )}
+    </div>
+  );
+}
+
+// ── Componente: Card de escala compacto ──────────────────────
+function ScheduleCard({
+  schedule,
+  onView,
+  onEdit,
+  onDelete,
+  canManage,
+}: {
+  schedule: Schedule;
+  onView: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+  canManage: boolean;
+}) {
+  const status = STATUS_LABELS[schedule.status] || STATUS_LABELS.draft;
+  const memberRows = getScheduleMemberRows(schedule);
+  const songs = [...(schedule.songs || [])].sort(
+    (a, b) => a.order_index - b.order_index,
+  );
+
+  return (
+    <div className="rounded-xl border border-border bg-background p-3 space-y-2">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-sm truncate">
+            {schedule.title ||
+              format(parseISO(schedule.date), "EEEE", { locale: ptBR })}
+          </p>
+          <span
+            className={cn(
+              "inline-block text-xs px-2 py-0.5 rounded-full mt-0.5",
+              status.color,
+            )}
+          >
+            {status.label}
+          </span>
+        </div>
+        <div className="flex gap-1 flex-shrink-0">
+          <button
+            onClick={onView}
+            className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Eye className="h-3.5 w-3.5" />
+          </button>
+          {canManage && (
+            <>
+              <button
+                onClick={onEdit}
+                className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </button>
+              <button
+                onClick={onDelete}
+                className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Membros */}
+      {memberRows.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {memberRows.map((row) => {
+            const FnIcon = row.functions[0]
+              ? getFunctionIcon(row.functions[0].nome)
+              : Circle;
+            return (
+              <div
+                key={row.id}
+                className="flex items-center gap-1 bg-muted rounded-full px-2 py-0.5"
+              >
+                <FnIcon className="h-3 w-3 text-primary flex-shrink-0" />
+                <span className="text-xs font-medium">
+                  {row.name.split(" ")[0]}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Músicas */}
+      {songs.length > 0 && (
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Music2 className="h-3 w-3" />
+          <span>
+            {songs
+              .map((s) => s.song?.name)
+              .filter(Boolean)
+              .join(" · ")}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Componente principal ─────────────────────────────────────
 export function WorshipDashboard() {
   const { toast } = useToast();
   const { user, profiles } = useAuthStore();
+  const [tab, setTab] = useState<"inicio" | "agenda">("inicio");
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showFixedTeamModal, setShowFixedTeamModal] = useState(false);
-  const [showWhatsAppExport, setShowWhatsAppExport] = useState(false);
+  const [showWhatsApp, setShowWhatsApp] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(
     null,
   );
@@ -327,35 +413,34 @@ export function WorshipDashboard() {
   const [deletingFixedTeam, setDeletingFixedTeam] =
     useState<WorshipFixedTeam | null>(null);
   const [loadingFixedTeams, setLoadingFixedTeams] = useState(false);
-  const [generatingMonthlySchedule, setGeneratingMonthlySchedule] =
-    useState(false);
+  const [generating, setGenerating] = useState(false);
 
   const { teams, loading: loadingTeams } = useTeams();
   const worshipTeam = teams.find((t) => t.team_type?.codigo === "louvor");
-
   const {
     schedules,
     loading: loadingSchedules,
     refetch,
   } = useSchedules(worshipTeam?.id || "", currentMonth);
-
   const deleteSchedule = useDeleteSchedule();
 
-  const loadFixedTeamData = async () => {
-    if (!worshipTeam) return;
+  const canManage =
+    !!user &&
+    (isGerencial(profiles || []) || isLeader(profiles || [], "louvor"));
 
+  const loadFixedTeams = async () => {
+    if (!worshipTeam) return;
     try {
       setLoadingFixedTeams(true);
-      const [presets, functions] = await Promise.all([
+      const [presets, fns] = await Promise.all([
         worshipFixedTeamService.getByTeamId(worshipTeam.id),
         worshipTeam.team_type_id
           ? teamService.getTeamFunctions(worshipTeam.team_type_id)
           : Promise.resolve([]),
       ]);
       setFixedTeams(presets);
-      setTeamFunctions(functions);
-    } catch (error) {
-      console.error("Erro ao carregar equipes padrão:", error);
+      setTeamFunctions(fns);
+    } catch {
       toast({
         variant: "destructive",
         title: "Erro ao carregar equipes padrão",
@@ -366,66 +451,27 @@ export function WorshipDashboard() {
   };
 
   useEffect(() => {
-    loadFixedTeamData();
+    loadFixedTeams();
   }, [worshipTeam?.id]);
 
+  // Calendário
   const monthStart = startOfMonth(currentMonth);
-  const startWeekday = getDay(monthStart);
-  const calendarDays = Array.from({ length: 42 }, (_, index) =>
-    addDays(monthStart, index - startWeekday),
+  const calDays = Array.from({ length: 42 }, (_, i) =>
+    addDays(monthStart, i - getDay(monthStart)),
   );
-
-  const getSchedulesForDay = (day: Date) =>
+  const getDaySchedules = (day: Date) =>
     schedules.filter((s) => s.date === format(day, "yyyy-MM-dd"));
-
-  const isCurrentUserScheduled = (daySchedules: Schedule[]) =>
-    !!user &&
-    daySchedules.some((schedule) =>
-      (schedule.members || []).some(
-        (member) =>
-          member.team_member?.user_id === user.id ||
-          member.team_member?.user?.id === user.id,
-      ),
-    );
-
-  const selectedDaySchedules = schedules.filter(
-    (s) => s.date === format(selectedDate, "yyyy-MM-dd"),
-  );
-  const monthlyScheduleGroups = groupSchedulesByWeekend(schedules);
-  const monthlyWhatsAppText = buildMonthlyWhatsAppText(
+  const selectedDaySchedules = getDaySchedules(selectedDate);
+  const whatsAppText = buildWhatsAppText(
     schedules,
     currentMonth,
-    worshipTeam?.nome || "MKD - Louvor",
+    worshipTeam?.nome || "Louvor",
   );
-  const [whatsAppPreviewText, setWhatsAppPreviewText] = useState("");
 
-  const openWhatsAppForText = (text: string) => {
-    setWhatsAppPreviewText(text);
-    setShowWhatsAppExport(true);
-  };
-
-  const canManage =
-    !!user &&
-    (isGerencial(profiles || []) || isLeader(profiles || [], "louvor"));
-
-  const sortedFixedTeams = [...fixedTeams].sort((a, b) => {
-    const firstA =
-      getPresetMemberRows(a, worshipTeam?.members || [], teamFunctions)[0]
-        ?.memberName || a.nome;
-    const firstB =
-      getPresetMemberRows(b, worshipTeam?.members || [], teamFunctions)[0]
-        ?.memberName || b.nome;
-    const firstDiff = firstA.localeCompare(firstB, "pt-BR", {
-      sensitivity: "base",
-    });
-    if (firstDiff !== 0) return firstDiff;
-    return a.nome.localeCompare(b.nome, "pt-BR", { sensitivity: "base" });
-  });
-
-  const handleDeleteSchedule = async (schedule: Schedule) => {
+  const handleDelete = async (schedule: Schedule) => {
     try {
       await deleteSchedule.mutateAsync(schedule.id);
-      toast({ title: "Escala excluída com sucesso!" });
+      toast({ title: "Escala excluída!" });
       setDeletingSchedule(null);
       refetch();
     } catch {
@@ -438,1008 +484,497 @@ export function WorshipDashboard() {
       await worshipFixedTeamService.delete(preset.id);
       toast({ title: "Equipe padrão excluída!" });
       setDeletingFixedTeam(null);
-      loadFixedTeamData();
+      loadFixedTeams();
     } catch {
       toast({ variant: "destructive", title: "Erro ao excluir equipe padrão" });
     }
   };
 
-  const handleViewSchedule = (schedule: Schedule) => {
-    setSelectedSchedule(schedule);
-    setShowDetailModal(true);
-  };
-
-  const handleEditSchedule = (schedule: Schedule) => {
-    setSelectedFixedTeamId(null);
-    setEditingSchedule(schedule);
-    setShowCreateModal(true);
-  };
-
-  const handleCreateSchedule = (fixedTeamId?: string) => {
-    setEditingSchedule(null);
-    setSelectedFixedTeamId(fixedTeamId || null);
-    setShowCreateModal(true);
-  };
-
-  const handleCalendarDayDoubleClick = (day: Date) => {
-    const dateText = format(day, "yyyy-MM-dd");
-    const daySchedule = schedules.find(
-      (schedule) => schedule.date === dateText,
-    );
-
-    setSelectedDate(day);
-
-    if (daySchedule) {
-      handleEditSchedule(daySchedule);
-      return;
-    }
-
-    handleCreateSchedule();
-  };
-
-  const handleGenerateMonthlySchedule = async () => {
+  const handleGenerateMonthly = async () => {
     if (!worshipTeam) return;
-
     try {
-      setGeneratingMonthlySchedule(true);
+      setGenerating(true);
       const result = await worshipAutoScheduleService.generateMonthly(
         worshipTeam.id,
         currentMonth,
       );
-
       toast({
-        title: "Escala mensal gerada",
-        description: `${result.created} escala(s) criada(s). ${result.skipped} data(s) ja tinham escala e foram preservadas.`,
+        title: "Escala mensal gerada!",
+        description: `${result.created} criada(s), ${result.skipped} preservada(s).`,
       });
-
       refetch();
-    } catch (error: any) {
+    } catch (e: any) {
       toast({
         variant: "destructive",
         title: "Erro ao gerar escala mensal",
-        description:
-          error.message ||
-          "Revise equipes padrao, membros e funcoes do Louvor.",
+        description: e.message,
       });
     } finally {
-      setGeneratingMonthlySchedule(false);
+      setGenerating(false);
     }
   };
 
-  const handleCopyWhatsAppExport = async () => {
-    try {
-      await navigator.clipboard.writeText(
-        whatsAppPreviewText || monthlyWhatsAppText,
-      );
-      toast({ title: "Escala copiada para o WhatsApp!" });
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Não foi possível copiar",
-        description: "Selecione o texto e copie manualmente.",
-      });
-    }
-  };
-
-  if (loadingTeams) {
+  if (loadingTeams)
     return (
       <div className="flex items-center justify-center h-64">
         <LoadingSpinner />
       </div>
     );
-  }
-
-  if (!worshipTeam) {
+  if (!worshipTeam)
     return (
       <EmptyState
         icon={Users}
         title="Equipe de Louvor não encontrada"
-        description="Crie uma equipe do tipo Louvor em Gerencial → Equipes para começar."
+        description="Crie uma equipe do tipo Louvor em Gerencial → Equipes."
       />
     );
-  }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0">
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-            🎵 Louvor
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            {worshipTeam.nome} · {worshipTeam.members?.length || 0} membros
-          </p>
+    <div className="pb-20 space-y-3">
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">🎵 Louvor</h1>
+          <p className="text-xs text-muted-foreground">{worshipTeam.nome}</p>
         </div>
-        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-end">
-          {canManage && (
-            <>
-              <Button
-                variant="outline"
-                className="gap-2 w-full sm:w-auto"
-                id="export-whatsapp-monthly"
-                onClick={() => openWhatsAppForText(monthlyWhatsAppText)}
-                disabled={schedules.length === 0}
+        {canManage && (
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 text-xs h-8"
+              onClick={() => setShowWhatsApp(true)}
+              disabled={schedules.length === 0}
+            >
+              <FileText className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Exportar WhatsApp</span>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 text-xs h-8"
+              onClick={handleGenerateMonthly}
+              disabled={generating}
+            >
+              <CalendarDays className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">
+                {generating ? "Gerando..." : "Gerar Escala Mensal"}
+              </span>
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {/* ── Calendário ── */}
+      <div className="rounded-2xl border border-border bg-card p-4">
+        {/* Navegação do mês */}
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <p className="text-lg font-bold capitalize">
+              {format(currentMonth, "MMMM yyyy", { locale: ptBR })}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Selecione a data desejada
+            </p>
+          </div>
+          <div className="flex gap-1">
+            <button
+              onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+              className="p-1.5 rounded-lg hover:bg-accent transition-colors"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+              className="p-1.5 rounded-lg hover:bg-accent transition-colors"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* Dias da semana */}
+        <div className="grid grid-cols-7 mb-1">
+          {["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"].map((d) => (
+            <div
+              key={d}
+              className="text-center text-[10px] font-bold text-muted-foreground py-1"
+            >
+              {d}
+            </div>
+          ))}
+        </div>
+
+        {/* Grid de dias */}
+        <div className="grid grid-cols-7 gap-0.5">
+          {calDays.map((day) => {
+            const daySchedules = getDaySchedules(day);
+            const isSelected = isSameDay(day, selectedDate);
+            const isToday = isSameDay(day, new Date());
+            const inMonth = isSameMonth(day, currentMonth);
+            const hasSchedule = daySchedules.length > 0;
+
+            return (
+              <button
+                key={day.toISOString()}
+                onClick={() => {
+                  setSelectedDate(day);
+                  if (!inMonth) setCurrentMonth(day);
+                }}
+                className={cn(
+                  "relative flex flex-col items-center justify-center h-10 rounded-xl text-sm font-semibold transition-all",
+                  isSelected && "bg-primary text-primary-foreground shadow-md",
+                  !isSelected &&
+                    hasSchedule &&
+                    "border border-primary/60 text-foreground hover:bg-primary/10",
+                  !isSelected &&
+                    !hasSchedule &&
+                    inMonth &&
+                    "text-foreground hover:bg-accent",
+                  !isSelected && !inMonth && "text-muted-foreground/30",
+                  isToday && !isSelected && "ring-2 ring-primary/30",
+                )}
               >
-                <FileText className="h-4 w-4" />
-                Exportar WhatsApp
-              </Button>
-              <Button
-                variant="outline"
-                className="gap-2 w-full sm:w-auto"
-                onClick={handleGenerateMonthlySchedule}
-                disabled={generatingMonthlySchedule}
-              >
-                <Calendar className="h-4 w-4" />
-                {generatingMonthlySchedule
-                  ? "Gerando..."
-                  : "Gerar Escala Mensal Automática"}
-              </Button>
-            </>
-          )}
-          <Button
-            className="gap-2 w-full sm:w-auto"
-            onClick={() => handleCreateSchedule()}
+                <span>{format(day, "d")}</span>
+                {hasSchedule && (
+                  <span
+                    className={cn(
+                      "absolute top-1 right-1 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-bold",
+                      isSelected
+                        ? "bg-primary-foreground text-primary"
+                        : "bg-primary text-primary-foreground",
+                    )}
+                  >
+                    {daySchedules.length}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── Conteúdo por aba ── */}
+      {tab === "inicio" && (
+        <div className="space-y-3">
+          {/* Escala do dia selecionado */}
+          <CollapsibleSection
+            icon={Calendar}
+            title={`Escala de ${format(selectedDate, "dd 'de' MMMM", { locale: ptBR })}`}
+            badge={
+              selectedDaySchedules.length > 0
+                ? `${selectedDaySchedules.length}`
+                : undefined
+            }
+            defaultOpen
+            action={
+              canManage ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs gap-1 mr-1"
+                  onClick={() => {
+                    setEditingSchedule(null);
+                    setSelectedFixedTeamId(null);
+                    setShowCreateModal(true);
+                  }}
+                >
+                  <Plus className="h-3 w-3" /> Nova
+                </Button>
+              ) : undefined
+            }
           >
-            <Plus className="h-4 w-4" />
-            Nova Escala
-          </Button>
-        </div>
-      </div>
-
-      {/* Stats rápidas */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-        {[
-          {
-            icon: Calendar,
-            value: schedules.length,
-            label: "Escalas este mês",
-          },
-          {
-            icon: Users,
-            value: worshipTeam.members?.length || 0,
-            label: "Membros na equipe",
-          },
-          {
-            icon: Music,
-            value: schedules.reduce(
-              (acc, s) => acc + (s.songs?.length || 0),
-              0,
-            ),
-            label: "Músicas escaladas",
-          },
-        ].map(({ icon: Icon, value, label }) => (
-          <Card key={label}>
-            <CardContent className="pt-4 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <Icon className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-foreground">{value}</p>
-                  <p className="text-xs text-muted-foreground">{label}</p>
-                </div>
+            {loadingSchedules ? (
+              <div className="flex justify-center py-4">
+                <LoadingSpinner />
               </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:items-stretch">
-        <div className="lg:col-span-2 space-y-6">
-          {/* Calendário */}
-          <Card className="border-primary/10 bg-gradient-to-br from-primary/5 via-background to-background shadow-sm">
-            <CardHeader className="px-5 pb-2 pt-5">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <CardTitle className="text-2xl capitalize tracking-tight">
-                    {format(currentMonth, "MMMM yyyy", { locale: ptBR })}
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground mt-0.5">
-                    Selecione a data desejada
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="secondary"
-                    size="icon"
-                    className="h-9 w-9 rounded-xl"
-                    onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="icon"
-                    className="h-9 w-9 rounded-xl"
-                    onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="hidden h-9 rounded-xl sm:inline-flex"
-                    onClick={() => {
-                      const today = new Date();
-                      setCurrentMonth(today);
-                      setSelectedDate(today);
+            ) : selectedDaySchedules.length === 0 ? (
+              <div className="text-center py-4 text-sm text-muted-foreground">
+                Nenhuma escala neste dia
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {selectedDaySchedules.map((s) => (
+                  <ScheduleCard
+                    key={s.id}
+                    schedule={s}
+                    canManage={canManage}
+                    onView={() => {
+                      setSelectedSchedule(s);
+                      setShowDetailModal(true);
                     }}
-                  >
-                    Hoje
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="px-4 pb-10 pt-2 sm:px-5">
-              <div className="grid grid-cols-7 px-1">
-                {["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"].map((d) => (
-                  <div
-                    key={d}
-                    className="text-center text-[11px] font-bold tracking-wide text-muted-foreground py-3"
-                  >
-                    {d}
-                  </div>
+                    onEdit={() => {
+                      setEditingSchedule(s);
+                      setShowCreateModal(true);
+                    }}
+                    onDelete={() => setDeletingSchedule(s)}
+                  />
                 ))}
               </div>
+            )}
+          </CollapsibleSection>
 
-              <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
-                {calendarDays.map((day) => {
-                  const daySchedules = getSchedulesForDay(day);
-                  const isSelected = isSameDay(day, selectedDate);
-                  const isToday = isSameDay(day, new Date());
-                  const hasSchedule = daySchedules.length > 0;
-                  const isUserScheduled = isCurrentUserScheduled(daySchedules);
-                  const inCurrentMonth = isSameMonth(day, currentMonth);
-
-                  return (
-                    <button
-                      key={day.toISOString()}
-                      onClick={() => {
-                        setSelectedDate(day);
-                        if (!inCurrentMonth) setCurrentMonth(day);
-                      }}
-                      onDoubleClick={() => handleCalendarDayDoubleClick(day)}
-                      className={`
-                      group relative flex h-11 items-center justify-center overflow-hidden rounded-xl border text-sm font-bold transition-all sm:h-12
-                      ${isSelected ? "border-primary bg-primary text-primary-foreground shadow-md shadow-primary/20" : ""}
-                      ${!isSelected && hasSchedule ? "border-primary/80 bg-background text-foreground hover:bg-primary/10 hover:shadow-sm" : ""}
-                      ${!isSelected && !hasSchedule && inCurrentMonth ? "border-transparent text-foreground hover:border-primary/30 hover:bg-background/80" : ""}
-                      ${!isSelected && !inCurrentMonth ? "border-transparent text-muted-foreground/30 hover:text-muted-foreground" : ""}
-                      ${isToday && !isSelected ? "ring-2 ring-primary/30" : ""}
-                    `}
-                      title={`${format(day, "dd 'de' MMMM", { locale: ptBR })}${hasSchedule ? ` - ${daySchedules.length} escala(s)` : ""}${isUserScheduled ? " - você está escalado(a)" : ""}`}
-                    >
-                      <span className="relative z-10">{format(day, "d")}</span>
-                      {hasSchedule && (
-                        <span
-                          className={`absolute right-1 top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full ring-2 ring-background shadow-sm transition-transform group-hover:scale-110 sm:right-1.5 sm:top-1.5 sm:h-4 sm:w-4 ${
-                            isSelected
-                              ? "bg-primary-foreground text-primary"
-                              : "bg-primary text-primary-foreground shadow-primary/20"
-                          }`}
-                          aria-label={`${daySchedules.length} escala(s) neste dia`}
-                        >
-                          <CalendarCheck2 className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                        </span>
-                      )}
-                      {isUserScheduled && (
-                        <span
-                          className="absolute bottom-1 right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-emerald-500 text-white ring-2 ring-background shadow-sm shadow-emerald-500/20 transition-transform group-hover:scale-110 sm:bottom-1.5 sm:right-1.5 sm:h-4 sm:w-4"
-                          aria-label="Você está escalado(a) neste dia"
-                        >
-                          <UserCheck className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Escalas do dia selecionado */}
-          <Card>
-            <CardHeader className="pb-2">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <CardTitle className="text-base">
-                  Escala de{" "}
-                  {format(selectedDate, "dd 'de' MMMM", { locale: ptBR })}
-                </CardTitle>
-                {!loadingSchedules && selectedDaySchedules.length === 0 && (
-                  <Button
-                    size="sm"
-                    className="h-8 gap-1 self-start sm:self-auto"
-                    onClick={() => handleCreateSchedule()}
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                    Escala
-                  </Button>
-                )}
-                {!loadingSchedules && selectedDaySchedules.length > 0 && (
-                  <div className="flex gap-2 self-start sm:self-auto">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-8 gap-1"
-                      onClick={() =>
-                        handleEditSchedule(selectedDaySchedules[0])
-                      }
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                      Editar
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-8 gap-1 border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                      onClick={() =>
-                        setDeletingSchedule(selectedDaySchedules[0])
-                      }
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                      Excluir
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent>
-              {loadingSchedules ? (
-                <div className="flex justify-center py-8">
+          {/* Equipes padrão */}
+          {canManage && (
+            <CollapsibleSection
+              icon={Music2}
+              title="Equipes padrão"
+              badge={fixedTeams.length > 0 ? fixedTeams.length : undefined}
+              action={
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs gap-1 mr-1"
+                  onClick={() => {
+                    setEditingFixedTeam(null);
+                    setShowFixedTeamModal(true);
+                  }}
+                >
+                  <Plus className="h-3 w-3" /> Nova
+                </Button>
+              }
+            >
+              {loadingFixedTeams ? (
+                <div className="flex justify-center py-4">
                   <LoadingSpinner />
                 </div>
-              ) : selectedDaySchedules.length === 0 ? (
-                <div className="rounded-lg border border-dashed py-8 text-center">
-                  <Calendar className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" />
-                  <p className="text-sm font-medium text-foreground">
-                    Nenhuma escala neste dia
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Escolha uma equipe padrão ou crie a escala manualmente.
-                  </p>
-                </div>
+              ) : fixedTeams.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-3">
+                  Nenhuma equipe padrão cadastrada
+                </p>
               ) : (
-                <div className="grid gap-4">
-                  {selectedDaySchedules.map((schedule) => {
-                    const status =
-                      STATUS_LABELS[schedule.status] || STATUS_LABELS.draft;
-                    const memberRows = getScheduleMemberRows(schedule);
-                    const songs = [...(schedule.songs || [])].sort(
-                      (a, b) => a.order_index - b.order_index,
+                <div className="space-y-2">
+                  {fixedTeams.map((preset) => {
+                    const rows = getPresetMemberRows(
+                      preset,
+                      worshipTeam.members || [],
+                      teamFunctions,
                     );
-
                     return (
                       <div
-                        key={schedule.id}
-                        className="overflow-hidden rounded-xl border border-border bg-background shadow-sm transition-colors hover:border-primary/40"
+                        key={preset.id}
+                        className="rounded-xl border border-border bg-background p-3"
                       >
-                        <button
-                          type="button"
-                          onClick={() => handleViewSchedule(schedule)}
-                          className="w-full bg-primary/5 p-3 text-left transition-colors hover:bg-primary/10"
-                        >
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0">
-                              <p className="font-semibold text-sm text-foreground truncate">
-                                {schedule.title || "Escala sem título"}
-                              </p>
-                              <p className="text-xs text-muted-foreground mt-0.5">
-                                {memberRows.length} membro(s) · {songs.length}{" "}
-                                música(s)
-                              </p>
-                            </div>
-                            <span
-                              className={`shrink-0 text-xs px-2 py-0.5 rounded-full ${status.color}`}
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="font-semibold text-sm">{preset.nome}</p>
+                          <div className="flex gap-1">
+                            <button
+                              onClick={() => {
+                                setEditingFixedTeam(preset);
+                                setShowFixedTeamModal(true);
+                              }}
+                              className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
                             >
-                              {status.label}
-                            </span>
-                          </div>
-                        </button>
-
-                        <div className="space-y-3 p-3">
-                          {memberRows.length > 0 && (
-                            <div className="space-y-2">
-                              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                <Users className="h-3.5 w-3.5" />
-                                Equipe Escalada
-                              </div>
-                              <div className="rounded-lg border border-gray-200 overflow-hidden divide-y divide-gray-100">
-                                {(() => {
-                                  // Agrupar membros por função
-                                  const functionMap = new Map<
-                                    string,
-                                    {
-                                      functionName: string;
-                                      members: string[];
-                                      icon: any;
-                                      color: string;
-                                    }
-                                  >();
-
-                                  schedule.members?.forEach((member) => {
-                                    const memberName =
-                                      member.team_member?.user?.nome ||
-                                      "Sem nome";
-                                    (member.functions || []).forEach((fn) => {
-                                      if (!functionMap.has(fn.id)) {
-                                        functionMap.set(fn.id, {
-                                          functionName: fn.nome,
-                                          members: [],
-                                          icon: getFunctionIcon(fn.nome),
-                                          color:
-                                            getFunctionPriority(fn.nome) === 0
-                                              ? "bg-purple-50 text-purple-700"
-                                              : getFunctionPriority(fn.nome) ===
-                                                  1
-                                                ? "bg-fuchsia-50 text-fuchsia-700"
-                                                : "bg-gray-50 text-gray-700",
-                                        });
-                                      }
-                                      functionMap
-                                        .get(fn.id)!
-                                        .members.push(memberName);
-                                    });
-                                  });
-
-                                  // Ordenar funções
-                                  const sortedFunctions = Array.from(
-                                    functionMap.values(),
-                                  ).sort((a, b) => {
-                                    const priorityA = getFunctionPriority(
-                                      a.functionName,
-                                    );
-                                    const priorityB = getFunctionPriority(
-                                      b.functionName,
-                                    );
-                                    if (priorityA !== priorityB)
-                                      return priorityA - priorityB;
-                                    return a.functionName.localeCompare(
-                                      b.functionName,
-                                    );
-                                  });
-
-                                  return sortedFunctions.map(
-                                    ({
-                                      functionName,
-                                      members,
-                                      icon: Icon,
-                                      color,
-                                    }) => (
-                                      <div
-                                        key={functionName}
-                                        className={`flex items-center gap-3 px-3 py-2 ${color}`}
-                                      >
-                                        <div className="flex items-center gap-1.5 w-24 flex-shrink-0">
-                                          <Icon className="h-3.5 w-3.5" />
-                                          <span className="text-xs font-semibold">
-                                            {functionName}
-                                          </span>
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                          <p className="text-xs text-foreground truncate">
-                                            {members.join(", ")}
-                                          </p>
-                                        </div>
-                                      </div>
-                                    ),
-                                  );
-                                })()}
-                              </div>
-                            </div>
-                          )}
-
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                              <Music className="h-3.5 w-3.5" />
-                              Músicas
-                            </div>
-                            {songs.length > 0 ? (
-                              <div className="grid gap-1.5 sm:grid-cols-2">
-                                {songs.slice(0, 5).map((song, index) => (
-                                  <div
-                                    key={song.id}
-                                    className="flex items-center gap-2 rounded-lg bg-muted/30 px-2 py-1.5"
-                                  >
-                                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">
-                                      {index + 1}
-                                    </span>
-                                    <div className="min-w-0 flex-1">
-                                      <p className="truncate text-xs font-medium text-foreground">
-                                        {song.song?.name || "Música removida"}
-                                      </p>
-                                      {(song.execution_key ||
-                                        song.song?.artist) && (
-                                        <p className="truncate text-[11px] text-muted-foreground">
-                                          {song.song?.artist || "Sem artista"}
-                                          {song.execution_key &&
-                                            ` · Tom ${song.execution_key}`}
-                                        </p>
-                                      )}
-                                    </div>
-                                  </div>
-                                ))}
-                                {songs.length > 5 && (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleViewSchedule(schedule)}
-                                    className="text-xs font-medium text-primary hover:underline"
-                                  >
-                                    Ver mais {songs.length - 5} música(s)
-                                  </button>
-                                )}
-                              </div>
-                            ) : (
-                              <div className="rounded-lg border border-dashed p-3 text-center text-xs text-muted-foreground">
-                                Nenhuma música adicionada nesta escala
-                              </div>
-                            )}
+                              <Pencil className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              onClick={() => setDeletingFixedTeam(preset)}
+                              className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
                           </div>
                         </div>
-
-                        <div className="flex flex-wrap gap-1 border-t bg-muted/20 p-2">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-8 px-2 text-xs"
-                            onClick={() => handleViewSchedule(schedule)}
-                          >
-                            <Eye className="h-3 w-3 mr-1" /> Detalhes
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-8 px-2 text-xs"
-                            onClick={() => handleEditSchedule(schedule)}
-                          >
-                            <Pencil className="h-3 w-3 mr-1" /> Editar
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-8 px-2 text-xs text-destructive hover:text-destructive"
-                            onClick={() => setDeletingSchedule(schedule)}
-                          >
-                            <Trash2 className="h-3 w-3 mr-1" /> Excluir
-                          </Button>
+                        <div className="flex flex-wrap gap-1.5">
+                          {rows.map((row) => {
+                            const FnIcon = row.functions[0]
+                              ? getFunctionIcon(row.functions[0].nome)
+                              : Circle;
+                            return (
+                              <div
+                                key={row.memberId}
+                                className="flex items-center gap-1 bg-muted rounded-full px-2 py-0.5"
+                              >
+                                <FnIcon className="h-3 w-3 text-primary flex-shrink-0" />
+                                <span className="text-xs font-medium">
+                                  {row.memberName.split(" ")[0]}
+                                </span>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     );
                   })}
                 </div>
               )}
-            </CardContent>
-          </Card>
-        </div>
+            </CollapsibleSection>
+          )}
 
-        <div className="flex min-h-0 flex-col gap-4">
-          <Accordion type="single" collapsible className="w-full">
-            <AccordionItem
-              value="fixed-teams"
-              className="border rounded-lg overflow-hidden"
-            >
-              <AccordionHeader className="flex items-center justify-between px-6 py-4 hover:no-underline bg-card hover:bg-accent/50">
-                <AccordionTrigger className="flex items-center gap-2 text-base font-medium">
-                  <Music className="h-5 w-5 text-primary" />
-                  Equipes padrão
-                </AccordionTrigger>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 gap-1"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setEditingFixedTeam(null);
-                    setShowFixedTeamModal(true);
-                  }}
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  Nova
-                </Button>
-              </AccordionHeader>
-              <AccordionContent className="px-6 pb-4 border-t">
-                {loadingFixedTeams ? (
-                  <div className="flex justify-center py-6">
-                    <LoadingSpinner />
-                  </div>
-                ) : fixedTeams.length === 0 ? (
-                  <div className="rounded-lg border border-dashed p-4 text-center">
-                    <p className="text-sm font-medium text-foreground">
-                      Nenhuma equipe padrão
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Cadastre formações fixas para montar escalas mais rápido.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-1.5">
-                    {sortedFixedTeams.map((preset) => {
-                      const rows = getPresetMemberRows(
-                        preset,
-                        worshipTeam.members || [],
-                        teamFunctions,
-                      );
-                      const vocalSummary = rows
-                        .filter((row) => row.priority <= 1)
-                        .slice(0, 3)
-                        .map((row) => row.memberName)
-                        .join(", ");
-
-                      return (
-                        <div
-                          key={preset.id}
-                          className="rounded-lg border border-border p-2.5 space-y-1.5 hover:bg-accent/40 transition-colors"
-                        >
-                          <div className="flex items-start justify-between gap-2">
-                            <button
-                              type="button"
-                              onClick={() => handleCreateSchedule(preset.id)}
-                              className="min-w-0 flex-1 rounded-md text-left transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                              title="Criar escala usando esta equipe padrão"
-                            >
-                              <p className="font-semibold text-[13px] leading-4 truncate">
-                                {preset.nome}
-                              </p>
-                              <p className="text-[11px] leading-4 text-muted-foreground truncate">
-                                {vocalSummary || `${rows.length} membro(s)`}
-                              </p>
-                            </button>
-                            <div className="flex gap-1">
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-6 w-6"
-                                onClick={() => {
-                                  setEditingFixedTeam(preset);
-                                  setShowFixedTeamModal(true);
-                                }}
-                              >
-                                <Pencil className="h-3.5 w-3.5" />
-                              </Button>
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-6 w-6 text-destructive hover:text-destructive"
-                                onClick={() => setDeletingFixedTeam(preset)}
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </Button>
-                            </div>
-                          </div>
-
-                          <div className="flex flex-wrap gap-1">
-                            {rows.slice(0, 2).map((row) => (
-                              <span
-                                key={row.memberId}
-                                className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] leading-4 text-primary"
-                              >
-                                {row.functions[0]?.nome || "Função"}:{" "}
-                                {row.memberName}
-                              </span>
-                            ))}
-                            {rows.length > 2 && (
-                              <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] leading-4 text-muted-foreground">
-                                +{rows.length - 2}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-
-          <Accordion type="single" collapsible className="w-full">
-            <AccordionItem
-              value="members"
-              className="border rounded-lg overflow-hidden"
-            >
-              <AccordionHeader className="px-6 py-4 hover:no-underline bg-card hover:bg-accent/50">
-                <AccordionTrigger className="flex items-center gap-2 text-base font-medium">
-                  <Users className="h-5 w-5 text-primary" />
-                  Membros da Equipe
-                </AccordionTrigger>
-              </AccordionHeader>
-              <AccordionContent className="px-6 pb-4 border-t">
-                {!worshipTeam.members || worshipTeam.members.length === 0 ? (
-                  <div className="rounded-lg border border-dashed p-3 text-center text-xs text-muted-foreground">
-                    Adicione membros em Gerencial → Equipes
-                  </div>
-                ) : (
-                  <div className="space-y-1.5">
-                    {worshipTeam.members
-                      .filter((member) => member.ativo !== false)
-                      .sort((a, b) =>
-                        (a.user?.nome || "").localeCompare(
-                          b.user?.nome || "",
-                          "pt-BR",
-                          { sensitivity: "base" },
-                        ),
-                      )
-                      .map((member) => (
-                        <div
-                          key={member.id}
-                          className="flex items-center gap-2 rounded-lg border border-border bg-background px-2 py-1.5"
-                        >
-                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-                            {member.user?.nome?.charAt(0).toUpperCase() || "?"}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-[13px] font-medium leading-4 text-foreground">
-                              {member.user?.nome || "Membro sem nome"}
-                            </p>
-                            <p className="truncate text-[10px] leading-3 text-muted-foreground">
-                              {member.functions && member.functions.length > 0
-                                ? member.functions
-                                    .map((fn) => fn.nome)
-                                    .join(", ")
-                                : "Sem função"}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                )}
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        </div>
-      </div>
-
-      {/* Lista de todas as escalas do mês */}
-      {schedules.length > 0 && (
-        <Accordion type="single" collapsible className="w-full">
-          <AccordionItem
-            value="all-schedules"
-            className="border rounded-lg overflow-hidden"
+          {/* Membros da equipe */}
+          <CollapsibleSection
+            icon={Users}
+            title="Membros da Equipe"
+            badge={worshipTeam.members?.length || 0}
           >
-            <AccordionHeader className="px-6 py-4 hover:no-underline bg-card hover:bg-accent/50">
-              <AccordionTrigger className="flex items-center gap-2 text-base font-medium">
-                <Calendar className="h-5 w-5 text-primary" />
-                Todas as Escalas —{" "}
-                {format(currentMonth, "MMMM yyyy", { locale: ptBR })}
-              </AccordionTrigger>
-            </AccordionHeader>
-            <AccordionContent className="px-6 pb-4 border-t">
-              <div className="space-y-4">
-                {monthlyScheduleGroups.map((group) => {
-                  const firstSchedule = group.schedules[0];
-                  const lastSchedule =
-                    group.schedules[group.schedules.length - 1];
-                  const firstDate = parseISO(firstSchedule.date);
-                  const lastDate = parseISO(lastSchedule.date);
-                  const sameTeam = group.schedules.every(
-                    (schedule) => schedule.title === firstSchedule.title,
-                  );
-                  const totalMembers = group.schedules.reduce(
-                    (acc, schedule) => acc + (schedule.members?.length || 0),
-                    0,
-                  );
-                  const totalSongs = group.schedules.reduce(
-                    (acc, schedule) => acc + (schedule.songs?.length || 0),
-                    0,
-                  );
-
-                  return (
-                    <div
-                      key={group.key}
-                      className="overflow-hidden rounded-xl border border-border bg-background shadow-sm"
-                    >
-                      <div className="flex flex-col gap-2 bg-primary/5 p-3 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="min-w-0">
-                          <p className="text-xs font-semibold uppercase tracking-wide text-primary">
-                            Fim de semana
-                          </p>
-                          <h3 className="text-sm font-semibold text-foreground">
-                            {format(firstDate, "dd 'de' MMMM", {
-                              locale: ptBR,
-                            })}
-                            {firstSchedule.date !== lastSchedule.date &&
-                              ` e ${format(lastDate, "dd", { locale: ptBR })}`}
-                          </h3>
-                          {sameTeam && (
-                            <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                              {firstSchedule.title || "Escala sem título"}
-                            </p>
-                          )}
-                        </div>
-                        <div className="flex flex-wrap gap-2 text-xs text-muted-foreground items-center">
-                          <span className="rounded-full bg-background px-2 py-1">
-                            {group.schedules.length} dia(s)
-                          </span>
-                          <span className="rounded-full bg-background px-2 py-1">
-                            {totalMembers} membro(s)
-                          </span>
-                          {totalSongs > 0 && (
-                            <span className="rounded-full bg-background px-2 py-1">
-                              {totalSongs} música(s)
-                            </span>
-                          )}
-                        </div>
-                        <div className="w-full sm:w-auto sm:ml-4 flex justify-center sm:justify-start">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-8 px-2 text-xs"
-                            id={`export-whatsapp-group-${group.schedules[0]?.id ?? "unknown"}`}
-                            onClick={() => {
-                              const txt = buildMonthlyWhatsAppText(
-                                group.schedules,
-                                parseISO(group.schedules[0].date),
-                                worshipTeam?.nome || "MKD - Louvor",
-                              );
-                              openWhatsAppForText(txt);
-                            }}
-                          >
-                            <FileText className="mr-1 h-3 w-3" />
-                            Exportar WhatsApp
-                          </Button>
-                        </div>
-                      </div>
-
-                      <div className="grid gap-2 p-3 md:grid-cols-2">
-                        {group.schedules.map((schedule) => {
-                          const status =
-                            STATUS_LABELS[schedule.status] ||
-                            STATUS_LABELS.draft;
-                          const date = parseISO(schedule.date);
-                          const isUserScheduled = isCurrentUserScheduled([
-                            schedule,
-                          ]);
-
-                          return (
-                            <div
-                              key={schedule.id}
-                              className={`group rounded-lg border bg-card transition-colors hover:border-primary/50 hover:bg-accent/40 ${
-                                isUserScheduled
-                                  ? "border-emerald-500/70 bg-emerald-500/5 shadow-sm shadow-emerald-500/10 ring-1 ring-emerald-500/25"
-                                  : "border-border"
-                              }`}
-                            >
-                              <button
-                                type="button"
-                                onClick={() => handleViewSchedule(schedule)}
-                                className="w-full p-3 text-left"
-                              >
-                                <div className="flex items-start gap-3">
-                                  <div
-                                    className={`relative flex h-14 w-12 shrink-0 flex-col items-center justify-center rounded-lg ${
-                                      isUserScheduled
-                                        ? "bg-emerald-500/15"
-                                        : "bg-primary/10"
-                                    }`}
-                                  >
-                                    {isUserScheduled && (
-                                      <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white ring-2 ring-background">
-                                        <BellRing className="h-3 w-3" />
-                                      </span>
-                                    )}
-                                    <span
-                                      className={`text-[10px] font-semibold uppercase ${
-                                        isUserScheduled
-                                          ? "text-emerald-700 dark:text-emerald-300"
-                                          : "text-primary"
-                                      }`}
-                                    >
-                                      {format(date, "EEE", { locale: ptBR })}
-                                    </span>
-                                    <span
-                                      className={`text-xl font-bold leading-none ${
-                                        isUserScheduled
-                                          ? "text-emerald-700 dark:text-emerald-300"
-                                          : "text-primary"
-                                      }`}
-                                    >
-                                      {format(date, "dd")}
-                                    </span>
-                                  </div>
-                                  <div className="min-w-0 flex-1">
-                                    <div className="flex items-center gap-2">
-                                      <p className="truncate text-sm font-semibold text-foreground">
-                                        {schedule.title || "Escala sem título"}
-                                      </p>
-                                      {isUserScheduled && (
-                                        <span className="hidden shrink-0 rounded-full bg-emerald-500 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white sm:inline-flex">
-                                          Sua escala
-                                        </span>
-                                      )}
-                                    </div>
-                                    <div className="mt-1 flex flex-wrap items-center gap-2">
-                                      {isUserScheduled && (
-                                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
-                                          <UserCheck className="h-3 w-3" />
-                                          Você
-                                        </span>
-                                      )}
-                                      <span
-                                        className={`rounded-full px-2 py-0.5 text-xs ${status.color}`}
-                                      >
-                                        {status.label}
-                                      </span>
-                                      <span className="text-xs text-muted-foreground">
-                                        {schedule.members?.length || 0}{" "}
-                                        membro(s)
-                                        {(schedule.songs?.length || 0) > 0 &&
-                                          ` · ${schedule.songs!.length} música(s)`}
-                                      </span>
-                                    </div>
-                                  </div>
-                                </div>
-                              </button>
-
-                              <div className="flex flex-wrap justify-end gap-1 border-t bg-muted/20 px-2 py-1.5">
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-8 px-2 text-xs"
-                                  onClick={() => handleViewSchedule(schedule)}
-                                >
-                                  <Eye className="mr-1 h-3 w-3" />
-                                  Ver
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-8 px-2 text-xs"
-                                  onClick={() => {
-                                    const txt = buildMonthlyWhatsAppText(
-                                      [schedule],
-                                      parseISO(schedule.date),
-                                      worshipTeam?.nome || "MKD - Louvor",
-                                    );
-                                    openWhatsAppForText(txt);
-                                  }}
-                                >
-                                  <FileText className="mr-1 h-3 w-3" />
-                                  Exportar
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-8 px-2 text-xs"
-                                  onClick={() => handleEditSchedule(schedule)}
-                                >
-                                  <Pencil className="mr-1 h-3 w-3" />
-                                  Editar
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-8 px-2 text-xs text-destructive hover:text-destructive"
-                                  onClick={() => setDeletingSchedule(schedule)}
-                                >
-                                  <Trash2 className="mr-1 h-3 w-3" />
-                                  Excluir
-                                </Button>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
+            {!worshipTeam.members || worshipTeam.members.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-3">
+                Nenhum membro na equipe
+              </p>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                {worshipTeam.members.map((m) => (
+                  <div
+                    key={m.id}
+                    className="flex items-center gap-2 p-2 rounded-xl bg-muted/50"
+                  >
+                    <div className="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center text-xs font-bold text-primary flex-shrink-0">
+                      {m.user?.nome?.charAt(0).toUpperCase() || "?"}
                     </div>
-                  );
-                })}
+                    <div className="min-w-0">
+                      <p className="text-xs font-medium truncate">
+                        {m.user?.nome?.split(" ")[0]}
+                      </p>
+                      {m.functions && m.functions.length > 0 && (
+                        <p className="text-[10px] text-muted-foreground truncate">
+                          {m.functions.map((f) => f.nome).join(", ")}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
+            )}
+          </CollapsibleSection>
+        </div>
       )}
 
+      {/* ── Aba Agenda ── */}
+      {tab === "agenda" && (
+        <CollapsibleSection
+          icon={CalendarDays}
+          title={`Todas as Escalas — ${format(currentMonth, "MMMM yyyy", { locale: ptBR })}`}
+          badge={schedules.length}
+          defaultOpen
+        >
+          {loadingSchedules ? (
+            <div className="flex justify-center py-4">
+              <LoadingSpinner />
+            </div>
+          ) : schedules.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              Nenhuma escala este mês
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {schedules.map((s) => {
+                const status = STATUS_LABELS[s.status] || STATUS_LABELS.draft;
+                return (
+                  <div
+                    key={s.id}
+                    className="flex items-center gap-3 p-3 rounded-xl border border-border hover:bg-accent transition-colors cursor-pointer"
+                    onClick={() => {
+                      setSelectedSchedule(s);
+                      setShowDetailModal(true);
+                    }}
+                  >
+                    <div className="text-center min-w-[40px]">
+                      <p className="text-[10px] text-muted-foreground uppercase">
+                        {format(parseISO(s.date), "EEE", { locale: ptBR })}
+                      </p>
+                      <p className="text-lg font-bold text-primary leading-none">
+                        {format(parseISO(s.date), "dd")}
+                      </p>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">
+                        {s.title || "Escala sem título"}
+                      </p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span
+                          className={cn(
+                            "text-xs px-1.5 py-0.5 rounded-full",
+                            status.color,
+                          )}
+                        >
+                          {status.label}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {s.members?.length || 0} membros
+                        </span>
+                      </div>
+                    </div>
+                    {canManage && (
+                      <div
+                        className="flex gap-1"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <button
+                          onClick={() => {
+                            setEditingSchedule(s);
+                            setShowCreateModal(true);
+                          }}
+                          className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={() => setDeletingSchedule(s)}
+                          className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CollapsibleSection>
+      )}
+
+      {/* ── Bottom Navigation ── */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 flex border-t border-border bg-background/95 backdrop-blur-sm md:left-56">
+        <button
+          onClick={() => setTab("inicio")}
+          className={cn(
+            "flex flex-1 flex-col items-center justify-center gap-1 py-3 text-xs font-semibold transition-all",
+            tab === "inicio"
+              ? "text-foreground"
+              : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <div
+            className={cn(
+              "flex items-center gap-2 px-5 py-2 rounded-full transition-all",
+              tab === "inicio" && "bg-foreground text-background",
+            )}
+          >
+            <Home className="h-4 w-4" />
+            <span>INÍCIO</span>
+          </div>
+        </button>
+        <button
+          onClick={() => setTab("agenda")}
+          className={cn(
+            "flex flex-1 flex-col items-center justify-center gap-1 py-3 text-xs font-semibold transition-all",
+            tab === "agenda"
+              ? "text-foreground"
+              : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <div
+            className={cn(
+              "flex items-center gap-2 px-5 py-2 rounded-full transition-all",
+              tab === "agenda" && "bg-foreground text-background",
+            )}
+          >
+            <CalendarDays className="h-4 w-4" />
+            <span>AGENDA</span>
+          </div>
+        </button>
+      </div>
+
+      {/* ── Modais ── */}
       <CreateScheduleModal
         open={showCreateModal}
-        onOpenChange={(open) => {
-          setShowCreateModal(open);
-          if (!open) {
-            setEditingSchedule(null);
-            setSelectedFixedTeamId(null);
-          }
+        onOpenChange={(o) => {
+          setShowCreateModal(o);
+          if (!o) setEditingSchedule(null);
         }}
         teamId={worshipTeam.id}
         selectedDate={format(selectedDate, "yyyy-MM-dd")}
-        initialFixedTeamId={selectedFixedTeamId}
         schedule={editingSchedule}
         onSuccess={() => {
           refetch();
@@ -1447,68 +982,15 @@ export function WorshipDashboard() {
         }}
       />
 
-      <WorshipFixedTeamModal
-        open={showFixedTeamModal}
-        onOpenChange={(open) => {
-          setShowFixedTeamModal(open);
-          if (!open) setEditingFixedTeam(null);
-        }}
-        teamId={worshipTeam.id}
-        members={worshipTeam.members || []}
-        functions={teamFunctions}
-        preset={editingFixedTeam}
-        onSuccess={loadFixedTeamData}
-      />
-
-      <Dialog open={showWhatsAppExport} onOpenChange={setShowWhatsAppExport}>
-        <DialogContent className="w-[calc(100vw-1rem)] max-w-2xl max-h-[92vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5 text-primary" />
-              Exportar escala para WhatsApp
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-3">
-            <Textarea
-              readOnly
-              value={whatsAppPreviewText || monthlyWhatsAppText}
-              className="min-h-[420px] resize-none whitespace-pre-wrap font-mono text-sm leading-relaxed"
-              onChange={(e) => setWhatsAppPreviewText(e.target.value)}
-            />
-            <p className="text-xs text-muted-foreground">
-              Revise o texto, copie e cole no grupo do WhatsApp.
-            </p>
-          </div>
-
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button
-              variant="outline"
-              onClick={() => setShowWhatsAppExport(false)}
-            >
-              Fechar
-            </Button>
-            <Button className="gap-2" onClick={handleCopyWhatsAppExport}>
-              <Copy className="h-4 w-4" />
-              Copiar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       {selectedSchedule && (
         <ScheduleDetailModal
           open={showDetailModal}
           onOpenChange={setShowDetailModal}
           schedule={selectedSchedule}
-          weekendSchedules={
-            monthlyScheduleGroups.find((g) =>
-              g.schedules.some((s) => s.id === selectedSchedule.id),
-            )?.schedules || [selectedSchedule]
-          }
           onEdit={() => {
             setShowDetailModal(false);
-            handleEditSchedule(selectedSchedule);
+            setEditingSchedule(selectedSchedule);
+            setShowCreateModal(true);
           }}
           onDelete={() => {
             setShowDetailModal(false);
@@ -1517,33 +999,39 @@ export function WorshipDashboard() {
         />
       )}
 
+      <WorshipFixedTeamModal
+        open={showFixedTeamModal}
+        onOpenChange={(o) => {
+          setShowFixedTeamModal(o);
+          if (!o) setEditingFixedTeam(null);
+        }}
+        teamId={worshipTeam.id}
+        members={worshipTeam.members || []}
+        functions={teamFunctions}
+        preset={editingFixedTeam}
+        onSuccess={() => {
+          setShowFixedTeamModal(false);
+          loadFixedTeams();
+        }}
+      />
+
+      {/* AlertDialog: excluir escala */}
       <AlertDialog
         open={!!deletingSchedule}
-        onOpenChange={(open) => !open && setDeletingSchedule(null)}
+        onOpenChange={(o) => !o && setDeletingSchedule(null)}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir escala?</AlertDialogTitle>
             <AlertDialogDescription>
-              A escala{" "}
-              <strong>
-                "
-                {deletingSchedule?.title ||
-                  (deletingSchedule
-                    ? format(parseISO(deletingSchedule.date), "dd/MM/yyyy")
-                    : "")}
-                "
-              </strong>{" "}
-              será excluída permanentemente.
+              Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive hover:bg-destructive/90"
-              onClick={() =>
-                deletingSchedule && handleDeleteSchedule(deletingSchedule)
-              }
+              onClick={() => deletingSchedule && handleDelete(deletingSchedule)}
             >
               Excluir
             </AlertDialogAction>
@@ -1551,17 +1039,17 @@ export function WorshipDashboard() {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* AlertDialog: excluir equipe padrão */}
       <AlertDialog
         open={!!deletingFixedTeam}
-        onOpenChange={(open) => !open && setDeletingFixedTeam(null)}
+        onOpenChange={(o) => !o && setDeletingFixedTeam(null)}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir equipe padrão?</AlertDialogTitle>
             <AlertDialogDescription>
-              A equipe <strong>{deletingFixedTeam?.nome}</strong> será removida
-              das opções rápidas de escala. As escalas já criadas não serão
-              alteradas.
+              A equipe <strong>"{deletingFixedTeam?.nome}"</strong> será
+              removida permanentemente.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -1577,6 +1065,39 @@ export function WorshipDashboard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Dialog: exportar WhatsApp */}
+      <Dialog open={showWhatsApp} onOpenChange={setShowWhatsApp}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>📱 Exportar para WhatsApp</DialogTitle>
+          </DialogHeader>
+          <Textarea
+            value={whatsAppText}
+            readOnly
+            rows={12}
+            className="font-mono text-xs resize-none"
+          />
+          <DialogFooter>
+            <button
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(whatsAppText);
+                  toast({ title: "Copiado para a área de transferência!" });
+                } catch {
+                  toast({
+                    variant: "destructive",
+                    title: "Não foi possível copiar",
+                  });
+                }
+              }}
+              className="w-full rounded-lg bg-primary text-primary-foreground py-2.5 text-sm font-semibold hover:bg-primary/90 transition-colors"
+            >
+              Copiar texto
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
