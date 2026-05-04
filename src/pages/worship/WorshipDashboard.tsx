@@ -912,66 +912,219 @@ export function WorshipDashboard() {
               Nenhuma escala este mês
             </p>
           ) : (
-            <div className="space-y-2">
-              {schedules.map((s) => {
-                const status = STATUS_LABELS[s.status] || STATUS_LABELS.draft;
+            <div className="space-y-3">
+              {groupSchedulesByWeekend(schedules).map((group) => {
+                const ss = group.schedules;
+
+                // Verificar se o usuário logado está escalado neste fim de semana
+                const isUserInGroup =
+                  !!user &&
+                  ss.some((s) =>
+                    (s.members || []).some(
+                      (m) =>
+                        m.team_member?.user?.id === user.id ||
+                        (m.team_member as any)?.user_id === user.id,
+                    ),
+                  );
+
+                // Grupo com apenas 1 escala — renderiza simples
+                if (ss.length === 1) {
+                  const s = ss[0];
+                  const status = STATUS_LABELS[s.status] || STATUS_LABELS.draft;
+                  return (
+                    <div
+                      key={group.key}
+                      className={cn(
+                        "flex items-center gap-3 p-3 rounded-xl border transition-colors cursor-pointer",
+                        isUserInGroup
+                          ? "border-emerald-500/40 bg-emerald-500/5 hover:bg-emerald-500/10"
+                          : "border-border hover:bg-accent",
+                      )}
+                      onClick={() => {
+                        setSelectedSchedule(s);
+                        setShowDetailModal(true);
+                      }}
+                    >
+                      <div className="text-center min-w-[40px]">
+                        <p className="text-[10px] text-muted-foreground uppercase">
+                          {format(parseISO(s.date), "EEE", { locale: ptBR })}
+                        </p>
+                        <p className="text-lg font-bold text-primary leading-none">
+                          {format(parseISO(s.date), "dd")}
+                        </p>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-sm font-medium truncate">
+                            {s.title || "Escala sem título"}
+                          </p>
+                          {isUserInGroup && (
+                            <span className="flex-shrink-0 text-[10px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded-full">
+                              Você
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span
+                            className={cn(
+                              "text-xs px-1.5 py-0.5 rounded-full",
+                              status.color,
+                            )}
+                          >
+                            {status.label}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {s.members?.length || 0} membros
+                          </span>
+                        </div>
+                      </div>
+                      {canManage && (
+                        <div
+                          className="flex gap-1"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <button
+                            onClick={() => {
+                              setEditingSchedule(s);
+                              setShowCreateModal(true);
+                            }}
+                            className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            onClick={() => setDeletingSchedule(s)}
+                            className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+
+                // Grupo com 2 escalas (Sáb + Dom) — renderiza agrupado
+                const firstDate = parseISO(ss[0].date);
+                const lastDate = parseISO(ss[ss.length - 1].date);
+                const rangeLabel = `${format(firstDate, "dd")} – ${format(lastDate, "dd 'de' MMMM", { locale: ptBR })}`;
+
                 return (
                   <div
-                    key={s.id}
-                    className="flex items-center gap-3 p-3 rounded-xl border border-border hover:bg-accent transition-colors cursor-pointer"
-                    onClick={() => {
-                      setSelectedSchedule(s);
-                      setShowDetailModal(true);
-                    }}
-                  >
-                    <div className="text-center min-w-[40px]">
-                      <p className="text-[10px] text-muted-foreground uppercase">
-                        {format(parseISO(s.date), "EEE", { locale: ptBR })}
-                      </p>
-                      <p className="text-lg font-bold text-primary leading-none">
-                        {format(parseISO(s.date), "dd")}
-                      </p>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">
-                        {s.title || "Escala sem título"}
-                      </p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span
-                          className={cn(
-                            "text-xs px-1.5 py-0.5 rounded-full",
-                            status.color,
-                          )}
-                        >
-                          {status.label}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {s.members?.length || 0} membros
-                        </span>
-                      </div>
-                    </div>
-                    {canManage && (
-                      <div
-                        className="flex gap-1"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <button
-                          onClick={() => {
-                            setEditingSchedule(s);
-                            setShowCreateModal(true);
-                          }}
-                          className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          onClick={() => setDeletingSchedule(s)}
-                          className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
+                    key={group.key}
+                    className={cn(
+                      "rounded-xl border overflow-hidden",
+                      isUserInGroup ? "border-emerald-500/40" : "border-border",
                     )}
+                  >
+                    {/* Cabeçalho do fim de semana */}
+                    <div
+                      className={cn(
+                        "flex items-center justify-between px-3 py-2",
+                        isUserInGroup ? "bg-emerald-500/10" : "bg-muted/50",
+                      )}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-foreground uppercase tracking-wide">
+                          Fim de semana · {rangeLabel}
+                        </span>
+                        {isUserInGroup && (
+                          <span className="text-[10px] font-semibold bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded-full">
+                            ✓ Você está escalado(a)
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-xs text-muted-foreground">
+                        {ss.length} escalas
+                      </span>
+                    </div>
+
+                    {/* Escalas do fim de semana */}
+                    <div className="divide-y divide-border">
+                      {ss.map((s) => {
+                        const status =
+                          STATUS_LABELS[s.status] || STATUS_LABELS.draft;
+                        const isUserInSchedule =
+                          !!user &&
+                          (s.members || []).some(
+                            (m) =>
+                              m.team_member?.user?.id === user.id ||
+                              (m.team_member as any)?.user_id === user.id,
+                          );
+                        return (
+                          <div
+                            key={s.id}
+                            className="flex items-center gap-3 px-3 py-2.5 hover:bg-accent transition-colors cursor-pointer"
+                            onClick={() => {
+                              setSelectedSchedule(s);
+                              setShowDetailModal(true);
+                            }}
+                          >
+                            {/* Dia da semana */}
+                            <div className="text-center min-w-[36px]">
+                              <p className="text-[10px] text-muted-foreground uppercase leading-none">
+                                {format(parseISO(s.date), "EEE", {
+                                  locale: ptBR,
+                                })}
+                              </p>
+                              <p className="text-base font-bold text-primary leading-tight">
+                                {format(parseISO(s.date), "dd")}
+                              </p>
+                            </div>
+
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1.5">
+                                <p className="text-sm font-medium truncate">
+                                  {s.title ||
+                                    format(parseISO(s.date), "EEEE", {
+                                      locale: ptBR,
+                                    })}
+                                </p>
+                                {isUserInSchedule && (
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <span
+                                  className={cn(
+                                    "text-xs px-1.5 py-0.5 rounded-full",
+                                    status.color,
+                                  )}
+                                >
+                                  {status.label}
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                  {s.members?.length || 0} membros
+                                </span>
+                              </div>
+                            </div>
+
+                            {canManage && (
+                              <div
+                                className="flex gap-1"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <button
+                                  onClick={() => {
+                                    setEditingSchedule(s);
+                                    setShowCreateModal(true);
+                                  }}
+                                  className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+                                >
+                                  <Pencil className="h-3.5 w-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => setDeletingSchedule(s)}
+                                  className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 );
               })}
