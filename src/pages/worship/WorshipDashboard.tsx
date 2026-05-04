@@ -614,6 +614,17 @@ export function WorshipDashboard() {
             const inMonth = isSameMonth(day, currentMonth);
             const hasSchedule = daySchedules.length > 0;
 
+            // Verificar se o usuário logado está escalado neste dia
+            const isUserScheduled =
+              !!user &&
+              daySchedules.some((s) =>
+                (s.members || []).some(
+                  (m) =>
+                    m.team_member?.user?.id === user.id ||
+                    (m.team_member as any)?.user_id === user.id,
+                ),
+              );
+
             return (
               <button
                 key={day.toISOString()}
@@ -636,21 +647,51 @@ export function WorshipDashboard() {
                 )}
               >
                 <span>{format(day, "d")}</span>
-                {hasSchedule && (
-                  <span
-                    className={cn(
-                      "absolute top-1 right-1 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-bold",
-                      isSelected
-                        ? "bg-primary-foreground text-primary"
-                        : "bg-primary text-primary-foreground",
+
+                {/* Indicadores na parte inferior do dia */}
+                {(hasSchedule || isUserScheduled) && (
+                  <div className="absolute bottom-1 flex items-center gap-0.5">
+                    {/* Ponto: tem escala neste dia */}
+                    {hasSchedule && (
+                      <span
+                        className={cn(
+                          "w-1.5 h-1.5 rounded-full",
+                          isSelected ? "bg-primary-foreground" : "bg-primary",
+                        )}
+                      />
                     )}
-                  >
-                    {daySchedules.length}
-                  </span>
+                    {/* Ponto verde: usuário logado está escalado */}
+                    {isUserScheduled && (
+                      <span
+                        className={cn(
+                          "w-1.5 h-1.5 rounded-full",
+                          isSelected ? "bg-emerald-200" : "bg-emerald-500",
+                        )}
+                      />
+                    )}
+                  </div>
                 )}
               </button>
             );
           })}
+        </div>
+
+        {/* Legenda */}
+        <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
+            <span className="text-xs text-muted-foreground">Tem escala</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0" />
+            <span className="text-xs text-muted-foreground">
+              Você está escalado(a)
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded-full ring-2 ring-primary/30 flex-shrink-0" />
+            <span className="text-xs text-muted-foreground">Hoje</span>
+          </div>
         </div>
       </div>
 
