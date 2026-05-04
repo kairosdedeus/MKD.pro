@@ -632,6 +632,21 @@ export function WorshipDashboard() {
                   setSelectedDate(day);
                   if (!inMonth) setCurrentMonth(day);
                 }}
+                onDoubleClick={() => {
+                  // Duplo clique: abre visualização se tiver escala, ou cria nova
+                  setSelectedDate(day);
+                  if (!inMonth) setCurrentMonth(day);
+                  if (daySchedules.length > 0) {
+                    // Tem escala — abre o detalhe da primeira
+                    setSelectedSchedule(daySchedules[0]);
+                    setShowDetailModal(true);
+                  } else {
+                    // Sem escala — abre modal de criar
+                    setEditingSchedule(null);
+                    setSelectedFixedTeamId(null);
+                    setShowCreateModal(true);
+                  }
+                }}
                 className={cn(
                   "relative flex flex-col items-center justify-center h-10 rounded-xl text-sm font-semibold transition-all",
                   isSelected && "bg-primary text-primary-foreground shadow-md",
