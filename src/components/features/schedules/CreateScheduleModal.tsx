@@ -66,58 +66,64 @@ const FUNCTION_COLORS: Record<
   { bg: string; text: string; border: string; pill: string }
 > = {
   Vocal: {
-    bg: "bg-purple-50",
-    text: "text-purple-700",
-    border: "border-purple-200",
-    pill: "bg-purple-100 text-purple-700 border-purple-300",
+    bg: "bg-primary/5",
+    text: "text-primary",
+    border: "border-primary/20",
+    pill: "bg-primary/10 text-primary border-primary/30",
   },
   BackVocal: {
-    bg: "bg-fuchsia-50",
-    text: "text-fuchsia-700",
-    border: "border-fuchsia-200",
-    pill: "bg-fuchsia-100 text-fuchsia-700 border-fuchsia-300",
+    bg: "bg-primary/5",
+    text: "text-primary",
+    border: "border-primary/20",
+    pill: "bg-primary/10 text-primary border-primary/30",
   },
   Guitarra: {
-    bg: "bg-orange-50",
-    text: "text-orange-700",
-    border: "border-orange-200",
-    pill: "bg-orange-100 text-orange-700 border-orange-300",
+    bg: "bg-orange-500/5",
+    text: "text-orange-600 dark:text-orange-400",
+    border: "border-orange-500/20",
+    pill: "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/30",
   },
   Baixo: {
-    bg: "bg-blue-50",
-    text: "text-blue-700",
-    border: "border-blue-200",
-    pill: "bg-blue-100 text-blue-700 border-blue-300",
+    bg: "bg-blue-500/5",
+    text: "text-blue-600 dark:text-blue-400",
+    border: "border-blue-500/20",
+    pill: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30",
   },
   Bateria: {
-    bg: "bg-red-50",
-    text: "text-red-700",
-    border: "border-red-200",
-    pill: "bg-red-100 text-red-700 border-red-300",
+    bg: "bg-destructive/5",
+    text: "text-destructive",
+    border: "border-destructive/20",
+    pill: "bg-destructive/10 text-destructive border-destructive/30",
   },
   Teclado: {
-    bg: "bg-green-50",
-    text: "text-green-700",
-    border: "border-green-200",
-    pill: "bg-green-100 text-green-700 border-green-300",
+    bg: "bg-emerald-500/5",
+    text: "text-emerald-600 dark:text-emerald-400",
+    border: "border-emerald-500/20",
+    pill: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
+  },
+  Teclado2: {
+    bg: "bg-emerald-500/5",
+    text: "text-emerald-600 dark:text-emerald-400",
+    border: "border-emerald-500/20",
+    pill: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
   },
   Projeção: {
-    bg: "bg-cyan-50",
-    text: "text-cyan-700",
-    border: "border-cyan-200",
-    pill: "bg-cyan-100 text-cyan-700 border-cyan-300",
+    bg: "bg-cyan-500/5",
+    text: "text-cyan-600 dark:text-cyan-400",
+    border: "border-cyan-500/20",
+    pill: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/30",
   },
   Som: {
-    bg: "bg-yellow-50",
-    text: "text-yellow-700",
-    border: "border-yellow-200",
-    pill: "bg-yellow-100 text-yellow-700 border-yellow-300",
+    bg: "bg-yellow-500/5",
+    text: "text-yellow-600 dark:text-yellow-400",
+    border: "border-yellow-500/20",
+    pill: "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/30",
   },
   Transmissão: {
-    bg: "bg-pink-50",
-    text: "text-pink-700",
-    border: "border-pink-200",
-    pill: "bg-pink-100 text-pink-700 border-pink-300",
+    bg: "bg-pink-500/5",
+    text: "text-pink-600 dark:text-pink-400",
+    border: "border-pink-500/20",
+    pill: "bg-pink-500/10 text-pink-600 dark:text-pink-400 border-pink-500/30",
   },
 };
 
@@ -136,10 +142,10 @@ const FUNCTION_ICONS: Record<string, string> = {
 function getFunctionStyle(nome: string) {
   return (
     FUNCTION_COLORS[nome] || {
-      bg: "bg-gray-50",
-      text: "text-gray-700",
-      border: "border-gray-200",
-      pill: "bg-gray-100 text-gray-700 border-gray-300",
+      bg: "bg-muted",
+      text: "text-muted-foreground",
+      border: "border-border",
+      pill: "bg-muted text-muted-foreground border-border",
     }
   );
 }
@@ -238,7 +244,7 @@ function MemberPicker({
                 placeholder="Buscar membro..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300"
+                className="w-full pl-8 pr-3 py-1.5 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
             </div>
           </div>
@@ -257,7 +263,7 @@ function MemberPicker({
                     setQuery("");
                     setOpen(false);
                   }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-gray-50 transition-colors text-left"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-accent transition-colors text-left"
                 >
                   <span
                     className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${style.bg} ${style.text}`}
@@ -766,7 +772,7 @@ export function CreateScheduleModal({
                   }
                 />
                 {dateConflict && (
-                  <p className="text-xs text-red-600">
+                  <p className="text-xs text-destructive">
                     ⚠️ Já existe uma escala nesta data.
                   </p>
                 )}
@@ -784,13 +790,13 @@ export function CreateScheduleModal({
             </div>
 
             {/* ── Equipes fixas ── */}
-            <div className="space-y-3 rounded-xl border border-purple-200 bg-purple-50/60 p-3 sm:p-4">
+            <div className="space-y-3 rounded-xl border border-primary/20 bg-primary/5 p-3 sm:p-4">
               <div className="flex flex-col gap-2 sm:gap-3">
                 <div className="min-w-0">
                   <Label className="text-sm sm:text-base font-semibold">
                     Equipes fixas
                   </Label>
-                  <p className="text-xs text-gray-500 mt-0.5">
+                  <p className="text-xs text-muted-foreground mt-0.5">
                     Clique para preencher automaticamente as funções.
                   </p>
                 </div>
@@ -844,7 +850,7 @@ export function CreateScheduleModal({
                     type="button"
                     onClick={handleSaveFixedTeam}
                     disabled={savingFixedTeam}
-                    className="bg-purple-600 hover:bg-purple-700 w-full"
+                    className="bg-primary hover:bg-primary/90 w-full"
                   >
                     {savingFixedTeam ? "Salvando..." : "Salvar equipe padrão"}
                   </Button>
@@ -859,7 +865,7 @@ export function CreateScheduleModal({
                   👥 Membros da Escala
                 </Label>
                 {totalAssigned > 0 && (
-                  <span className="text-xs sm:text-sm text-gray-400">
+                  <span className="text-xs sm:text-sm text-muted-foreground">
                     {totalAssigned} membro{totalAssigned !== 1 ? "s" : ""}{" "}
                     escalado{totalAssigned !== 1 ? "s" : ""}
                   </span>
@@ -874,7 +880,7 @@ export function CreateScheduleModal({
                   </p>
                 </div>
               ) : (
-                <div className="rounded-xl border border-gray-200 overflow-hidden divide-y divide-gray-100">
+                <div className="rounded-xl border border-border overflow-hidden divide-y divide-border">
                   {teamFunctions
                     .slice()
                     .sort((a, b) => {
@@ -900,7 +906,7 @@ export function CreateScheduleModal({
                         <div
                           key={fn.id}
                           className={`flex items-start gap-4 px-4 py-3 transition-colors ${
-                            isEmpty ? "bg-white" : style.bg
+                            isEmpty ? "bg-background" : style.bg
                           }`}
                         >
                           {/* Função label */}
@@ -959,9 +965,9 @@ export function CreateScheduleModal({
                         key={song.id}
                         type="button"
                         onClick={() => addSong(song)}
-                        className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-left transition-colors"
+                        className="w-full flex items-center gap-3 px-4 py-2 hover:bg-accent text-left transition-colors"
                       >
-                        <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                           <Music className="h-4 w-4 text-primary" />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -969,13 +975,13 @@ export function CreateScheduleModal({
                             {song.name}
                           </p>
                           {song.artist && (
-                            <p className="text-xs text-gray-400 truncate">
+                            <p className="text-xs text-muted-foreground truncate">
                               {song.artist}
                             </p>
                           )}
                         </div>
                         {song.original_key && (
-                          <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full flex-shrink-0">
+                          <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full flex-shrink-0">
                             {song.original_key}
                           </span>
                         )}
@@ -987,14 +993,14 @@ export function CreateScheduleModal({
                 {showNoResults && !showQuickCreate && (
                   <div className="absolute z-20 w-full mt-1 bg-card border border-border rounded-xl shadow-lg">
                     <div className="px-4 py-3 text-center">
-                      <p className="text-sm text-gray-500 mb-2">
+                      <p className="text-sm text-muted-foreground mb-2">
                         Nenhuma música encontrada para{" "}
                         <strong>"{songSearchQuery}"</strong>
                       </p>
                       <Button
                         type="button"
                         size="sm"
-                        className="bg-purple-600 hover:bg-purple-700 gap-2"
+                        className="bg-primary hover:bg-primary/90 gap-2"
                         onClick={() => {
                           setQuickSongName(songSearchQuery);
                           setShowQuickCreate(true);
@@ -1011,9 +1017,9 @@ export function CreateScheduleModal({
               </div>
 
               {showQuickCreate && (
-                <div className="border-2 border-purple-300 rounded-xl p-4 bg-purple-50 space-y-3">
+                <div className="border-2 border-primary/30 rounded-xl p-4 bg-primary/5 space-y-3">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm font-semibold text-purple-800 flex items-center gap-2">
+                    <p className="text-sm font-semibold text-foreground flex items-center gap-2">
                       <Plus className="h-4 w-4" />
                       Criar nova música
                     </p>
@@ -1023,7 +1029,7 @@ export function CreateScheduleModal({
                         setShowQuickCreate(false);
                         setSongSearchQuery("");
                       }}
-                      className="text-gray-400 hover:text-gray-600"
+                      className="text-muted-foreground hover:text-foreground"
                     >
                       <X className="h-4 w-4" />
                     </button>
@@ -1098,12 +1104,12 @@ export function CreateScheduleModal({
                       onDragEnd={handleDragEnd}
                       className={`flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 p-3 bg-card transition-all cursor-grab active:cursor-grabbing ${
                         dragOverIndex === index && dragIndex !== index
-                          ? "border-t-2 border-purple-400 bg-purple-50"
-                          : "hover:bg-gray-50"
+                          ? "border-t-2 border-primary/50 bg-primary/5"
+                          : "hover:bg-accent"
                       } ${dragIndex === index ? "opacity-40" : ""}`}
                     >
                       <div className="flex items-center gap-3 w-full sm:w-auto sm:flex-1 min-w-0">
-                        <GripVertical className="h-4 w-4 text-gray-300 flex-shrink-0" />
+                        <GripVertical className="h-4 w-4 text-muted-foreground/50 flex-shrink-0" />
                         <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary flex-shrink-0">
                           {index + 1}
                         </div>
@@ -1112,7 +1118,7 @@ export function CreateScheduleModal({
                             {song.song_name}
                           </p>
                           {song.artist && (
-                            <p className="text-xs text-gray-400 truncate">
+                            <p className="text-xs text-muted-foreground truncate">
                               {song.artist}
                             </p>
                           )}
@@ -1120,7 +1126,7 @@ export function CreateScheduleModal({
                       </div>
                       <div className="flex items-center gap-2 w-full sm:w-auto pl-9 sm:pl-0">
                         {song.original_key && (
-                          <span className="text-xs text-gray-400">
+                          <span className="text-xs text-muted-foreground">
                             Original: <strong>{song.original_key}</strong>
                           </span>
                         )}
@@ -1140,7 +1146,7 @@ export function CreateScheduleModal({
                         <button
                           type="button"
                           onClick={() => removeSong(song.song_id)}
-                          className="text-gray-300 hover:text-red-500 transition-colors p-1 ml-auto sm:ml-0"
+                          className="text-muted-foreground/40 hover:text-destructive transition-colors p-1 ml-auto sm:ml-0"
                         >
                           <X className="h-4 w-4" />
                         </button>
@@ -1171,7 +1177,7 @@ export function CreateScheduleModal({
           <Button
             onClick={handleSubmit}
             disabled={loading || loadingData || (!isEditing && dateConflict)}
-            className="bg-purple-600 hover:bg-purple-700 w-full sm:w-auto sm:min-w-[140px]"
+            className="bg-primary hover:bg-primary/90 w-full sm:w-auto sm:min-w-[140px]"
           >
             {loading
               ? "Salvando..."

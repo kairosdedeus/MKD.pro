@@ -278,17 +278,3 @@ Para dúvidas e suporte, abra uma issue no repositório.
 ---
 
 **Nota**: Este sistema foi desenvolvido especificamente para gestão de escalas ministeriais, com foco em usabilidade, segurança e escalabilidade.
-📍 MKD - LOUVOR 🎤 Equipe X
-
-🗓 Sábado 04
-1 - Tudo se fez novo - D
-2 - Pisa - Em
-3 - Somos 1 - D
-4 - Nosso Coração Queima - A
-5 - Cristo/ Tudo que tenho é teu - A
-6 - Tu és tudo - D
-
-🗓 Domingo 05
-1 - Mil Graus - Alice
-2 - Pedra Preciosa - João
-3 - Canção do Apocalipse - Wallesca

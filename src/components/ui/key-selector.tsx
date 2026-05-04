@@ -18,20 +18,15 @@ function parseKey(key: string): {
   mode: Mode;
 } {
   if (!key) return { note: null, modifier: "", mode: "maior" };
-
   let rest = key;
   let note: BaseNote | null = null;
   let modifier: Modifier = "";
   let mode: Mode = "maior";
-
-  // Nota base
   const base = rest[0]?.toUpperCase() as BaseNote;
   if (BASE_NOTES.includes(base)) {
     note = base;
     rest = rest.slice(1);
   }
-
-  // Modificador
   if (rest.startsWith("#")) {
     modifier = "#";
     rest = rest.slice(1);
@@ -39,10 +34,7 @@ function parseKey(key: string): {
     modifier = "b";
     rest = rest.slice(1);
   }
-
-  // Modo
   if (rest.toLowerCase() === "m") mode = "menor";
-
   return { note, modifier, mode };
 }
 
@@ -55,6 +47,14 @@ function buildKey(
   return `${note}${modifier}${mode === "menor" ? "m" : ""}`;
 }
 
+// Classes base reutilizáveis
+const btnBase = "rounded-xl border transition-all font-medium";
+const btnActive =
+  "bg-primary/10 border-primary text-primary ring-1 ring-primary/30";
+const btnInactive =
+  "bg-background border-border text-muted-foreground hover:bg-accent hover:text-foreground";
+const btnDisabled = "opacity-30 cursor-not-allowed pointer-events-none";
+
 export function KeySelector({
   value,
   onChange,
@@ -64,7 +64,6 @@ export function KeySelector({
   const { note, modifier, mode } = parseKey(value);
 
   const setNote = (n: BaseNote) => {
-    // Se clicar na mesma nota e allowEmpty, limpa
     if (n === note && allowEmpty) {
       onChange("");
       return;
@@ -74,7 +73,6 @@ export function KeySelector({
 
   const setModifier = (m: Modifier) => {
     if (!note) return;
-    // Toggle: se já está selecionado, remove
     onChange(buildKey(note, modifier === m ? "" : m, mode));
   };
 
@@ -95,10 +93,9 @@ export function KeySelector({
             type="button"
             onClick={() => setNote(n)}
             className={cn(
-              "h-11 rounded-xl border text-sm font-semibold transition-all",
-              note === n
-                ? "bg-primary/15 border-primary/40 text-primary"
-                : "bg-background border-border text-muted-foreground hover:border-primary/30 hover:text-foreground",
+              btnBase,
+              "h-11 text-sm",
+              note === n ? btnActive : btnInactive,
             )}
           >
             {n}
@@ -108,69 +105,45 @@ export function KeySelector({
 
       {/* Modificadores ♭ e # */}
       <div className="grid grid-cols-2 gap-1.5">
-        <button
-          type="button"
-          onClick={() => setModifier("b")}
-          disabled={!note}
-          className={cn(
-            "h-10 rounded-xl border text-base font-medium transition-all",
-            modifier === "b"
-              ? "bg-primary/15 border-primary/40 text-primary"
-              : "bg-background border-border text-muted-foreground hover:border-primary/30 hover:text-foreground",
-            !note && "opacity-30 cursor-not-allowed",
-          )}
-        >
-          ♭
-        </button>
-        <button
-          type="button"
-          onClick={() => setModifier("#")}
-          disabled={!note}
-          className={cn(
-            "h-10 rounded-xl border text-base font-medium transition-all",
-            modifier === "#"
-              ? "bg-primary/15 border-primary/40 text-primary"
-              : "bg-background border-border text-muted-foreground hover:border-primary/30 hover:text-foreground",
-            !note && "opacity-30 cursor-not-allowed",
-          )}
-        >
-          #
-        </button>
+        {(["b", "#"] as Modifier[]).map((m) => (
+          <button
+            key={m}
+            type="button"
+            onClick={() => setModifier(m)}
+            disabled={!note}
+            className={cn(
+              btnBase,
+              "h-10 text-base",
+              modifier === m ? btnActive : btnInactive,
+              !note && btnDisabled,
+            )}
+          >
+            {m === "b" ? "♭" : "#"}
+          </button>
+        ))}
       </div>
 
       {/* Modo: Maior / Menor */}
       <div className="grid grid-cols-2 gap-1.5">
-        <button
-          type="button"
-          onClick={() => setMode("maior")}
-          disabled={!note}
-          className={cn(
-            "h-10 rounded-xl border text-sm font-semibold transition-all",
-            mode === "maior" && note
-              ? "bg-primary/15 border-primary/40 text-primary"
-              : "bg-background border-border text-muted-foreground hover:border-primary/30 hover:text-foreground",
-            !note && "opacity-30 cursor-not-allowed",
-          )}
-        >
-          Maior
-        </button>
-        <button
-          type="button"
-          onClick={() => setMode("menor")}
-          disabled={!note}
-          className={cn(
-            "h-10 rounded-xl border text-sm font-semibold transition-all",
-            mode === "menor" && note
-              ? "bg-primary/15 border-primary/40 text-primary"
-              : "bg-background border-border text-muted-foreground hover:border-primary/30 hover:text-foreground",
-            !note && "opacity-30 cursor-not-allowed",
-          )}
-        >
-          Menor
-        </button>
+        {(["maior", "menor"] as Mode[]).map((m) => (
+          <button
+            key={m}
+            type="button"
+            onClick={() => setMode(m)}
+            disabled={!note}
+            className={cn(
+              btnBase,
+              "h-10 text-sm",
+              mode === m && note ? btnActive : btnInactive,
+              !note && btnDisabled,
+            )}
+          >
+            {m === "maior" ? "Maior" : "Menor"}
+          </button>
+        ))}
       </div>
 
-      {/* Preview do tom selecionado */}
+      {/* Preview */}
       {value && (
         <div className="flex items-center justify-between pt-1">
           <span className="text-xs text-muted-foreground">

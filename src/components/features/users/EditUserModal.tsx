@@ -289,7 +289,7 @@ export function EditUserModal({
 
           <div className="space-y-1.5">
             <Label>Email / Login</Label>
-            <Input value={generatedEmail} disabled className="bg-gray-50" />
+            <Input value={generatedEmail} disabled className="bg-muted" />
             <p className="text-xs text-muted-foreground">
               Gerado automaticamente: primeira letra do nome + ultimo sobrenome
               @mkd.com
@@ -348,7 +348,7 @@ export function EditUserModal({
                   </div>
 
                   {group.teams.length === 0 ? (
-                    <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700">
+                    <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-600 dark:text-amber-400">
                       Nenhuma equipe cadastrada para este ministerio. Cadastre
                       uma equipe primeiro em Gerencial &gt; Equipes.
                     </div>
@@ -357,7 +357,7 @@ export function EditUserModal({
                       {group.teams.map((team: any) => (
                         <label
                           key={team.id}
-                          className="flex items-center gap-2 rounded-md bg-purple-50 px-3 py-2 text-sm text-purple-800"
+                          className="flex items-center gap-2 rounded-md bg-primary/5 px-3 py-2 text-sm text-foreground"
                         >
                           <Checkbox
                             checked={selectedTeamIds.includes(team.id)}
@@ -366,7 +366,7 @@ export function EditUserModal({
                           />
                           <span className="font-medium">{team.nome}</span>
                           {group.teams.length === 1 && (
-                            <span className="ml-auto text-xs text-purple-500">
+                            <span className="ml-auto text-xs text-muted-foreground">
                               Selecionada automaticamente
                             </span>
                           )}
@@ -399,7 +399,7 @@ export function EditUserModal({
               missingTeamGroups.length > 0 ||
               hasUnselectedTeamGroup
             }
-            className="bg-purple-600 hover:bg-purple-700 w-full sm:w-auto"
+            className="bg-primary hover:bg-primary/90 w-full sm:w-auto"
           >
             {saving ? "Salvando..." : "Salvar Alteracoes"}
           </Button>

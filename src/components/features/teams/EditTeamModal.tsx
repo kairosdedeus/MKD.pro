@@ -276,7 +276,7 @@ export function EditTeamModal({
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label>Membros</Label>
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-muted-foreground">
                 {members.length} selecionado(s)
               </span>
             </div>
@@ -290,12 +290,12 @@ export function EditTeamModal({
                 return (
                   <div
                     key={user.id}
-                    className={`p-3 ${isLeader ? "bg-purple-50" : ""}`}
+                    className={`p-3 ${isLeader ? "bg-primary/5" : ""}`}
                   >
                     <div className="flex items-center gap-3">
                       {isLeader ? (
-                        <div className="w-5 h-5 rounded bg-purple-600 flex items-center justify-center flex-shrink-0">
-                          <Crown className="h-3 w-3 text-white" />
+                        <div className="w-5 h-5 rounded bg-primary flex items-center justify-center flex-shrink-0">
+                          <Crown className="h-3 w-3 text-primary-foreground" />
                         </div>
                       ) : (
                         <Checkbox
@@ -306,7 +306,7 @@ export function EditTeamModal({
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <div
-                            className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold ${isLeader ? "bg-purple-200 text-purple-700" : "bg-gray-200 text-gray-600"}`}
+                            className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold ${isLeader ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"}`}
                           >
                             {user.nome.charAt(0).toUpperCase()}
                           </div>
@@ -314,7 +314,7 @@ export function EditTeamModal({
                             {user.nome}
                           </span>
                           {isLeader && (
-                            <span className="text-xs bg-purple-600 text-white px-1.5 py-0.5 rounded-full">
+                            <span className="text-xs bg-primary text-primary-foreground px-1.5 py-0.5 rounded-full">
                               Líder
                             </span>
                           )}
@@ -328,7 +328,7 @@ export function EditTeamModal({
                               return fn ? (
                                 <span
                                   key={fId}
-                                  className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded"
+                                  className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded"
                                 >
                                   {fn.nome}
                                 </span>
@@ -341,7 +341,7 @@ export function EditTeamModal({
                         <button
                           type="button"
                           onClick={() => toggleExpand(user.id)}
-                          className="text-gray-400 hover:text-gray-600"
+                          className="text-muted-foreground hover:text-foreground"
                         >
                           {member!.expanded ? (
                             <ChevronUp className="h-4 w-4" />
@@ -355,8 +355,10 @@ export function EditTeamModal({
                     {isSelected &&
                       member!.expanded &&
                       teamFunctions.length > 0 && (
-                        <div className="mt-2 ml-10 p-2 bg-gray-50 rounded-lg">
-                          <p className="text-xs text-gray-500 mb-2">Funções:</p>
+                        <div className="mt-2 ml-10 p-2 bg-muted rounded-lg">
+                          <p className="text-xs text-muted-foreground mb-2">
+                            Funções:
+                          </p>
                           <div className="flex flex-wrap gap-2">
                             {teamFunctions.map((fn) => (
                               <label
@@ -370,7 +372,7 @@ export function EditTeamModal({
                                   }
                                 />
                                 <span className="flex items-center gap-1">
-                                  <Music className="h-3 w-3 text-purple-500" />
+                                  <Music className="h-3 w-3 text-primary" />
                                   {fn.nome}
                                 </span>
                               </label>
@@ -383,7 +385,7 @@ export function EditTeamModal({
               })}
             </div>
             {teamFunctions.length > 0 && (
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-muted-foreground">
                 💡 Clique na seta ▼ para atribuir funções ao membro
               </p>
             )}
@@ -401,7 +403,7 @@ export function EditTeamModal({
           <Button
             onClick={handleSave}
             disabled={saving}
-            className="bg-purple-600 hover:bg-purple-700"
+            className="bg-primary hover:bg-primary/90"
           >
             {saving ? "Salvando..." : "💾 Salvar Alterações"}
           </Button>

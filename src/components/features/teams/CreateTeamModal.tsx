@@ -40,11 +40,13 @@ interface CreateTeamModalProps {
 }
 
 const MINISTRY_COLORS: Record<string, string> = {
-  louvor: "text-purple-700 bg-purple-50 border-purple-200",
+  louvor: "text-primary bg-primary/5 border-primary/20",
   danca: "text-pink-700 bg-pink-50 border-pink-200",
-  midia: "text-blue-700 bg-blue-50 border-blue-200",
-  obreiros: "text-green-700 bg-green-50 border-green-200",
-  celula: "text-orange-700 bg-orange-50 border-orange-200",
+  midia: "text-blue-600 dark:text-blue-400 bg-primary/10 border-primary/20",
+  obreiros:
+    "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/30",
+  celula:
+    "text-orange-600 dark:text-orange-400 bg-orange-500/10 border-orange-500/30",
 };
 
 export function CreateTeamModal({
@@ -198,9 +200,7 @@ export function CreateTeamModal({
         if (teamMembers.length > 0) {
           for (const member of members) {
             if (member.functionIds.length === 0) continue;
-            const tm = teamMembers.find(
-              (tm: any) => tm.user_id === member.userId,
-            );
+            const tm = teamMembers.find((tm) => tm.user_id === member.userId);
             if (tm) {
               await teamService.updateMemberFunctions(
                 tm.id,
@@ -317,7 +317,7 @@ export function CreateTeamModal({
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label>Membros da Equipe</Label>
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-muted-foreground">
                 {members.length} selecionado(s)
               </span>
             </div>
@@ -332,15 +332,15 @@ export function CreateTeamModal({
                 return (
                   <div
                     key={user.id}
-                    className={`p-3 ${isLeader ? "bg-purple-50" : ""}`}
+                    className={`p-3 ${isLeader ? "bg-primary/5" : ""}`}
                   >
                     {/* Linha do membro */}
                     <div className="flex items-center gap-3">
                       {isLeader ? (
                         // Líder: sempre selecionado, não pode desmarcar
-                        <div className="w-5 h-5 rounded bg-purple-600 flex items-center justify-center flex-shrink-0">
+                        <div className="w-5 h-5 rounded bg-primary flex items-center justify-center flex-shrink-0">
                           <svg
-                            className="w-3 h-3 text-white"
+                            className="w-3 h-3 text-primary-foreground"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -362,7 +362,7 @@ export function CreateTeamModal({
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <div
-                            className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold ${isLeader ? "bg-purple-200 text-purple-700" : "bg-gray-200 text-gray-600"}`}
+                            className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold ${isLeader ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"}`}
                           >
                             {user.nome.charAt(0).toUpperCase()}
                           </div>
@@ -370,7 +370,7 @@ export function CreateTeamModal({
                             {user.nome}
                           </span>
                           {isLeader && (
-                            <span className="text-xs bg-purple-600 text-white px-1.5 py-0.5 rounded-full">
+                            <span className="text-xs bg-primary text-primary-foreground px-1.5 py-0.5 rounded-full">
                               Líder
                             </span>
                           )}
@@ -408,7 +408,7 @@ export function CreateTeamModal({
                         <button
                           type="button"
                           onClick={() => toggleExpand(user.id)}
-                          className="text-gray-400 hover:text-gray-600 ml-1"
+                          className="text-muted-foreground hover:text-foreground ml-1"
                         >
                           {(isLeader
                             ? members.find((m) => m.userId === user.id)
@@ -429,11 +429,13 @@ export function CreateTeamModal({
                         : member
                       )?.expanded &&
                       teamFunctions.length > 0 && (
-                        <div className="mt-2 ml-10 p-2 bg-gray-50 rounded-lg">
-                          <p className="text-xs text-gray-500 mb-2">Funções:</p>
+                        <div className="mt-2 ml-10 p-2 bg-muted rounded-lg">
+                          <p className="text-xs text-muted-foreground mb-2">
+                            Funções:
+                          </p>
                           <div className="flex flex-wrap gap-2">
                             {loadingFunctions ? (
-                              <span className="text-xs text-gray-400">
+                              <span className="text-xs text-muted-foreground">
                                 Carregando...
                               </span>
                             ) : (
@@ -454,7 +456,7 @@ export function CreateTeamModal({
                                     }
                                   />
                                   <span className="flex items-center gap-1">
-                                    <Music className="h-3 w-3 text-purple-500" />
+                                    <Music className="h-3 w-3 text-primary" />
                                     {fn.nome}
                                   </span>
                                 </label>
@@ -468,14 +470,14 @@ export function CreateTeamModal({
               })}
 
               {!users?.length && (
-                <div className="p-4 text-center text-sm text-gray-400">
+                <div className="p-4 text-center text-sm text-muted-foreground">
                   Nenhum usuário disponível. Crie usuários primeiro.
                 </div>
               )}
             </div>
 
             {teamFunctions.length > 0 && (
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-muted-foreground">
                 💡 Clique na seta ▼ ao lado do membro para atribuir funções. Se
                 houver líder, ele será adicionado automaticamente.
               </p>
