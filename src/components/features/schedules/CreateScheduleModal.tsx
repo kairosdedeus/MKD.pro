@@ -37,6 +37,7 @@ import {
   Plus,
   Save,
   Laptop,
+  Upload,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 
@@ -325,6 +326,8 @@ export function CreateScheduleModal({
   const [quickSongArtist, setQuickSongArtist] = useState("");
   const [quickSongKey, setQuickSongKey] = useState("");
   const [quickSongVS, setQuickSongVS] = useState(false);
+  const [quickSongUrl, setQuickSongUrl] = useState("");
+  const [quickSongAudio, setQuickSongAudio] = useState<File | null>(null);
   const [savingQuickSong, setSavingQuickSong] = useState(false);
 
   // UI
@@ -438,6 +441,8 @@ export function CreateScheduleModal({
     setQuickSongArtist("");
     setQuickSongKey("");
     setQuickSongVS(false);
+    setQuickSongUrl("");
+    setQuickSongAudio(null);
     setShowFixedTeamForm(false);
     setFixedTeamName("");
   };
@@ -631,6 +636,8 @@ export function CreateScheduleModal({
         artist: quickSongArtist.trim() || undefined,
         original_key: quickSongKey.trim() || undefined,
         has_virtual_instruments: quickSongVS,
+        reference_url: quickSongUrl.trim() || undefined,
+        audio_file: quickSongAudio || undefined,
       });
       addSong(newSong);
       toast({ title: `🎵 "${newSong.name}" criada e adicionada!` });
@@ -638,6 +645,8 @@ export function CreateScheduleModal({
       setQuickSongArtist("");
       setQuickSongKey("");
       setQuickSongVS(false);
+      setQuickSongUrl("");
+      setQuickSongAudio(null);
       setShowQuickCreate(false);
       setSongSearchQuery("");
     } catch (error) {
@@ -1082,8 +1091,72 @@ export function CreateScheduleModal({
                           className="cursor-pointer flex items-center gap-1.5 text-sm"
                         >
                           <Laptop className="h-3.5 w-3.5 text-muted-foreground" />
-                          Possui instrumentos sampleados (VS)
+                          Possui VS
                         </Label>
+                      </div>
+
+                      {/* Link de referência */}
+                      <div className="col-span-2 space-y-1">
+                        <Label className="text-xs">Link de Referência</Label>
+                        <Input
+                          placeholder="YouTube, Spotify..."
+                          value={quickSongUrl}
+                          onChange={(e) => setQuickSongUrl(e.target.value)}
+                          autoComplete="off"
+                          className="bg-card text-sm h-8"
+                        />
+                      </div>
+
+                      {/* Upload de áudio */}
+                      <div className="col-span-2 space-y-1">
+                        <Label className="text-xs">Áudio (opcional)</Label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            id="quickAudioFile"
+                            type="file"
+                            accept="audio/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              if (file.size > 50 * 1024 * 1024) {
+                                toast({
+                                  variant: "destructive",
+                                  title: "Arquivo muito grande",
+                                  description: "Máximo 50MB",
+                                });
+                                return;
+                              }
+                              setQuickSongAudio(file);
+                            }}
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 h-8 text-xs gap-1.5 bg-card"
+                            onClick={() =>
+                              document.getElementById("quickAudioFile")?.click()
+                            }
+                          >
+                            <Upload className="h-3.5 w-3.5" />
+                            {quickSongAudio
+                              ? quickSongAudio.name
+                              : "Selecionar áudio"}
+                          </Button>
+                          {quickSongAudio && (
+                            <button
+                              type="button"
+                              onClick={() => setQuickSongAudio(null)}
+                              className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-muted-foreground">
+                          MP3, WAV, OGG — máximo 50MB
+                        </p>
                       </div>
                     </div>
                   </div>
