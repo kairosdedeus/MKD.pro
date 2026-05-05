@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { KeySelector } from "@/components/ui/key-selector";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/use-toast";
 import { scheduleService } from "@/services/scheduleService";
 import { teamService } from "@/services/teamService";
@@ -35,6 +36,7 @@ import {
   UserPlus,
   Plus,
   Save,
+  Laptop,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 
@@ -1066,6 +1068,22 @@ export function CreateScheduleModal({
                           label="Tom Original"
                           allowEmpty
                         />
+                      </div>
+
+                      {/* VS — Virtual Sample */}
+                      <div className="col-span-2 flex items-center gap-2 pt-1">
+                        <Checkbox
+                          id="quickSongVS"
+                          checked={quickSongVS}
+                          onCheckedChange={(v) => setQuickSongVS(v as boolean)}
+                        />
+                        <Label
+                          htmlFor="quickSongVS"
+                          className="cursor-pointer flex items-center gap-1.5 text-sm"
+                        >
+                          <Laptop className="h-3.5 w-3.5 text-muted-foreground" />
+                          Possui instrumentos sampleados (VS)
+                        </Label>
                       </div>
                     </div>
                   </div>
