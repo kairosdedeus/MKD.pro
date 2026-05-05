@@ -46,6 +46,8 @@ import {
   ChevronDown,
   SlidersHorizontal,
   Laptop,
+  Download,
+  Headphones,
 } from "lucide-react";
 import { useSongs } from "@/hooks/useSongs";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
@@ -148,6 +150,7 @@ export function SongsPage() {
   const [playerTracks, setPlayerTracks] = useState<AudioTrack[]>([]);
   const [currentTrackId, setCurrentTrackId] = useState<string | null>(null);
   const [loadingAudioId, setLoadingAudioId] = useState<string | null>(null);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   const filtered = songs
     .filter((s) => {
@@ -230,6 +233,20 @@ export function SongsPage() {
       setCurrentTrackId(id);
     } catch {
       toast({ variant: "destructive", title: "Erro ao carregar faixa" });
+    }
+  };
+
+  const handleDownload = async (song: Song) => {
+    if (!song.audio_path) return;
+    try {
+      setDownloadingId(song.id);
+      const ext = song.audio_path.split(".").pop() || "mp3";
+      const fileName = `${song.name}${song.artist ? ` - ${song.artist}` : ""}.${ext}`;
+      await songService.downloadAudio(song.audio_path, fileName);
+    } catch {
+      toast({ variant: "destructive", title: "Erro ao baixar áudio" });
+    } finally {
+      setDownloadingId(null);
     }
   };
 
@@ -472,6 +489,14 @@ export function SongsPage() {
                       {song.original_key}
                     </span>
                   )}
+                  {song.audio_path && (
+                    <span
+                      title="Possui áudio"
+                      className="flex items-center justify-center w-6 h-6 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                    >
+                      <Headphones className="h-3.5 w-3.5" />
+                    </span>
+                  )}
                   {song.has_virtual_instruments && (
                     <span
                       title="Virtual Sample"
@@ -479,6 +504,23 @@ export function SongsPage() {
                     >
                       <Laptop className="h-3.5 w-3.5" />
                     </span>
+                  )}
+                  {song.audio_path && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDownload(song);
+                      }}
+                      disabled={downloadingId === song.id}
+                      className="flex items-center justify-center w-6 h-6 rounded-lg text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors disabled:opacity-50"
+                      title="Baixar áudio"
+                    >
+                      {downloadingId === song.id ? (
+                        <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <Download className="h-3.5 w-3.5" />
+                      )}
+                    </button>
                   )}
                   {song.reference_url && (
                     <a
@@ -508,6 +550,17 @@ export function SongsPage() {
                     <DropdownMenuItem onClick={() => setEditingSong(song)}>
                       <Pencil className="h-4 w-4 mr-2" /> Editar
                     </DropdownMenuItem>
+                    {song.audio_path && (
+                      <DropdownMenuItem
+                        onClick={() => handleDownload(song)}
+                        disabled={downloadingId === song.id}
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        {downloadingId === song.id
+                          ? "Baixando..."
+                          : "Baixar áudio"}
+                      </DropdownMenuItem>
+                    )}
                     {song.reference_url && (
                       <DropdownMenuItem asChild>
                         <a

@@ -167,6 +167,25 @@ export const songService = {
     }
   },
 
+  async downloadAudio(audioPath: string, fileName: string) {
+    // Gera signed URL com download forçado
+    const { data, error } = await supabase.storage
+      .from("audio-musicas")
+      .createSignedUrl(audioPath, 60, {
+        download: fileName, // força Content-Disposition: attachment
+      });
+
+    if (error) throw error;
+
+    // Dispara download via link temporário
+    const a = document.createElement("a");
+    a.href = data.signedUrl;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  },
+
   async addSongToSchedule(
     scheduleId: string,
     songId: string,

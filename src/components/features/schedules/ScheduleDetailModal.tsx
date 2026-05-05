@@ -19,6 +19,7 @@ import {
   Headphones,
   Laptop,
   ExternalLink,
+  Download,
 } from "lucide-react";
 import { Schedule } from "@/types";
 import { useToast } from "@/components/ui/use-toast";
@@ -116,6 +117,7 @@ export function ScheduleDetailModal({
   const [playerTracks, setPlayerTracks] = useState<AudioTrack[]>([]);
   const [currentTrackId, setCurrentTrackId] = useState<string | null>(null);
   const [loadingAudioId, setLoadingAudioId] = useState<string | null>(null);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   // Fechar player ao fechar modal
   useEffect(() => {
@@ -187,6 +189,22 @@ export function ScheduleDetailModal({
       setCurrentTrackId(id);
     } catch {
       toast({ variant: "destructive", title: "Erro ao carregar faixa" });
+    }
+  };
+
+  const handleDownload = async (scheduleSongId: string) => {
+    const scheduleSong = schedule.songs?.find((ss) => ss.id === scheduleSongId);
+    if (!scheduleSong?.song?.audio_path) return;
+    try {
+      setDownloadingId(scheduleSongId);
+      const song = scheduleSong.song;
+      const ext = song.audio_path!.split(".").pop() || "mp3";
+      const fileName = `${song.name}${song.artist ? ` - ${song.artist}` : ""}.${ext}`;
+      await songService.downloadAudio(song.audio_path!, fileName);
+    } catch {
+      toast({ variant: "destructive", title: "Erro ao baixar áudio" });
+    } finally {
+      setDownloadingId(null);
     }
   };
 
@@ -455,7 +473,7 @@ export function ScheduleDetailModal({
                         )}
                       </div>
 
-                      {/* Tom + Link */}
+                      {/* Tom + Link + Download */}
                       <div className="flex items-center gap-1.5 flex-shrink-0">
                         {scheduleSong.song?.original_key && (
                           <span className="text-xs bg-muted text-muted-foreground px-1.5 py-0.5 rounded-md font-medium">
@@ -480,6 +498,20 @@ export function ScheduleDetailModal({
                           >
                             <ExternalLink className="h-3.5 w-3.5" />
                           </a>
+                        )}
+                        {hasAudio && (
+                          <button
+                            onClick={() => handleDownload(scheduleSong.id)}
+                            disabled={downloadingId === scheduleSong.id}
+                            className="text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors disabled:opacity-50"
+                            title="Baixar áudio"
+                          >
+                            {downloadingId === scheduleSong.id ? (
+                              <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <Download className="h-3.5 w-3.5" />
+                            )}
+                          </button>
                         )}
                       </div>
                     </div>

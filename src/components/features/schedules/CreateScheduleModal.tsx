@@ -38,6 +38,8 @@ import {
   Save,
   Laptop,
   Upload,
+  Headphones,
+  Download,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 
@@ -62,6 +64,8 @@ interface SelectedSong {
   execution_key?: string;
   order_index: number;
   notes?: string;
+  audio_path?: string | null;
+  has_virtual_instruments?: boolean;
 }
 
 const FUNCTION_COLORS: Record<
@@ -329,6 +333,7 @@ export function CreateScheduleModal({
   const [quickSongUrl, setQuickSongUrl] = useState("");
   const [quickSongAudio, setQuickSongAudio] = useState<File | null>(null);
   const [savingQuickSong, setSavingQuickSong] = useState(false);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   // UI
   const [dragIndex, setDragIndex] = useState<number | null>(null);
@@ -377,6 +382,8 @@ export function CreateScheduleModal({
               original_key: s.song?.original_key || undefined,
               execution_key: s.execution_key || undefined,
               order_index: s.order_index,
+              audio_path: s.song?.audio_path || null,
+              has_virtual_instruments: s.song?.has_virtual_instruments,
             })),
         );
       }
@@ -616,6 +623,8 @@ export function CreateScheduleModal({
         original_key: song.original_key || undefined,
         execution_key: song.original_key || undefined,
         order_index: prev.length,
+        audio_path: song.audio_path || null,
+        has_virtual_instruments: song.has_virtual_instruments,
       },
     ]);
     setSongSearchQuery("");
@@ -690,6 +699,22 @@ export function CreateScheduleModal({
   const handleDragEnd = () => {
     setDragIndex(null);
     setDragOverIndex(null);
+  };
+
+  // ── Download de áudio ─────────────────────────────────────────────────────
+
+  const handleDownload = async (song: SelectedSong) => {
+    if (!song.audio_path) return;
+    try {
+      setDownloadingId(song.song_id);
+      const ext = song.audio_path.split(".").pop() || "mp3";
+      const fileName = `${song.song_name}${song.artist ? ` - ${song.artist}` : ""}.${ext}`;
+      await songService.downloadAudio(song.audio_path, fileName);
+    } catch {
+      toast({ variant: "destructive", title: "Erro ao baixar áudio" });
+    } finally {
+      setDownloadingId(null);
+    }
   };
 
   // ── Submit ────────────────────────────────────────────────────────────────
@@ -1208,9 +1233,29 @@ export function CreateScheduleModal({
                           {index + 1}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm truncate">
-                            {song.song_name}
-                          </p>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <p className="font-medium text-sm truncate">
+                              {song.song_name}
+                            </p>
+                            {/* Ícone áudio */}
+                            {song.audio_path && (
+                              <span
+                                title="Possui áudio"
+                                className="flex items-center justify-center w-5 h-5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex-shrink-0"
+                              >
+                                <Headphones className="h-3 w-3" />
+                              </span>
+                            )}
+                            {/* Ícone VS */}
+                            {song.has_virtual_instruments && (
+                              <span
+                                title="Virtual Sample"
+                                className="flex items-center justify-center w-5 h-5 rounded-md bg-muted text-muted-foreground flex-shrink-0"
+                              >
+                                <Laptop className="h-3 w-3" />
+                              </span>
+                            )}
+                          </div>
                           {song.artist && (
                             <p className="text-xs text-muted-foreground truncate">
                               {song.artist}
@@ -1237,6 +1282,22 @@ export function CreateScheduleModal({
                             placeholder="C"
                           />
                         </div>
+                        {/* Download */}
+                        {song.audio_path && (
+                          <button
+                            type="button"
+                            onClick={() => handleDownload(song)}
+                            disabled={downloadingId === song.song_id}
+                            className="text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors p-1 disabled:opacity-50"
+                            title="Baixar áudio"
+                          >
+                            {downloadingId === song.song_id ? (
+                              <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <Download className="h-3.5 w-3.5" />
+                            )}
+                          </button>
+                        )}
                         <button
                           type="button"
                           onClick={() => removeSong(song.song_id)}
