@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -52,6 +52,7 @@ import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { CreateSongModal } from "@/components/features/songs/CreateSongModal";
 import { EditSongModal } from "@/components/features/songs/EditSongModal";
+import { AudioPlayer, AudioTrack } from "@/components/shared/AudioPlayer";
 import { songService } from "@/services/songService";
 import { useToast } from "@/components/ui/use-toast";
 import { Song } from "@/types";
@@ -142,8 +143,11 @@ export function SongsPage() {
   const [editingSong, setEditingSong] = useState<Song | null>(null);
   const [deletingSong, setDeletingSong] = useState<Song | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [playingId, setPlayingId] = useState<string | null>(null);
+
+  // Player
+  const [playerTracks, setPlayerTracks] = useState<AudioTrack[]>([]);
+  const [currentTrackId, setCurrentTrackId] = useState<string | null>(null);
+  const [loadingAudioId, setLoadingAudioId] = useState<string | null>(null);
 
   const filtered = songs
     .filter((s) => {
@@ -162,23 +166,70 @@ export function SongsPage() {
     });
 
   const handlePlay = async (song: Song) => {
-    if (playingId === song.id) {
-      audioRef.current?.pause();
-      setPlayingId(null);
+    if (!song.audio_path) return;
+
+    // Se já está na playlist, só muda a faixa atual
+    const existing = playerTracks.find((t) => t.id === song.id);
+    if (existing) {
+      setCurrentTrackId(song.id);
       return;
     }
-    if (!song.audio_path) return;
+
     try {
+      setLoadingAudioId(song.id);
       const url = await songService.getAudioUrl(song.audio_path);
-      setPlayingId(song.id);
-      setTimeout(() => {
-        if (audioRef.current) {
-          audioRef.current.src = url;
-          audioRef.current.play();
-        }
-      }, 50);
+
+      // Monta playlist com todas as músicas que têm áudio
+      const allTracks: AudioTrack[] = songs
+        .filter((s) => s.audio_path)
+        .map((s) => ({
+          id: s.id,
+          name: s.name,
+          artist: s.artist || undefined,
+          audioUrl: s.id === song.id ? url : "", // URL lazy para as outras
+          key: s.original_key || undefined,
+        }));
+
+      // Garante que a faixa clicada tem a URL correta
+      const trackIndex = allTracks.findIndex((t) => t.id === song.id);
+      if (trackIndex >= 0) allTracks[trackIndex].audioUrl = url;
+
+      setPlayerTracks(allTracks);
+      setCurrentTrackId(song.id);
     } catch {
       toast({ variant: "destructive", title: "Erro ao reproduzir áudio" });
+    } finally {
+      setLoadingAudioId(null);
+    }
+  };
+
+  // Quando o player muda de faixa, carrega a URL se necessário
+  const handleTrackChange = async (id: string | null) => {
+    if (!id) {
+      setCurrentTrackId(null);
+      return;
+    }
+
+    const track = playerTracks.find((t) => t.id === id);
+    if (!track) return;
+
+    if (track.audioUrl) {
+      setCurrentTrackId(id);
+      return;
+    }
+
+    // Carregar URL da faixa
+    const song = songs.find((s) => s.id === id);
+    if (!song?.audio_path) return;
+
+    try {
+      const url = await songService.getAudioUrl(song.audio_path);
+      setPlayerTracks((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, audioUrl: url } : t)),
+      );
+      setCurrentTrackId(id);
+    } catch {
+      toast({ variant: "destructive", title: "Erro ao carregar faixa" });
     }
   };
 
@@ -373,7 +424,7 @@ export function SongsPage() {
                 key={song.id}
                 className={cn(
                   "flex items-center gap-3 p-3 rounded-xl border transition-colors",
-                  playingId === song.id
+                  currentTrackId === song.id
                     ? "bg-primary/5 border-primary/20"
                     : "hover:bg-accent border-transparent",
                 )}
@@ -388,7 +439,9 @@ export function SongsPage() {
                       : "bg-muted cursor-default",
                   )}
                 >
-                  {playingId === song.id ? (
+                  {loadingAudioId === song.id ? (
+                    <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  ) : currentTrackId === song.id ? (
                     <Pause className="h-4 w-4 text-primary" />
                   ) : (
                     <Play
@@ -482,15 +535,18 @@ export function SongsPage() {
         )}
       </Section>
 
-      {/* Player oculto */}
-      <audio
-        ref={audioRef}
-        onEnded={() => setPlayingId(null)}
-        onError={() => {
-          setPlayingId(null);
-          toast({ variant: "destructive", title: "Erro ao reproduzir" });
-        }}
-      />
+      {/* Player global */}
+      {currentTrackId && playerTracks.length > 0 && (
+        <AudioPlayer
+          tracks={playerTracks}
+          currentTrackId={currentTrackId}
+          onTrackChange={handleTrackChange}
+          onClose={() => {
+            setCurrentTrackId(null);
+            setPlayerTracks([]);
+          }}
+        />
+      )}
 
       {/* Modais */}
       <CreateSongModal

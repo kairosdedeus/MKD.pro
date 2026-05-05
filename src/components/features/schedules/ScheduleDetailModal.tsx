@@ -7,12 +7,27 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Trash2, Calendar, Users, Music, FileText } from "lucide-react";
+import {
+  Pencil,
+  Trash2,
+  Calendar,
+  Users,
+  Music,
+  FileText,
+  Play,
+  Pause,
+  Headphones,
+  Laptop,
+  ExternalLink,
+} from "lucide-react";
 import { Schedule } from "@/types";
 import { useToast } from "@/components/ui/use-toast";
 import { format, parseISO } from "date-fns";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ptBR } from "date-fns/locale";
+import { songService } from "@/services/songService";
+import { AudioPlayer, AudioTrack } from "@/components/shared/AudioPlayer";
+import { cn } from "@/lib/utils";
 
 interface ScheduleDetailModalProps {
   open: boolean;
@@ -31,6 +46,59 @@ const STATUS_LABELS: Record<
   completed: { label: "Concluída", variant: "outline" },
 };
 
+const FUNCTION_COLORS: Record<
+  string,
+  { bg: string; text: string; pill: string }
+> = {
+  Vocal: {
+    bg: "bg-primary/5",
+    text: "text-primary",
+    pill: "bg-primary/10 text-primary border-primary/30",
+  },
+  BackVocal: {
+    bg: "bg-primary/5",
+    text: "text-primary",
+    pill: "bg-primary/10 text-primary border-primary/30",
+  },
+  Guitarra: {
+    bg: "bg-orange-500/5",
+    text: "text-orange-600 dark:text-orange-400",
+    pill: "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/30",
+  },
+  Baixo: {
+    bg: "bg-blue-500/5",
+    text: "text-blue-600 dark:text-blue-400",
+    pill: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30",
+  },
+  Bateria: {
+    bg: "bg-destructive/5",
+    text: "text-destructive",
+    pill: "bg-destructive/10 text-destructive border-destructive/30",
+  },
+  Teclado: {
+    bg: "bg-emerald-500/5",
+    text: "text-emerald-600 dark:text-emerald-400",
+    pill: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
+  },
+  Teclado2: {
+    bg: "bg-emerald-500/5",
+    text: "text-emerald-600 dark:text-emerald-400",
+    pill: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
+  },
+};
+
+const FUNCTION_ICONS: Record<string, string> = {
+  Vocal: "🎤",
+  BackVocal: "🎙️",
+  Guitarra: "🎸",
+  Baixo: "🎸",
+  Bateria: "🥁",
+  Teclado: "🎹",
+  Projeção: "📽️",
+  Som: "🔊",
+  Transmissão: "📡",
+};
+
 export function ScheduleDetailModal({
   open,
   onOpenChange,
@@ -44,13 +112,91 @@ export function ScheduleDetailModal({
   const [showWhatsAppPreview, setShowWhatsAppPreview] = useState(false);
   const [whatsAppText, setWhatsAppText] = useState("");
 
+  // ── Player ────────────────────────────────────────────────────
+  const [playerTracks, setPlayerTracks] = useState<AudioTrack[]>([]);
+  const [currentTrackId, setCurrentTrackId] = useState<string | null>(null);
+  const [loadingAudioId, setLoadingAudioId] = useState<string | null>(null);
+
+  // Fechar player ao fechar modal
+  useEffect(() => {
+    if (!open) {
+      setCurrentTrackId(null);
+      setPlayerTracks([]);
+    }
+  }, [open]);
+
+  const songsWithAudio = (schedule.songs || [])
+    .filter((ss) => ss.song?.audio_path)
+    .sort((a, b) => a.order_index - b.order_index);
+
+  const handlePlay = async (scheduleSongId: string) => {
+    const scheduleSong = schedule.songs?.find((ss) => ss.id === scheduleSongId);
+    if (!scheduleSong?.song?.audio_path) return;
+
+    // Se já está na playlist, só muda a faixa
+    const existing = playerTracks.find((t) => t.id === scheduleSongId);
+    if (existing?.audioUrl) {
+      setCurrentTrackId(scheduleSongId);
+      return;
+    }
+
+    try {
+      setLoadingAudioId(scheduleSongId);
+      const url = await songService.getAudioUrl(scheduleSong.song.audio_path);
+
+      // Monta playlist com todas as músicas da escala que têm áudio
+      const tracks: AudioTrack[] = songsWithAudio.map((ss) => ({
+        id: ss.id,
+        name: ss.song?.name || "Música",
+        artist: ss.song?.artist || undefined,
+        audioUrl: ss.id === scheduleSongId ? url : "",
+        key: ss.execution_key || ss.song?.original_key || undefined,
+      }));
+
+      setPlayerTracks(tracks);
+      setCurrentTrackId(scheduleSongId);
+    } catch {
+      toast({ variant: "destructive", title: "Erro ao reproduzir áudio" });
+    } finally {
+      setLoadingAudioId(null);
+    }
+  };
+
+  const handleTrackChange = async (id: string | null) => {
+    if (!id) {
+      setCurrentTrackId(null);
+      return;
+    }
+
+    const track = playerTracks.find((t) => t.id === id);
+    if (!track) return;
+
+    if (track.audioUrl) {
+      setCurrentTrackId(id);
+      return;
+    }
+
+    const scheduleSong = schedule.songs?.find((ss) => ss.id === id);
+    if (!scheduleSong?.song?.audio_path) return;
+
+    try {
+      const url = await songService.getAudioUrl(scheduleSong.song.audio_path);
+      setPlayerTracks((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, audioUrl: url } : t)),
+      );
+      setCurrentTrackId(id);
+    } catch {
+      toast({ variant: "destructive", title: "Erro ao carregar faixa" });
+    }
+  };
+
+  // ── WhatsApp ──────────────────────────────────────────────────
   function buildWeekendWhatsAppText(schedules: Schedule[], teamName: string) {
     const lines: string[] = [];
     lines.push(
       `📍 *${teamName.toUpperCase()}* ${schedule.title ? `🎤 *${schedule.title}*` : ""}`,
     );
     lines.push("");
-
     const ordered = [...schedules].sort((a, b) => a.date.localeCompare(b.date));
     ordered.forEach((s) => {
       lines.push(`🗓 ${format(parseISO(s.date), "EEEE dd", { locale: ptBR })}`);
@@ -65,7 +211,6 @@ export function ScheduleDetailModal({
       });
       lines.push("");
     });
-
     return lines.join("\n").trim();
   }
 
@@ -74,7 +219,7 @@ export function ScheduleDetailModal({
       await navigator.clipboard.writeText(whatsAppText);
       toast({ title: "Texto copiado para a área de transferência" });
       setShowWhatsAppPreview(false);
-    } catch (error) {
+    } catch {
       toast({
         variant: "destructive",
         title: "Não foi possível copiar",
@@ -82,6 +227,46 @@ export function ScheduleDetailModal({
       });
     }
   };
+
+  // ── Membros agrupados por função ──────────────────────────────
+  const functionMap = new Map<
+    string,
+    {
+      functionName: string;
+      members: string[];
+      icon: string;
+      color: { bg: string; text: string; pill: string };
+    }
+  >();
+  (schedule.members || []).forEach((member) => {
+    const memberName = member.team_member?.user?.nome || "Sem nome";
+    (member.functions || []).forEach((fn) => {
+      if (!functionMap.has(fn.id)) {
+        functionMap.set(fn.id, {
+          functionName: fn.nome,
+          members: [],
+          icon: FUNCTION_ICONS[fn.nome] || "🎵",
+          color: FUNCTION_COLORS[fn.nome] || {
+            bg: "bg-muted",
+            text: "text-muted-foreground",
+            pill: "bg-muted text-muted-foreground border-border",
+          },
+        });
+      }
+      functionMap.get(fn.id)!.members.push(memberName);
+    });
+  });
+  const sortedFunctions = Array.from(functionMap.values()).sort((a, b) => {
+    const p = (n: string) => (n === "Vocal" ? 0 : n === "BackVocal" ? 1 : 2);
+    return (
+      p(a.functionName) - p(b.functionName) ||
+      a.functionName.localeCompare(b.functionName)
+    );
+  });
+
+  const sortedSongs = [...(schedule.songs || [])].sort(
+    (a, b) => a.order_index - b.order_index,
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -132,199 +317,191 @@ export function ScheduleDetailModal({
               <Users className="h-4 w-4 text-primary" />
               Membros da Escala
             </div>
-            {!schedule.members || schedule.members.length === 0 ? (
+            {sortedFunctions.length === 0 ? (
               <p className="text-sm text-muted-foreground italic">
                 Nenhum membro escalado
               </p>
             ) : (
               <div className="rounded-xl border border-border overflow-hidden divide-y divide-border">
-                {(() => {
-                  // Agrupar membros por função
-                  const functionMap = new Map<
-                    string,
-                    {
-                      functionName: string;
-                      members: string[];
-                      icon: string;
-                      color: { bg: string; text: string; pill: string };
-                    }
-                  >();
-
-                  const FUNCTION_COLORS: Record<
-                    string,
-                    { bg: string; text: string; pill: string }
-                  > = {
-                    Vocal: {
-                      bg: "bg-primary/5",
-                      text: "text-primary",
-                      pill: "bg-primary/10 text-primary border-primary/30",
-                    },
-                    BackVocal: {
-                      bg: "bg-primary/5",
-                      text: "text-primary",
-                      pill: "bg-primary/10 text-primary border-primary/30",
-                    },
-                    Guitarra: {
-                      bg: "bg-orange-500/5",
-                      text: "text-orange-600 dark:text-orange-400",
-                      pill: "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/30",
-                    },
-                    Baixo: {
-                      bg: "bg-blue-500/5",
-                      text: "text-blue-600 dark:text-blue-400",
-                      pill: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30",
-                    },
-                    Bateria: {
-                      bg: "bg-destructive/5",
-                      text: "text-destructive",
-                      pill: "bg-destructive/10 text-destructive border-destructive/30",
-                    },
-                    Teclado: {
-                      bg: "bg-emerald-500/5",
-                      text: "text-emerald-600 dark:text-emerald-400",
-                      pill: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
-                    },
-                    Teclado2: {
-                      bg: "bg-emerald-500/5",
-                      text: "text-emerald-600 dark:text-emerald-400",
-                      pill: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
-                    },
-                  };
-
-                  const FUNCTION_ICONS: Record<string, string> = {
-                    Vocal: "🎤",
-                    BackVocal: "🎙️",
-                    Guitarra: "🎸",
-                    Baixo: "🎸",
-                    Bateria: "🥁",
-                    Teclado: "🎹",
-                    Projeção: "📽️",
-                    Som: "🔊",
-                    Transmissão: "📡",
-                  };
-
-                  schedule.members.forEach((member) => {
-                    const memberName =
-                      member.team_member?.user?.nome || "Sem nome";
-                    (member.functions || []).forEach((fn) => {
-                      if (!functionMap.has(fn.id)) {
-                        functionMap.set(fn.id, {
-                          functionName: fn.nome,
-                          members: [],
-                          icon: FUNCTION_ICONS[fn.nome] || "🎵",
-                          color: FUNCTION_COLORS[fn.nome] || {
-                            bg: "bg-muted",
-                            text: "text-muted-foreground",
-                            pill: "bg-muted text-muted-foreground border-border",
-                          },
-                        });
-                      }
-                      functionMap.get(fn.id)!.members.push(memberName);
-                    });
-                  });
-
-                  // Ordenar funções: Vocal, BackVocal, demais
-                  const sortedFunctions = Array.from(functionMap.values()).sort(
-                    (a, b) => {
-                      const getPriority = (nome: string) => {
-                        if (nome === "Vocal") return 0;
-                        if (nome === "BackVocal") return 1;
-                        return 2;
-                      };
-                      const priorityA = getPriority(a.functionName);
-                      const priorityB = getPriority(b.functionName);
-                      if (priorityA !== priorityB) return priorityA - priorityB;
-                      return a.functionName.localeCompare(b.functionName);
-                    },
-                  );
-
-                  return sortedFunctions.map(
-                    ({ functionName, members, icon, color }) => (
-                      <div
-                        key={functionName}
-                        className={`flex flex-col sm:flex-row items-start gap-3 sm:gap-4 px-3 sm:px-4 py-3 ${color.bg}`}
-                      >
-                        {/* Função label */}
-                        <div className="flex items-center gap-2 w-full sm:w-32 flex-shrink-0">
-                          <span className="text-base leading-none">{icon}</span>
-                          <span
-                            className={`text-sm font-semibold ${color.text}`}
-                          >
-                            {functionName}
-                          </span>
-                        </div>
-
-                        {/* Membros */}
-                        <div className="flex-1 min-w-0 w-full">
-                          <div className="flex flex-wrap items-center gap-2">
-                            {members.map((memberName, idx) => (
-                              <span
-                                key={idx}
-                                className={`inline-flex items-center gap-1.5 pl-2.5 pr-2.5 py-1 rounded-full text-sm font-medium border ${color.pill}`}
-                              >
-                                <span className="w-5 h-5 rounded-full bg-primary-foreground/60 dark:bg-white/20 flex items-center justify-center text-xs font-bold flex-shrink-0">
-                                  {memberName.charAt(0).toUpperCase()}
-                                </span>
-                                {memberName}
+                {sortedFunctions.map(
+                  ({ functionName, members, icon, color }) => (
+                    <div
+                      key={functionName}
+                      className={`flex flex-col sm:flex-row items-start gap-3 sm:gap-4 px-3 sm:px-4 py-3 ${color.bg}`}
+                    >
+                      <div className="flex items-center gap-2 w-full sm:w-32 flex-shrink-0">
+                        <span className="text-base leading-none">{icon}</span>
+                        <span className={`text-sm font-semibold ${color.text}`}>
+                          {functionName}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0 w-full">
+                        <div className="flex flex-wrap items-center gap-2">
+                          {members.map((memberName, idx) => (
+                            <span
+                              key={idx}
+                              className={`inline-flex items-center gap-1.5 pl-2.5 pr-2.5 py-1 rounded-full text-sm font-medium border ${color.pill}`}
+                            >
+                              <span className="w-5 h-5 rounded-full bg-primary-foreground/60 dark:bg-white/20 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                                {memberName.charAt(0).toUpperCase()}
                               </span>
-                            ))}
-                          </div>
+                              {memberName}
+                            </span>
+                          ))}
                         </div>
                       </div>
-                    ),
-                  );
-                })()}
+                    </div>
+                  ),
+                )}
               </div>
             )}
           </div>
 
           {/* Músicas */}
-          {schedule.songs && schedule.songs.length > 0 && (
+          {sortedSongs.length > 0 && (
             <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-                <Music className="h-4 w-4 text-primary" />
-                Músicas ({schedule.songs.length})
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                  <Music className="h-4 w-4 text-primary" />
+                  Músicas ({sortedSongs.length})
+                </div>
+                {songsWithAudio.length > 0 && (
+                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Headphones className="h-3.5 w-3.5" />
+                    {songsWithAudio.length} com áudio
+                  </span>
+                )}
               </div>
+
               <div className="space-y-1">
-                {schedule.songs
-                  .sort((a, b) => a.order_index - b.order_index)
-                  .map((scheduleSong, index) => (
+                {sortedSongs.map((scheduleSong, index) => {
+                  const hasAudio = !!scheduleSong.song?.audio_path;
+                  const isPlaying = currentTrackId === scheduleSong.id;
+                  const isLoading = loadingAudioId === scheduleSong.id;
+
+                  return (
                     <div
                       key={scheduleSong.id}
-                      className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 p-2 border rounded-lg"
+                      className={cn(
+                        "flex items-center gap-2 sm:gap-3 p-2.5 border rounded-xl transition-colors",
+                        isPlaying
+                          ? "bg-primary/5 border-primary/20"
+                          : "border-border hover:bg-accent/50",
+                      )}
                     >
-                      <span className="text-xs text-muted-foreground w-5 text-center flex-shrink-0">
-                        {index + 1}
-                      </span>
-                      <div className="flex-1 min-w-0 w-full">
-                        <p className="text-sm font-medium">
-                          {scheduleSong.song?.name || "Música"}
-                        </p>
+                      {/* Número / Play */}
+                      <button
+                        onClick={() => hasAudio && handlePlay(scheduleSong.id)}
+                        disabled={!hasAudio}
+                        className={cn(
+                          "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors",
+                          hasAudio
+                            ? "bg-primary/10 hover:bg-primary/20 cursor-pointer"
+                            : "bg-muted cursor-default",
+                        )}
+                        title={hasAudio ? "Reproduzir" : "Sem áudio"}
+                      >
+                        {isLoading ? (
+                          <div className="w-3.5 h-3.5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                        ) : isPlaying ? (
+                          <Pause className="h-3.5 w-3.5 text-primary" />
+                        ) : (
+                          <span
+                            className={cn(
+                              "text-xs font-bold",
+                              hasAudio
+                                ? "text-primary"
+                                : "text-muted-foreground",
+                            )}
+                          >
+                            {hasAudio ? (
+                              <Play className="h-3.5 w-3.5" />
+                            ) : (
+                              index + 1
+                            )}
+                          </span>
+                        )}
+                      </button>
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <p className="text-sm font-medium truncate">
+                            {scheduleSong.song?.name || "Música"}
+                          </p>
+                          {/* Ícone de áudio */}
+                          {hasAudio && (
+                            <span
+                              title="Possui áudio"
+                              className="flex items-center justify-center w-5 h-5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex-shrink-0"
+                            >
+                              <Headphones className="h-3 w-3" />
+                            </span>
+                          )}
+                          {/* Ícone VS */}
+                          {scheduleSong.song?.has_virtual_instruments && (
+                            <span
+                              title="Virtual Sample"
+                              className="flex items-center justify-center w-5 h-5 rounded-md bg-muted text-muted-foreground flex-shrink-0"
+                            >
+                              <Laptop className="h-3 w-3" />
+                            </span>
+                          )}
+                        </div>
                         {scheduleSong.song?.artist && (
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-xs text-muted-foreground truncate">
                             {scheduleSong.song.artist}
                           </p>
                         )}
                       </div>
-                      <div className="flex gap-2 text-xs text-muted-foreground flex-wrap">
+
+                      {/* Tom + Link */}
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
                         {scheduleSong.song?.original_key && (
-                          <span>
-                            Original:{" "}
-                            <strong>{scheduleSong.song.original_key}</strong>
+                          <span className="text-xs bg-muted text-muted-foreground px-1.5 py-0.5 rounded-md font-medium">
+                            {scheduleSong.song.original_key}
                           </span>
                         )}
                         {scheduleSong.execution_key &&
                           scheduleSong.execution_key !==
                             scheduleSong.song?.original_key && (
-                            <span className="text-primary">
-                              Execução:{" "}
-                              <strong>{scheduleSong.execution_key}</strong>
+                            <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded-md font-medium">
+                              {scheduleSong.execution_key}
                             </span>
                           )}
+                        {scheduleSong.song?.reference_url && (
+                          <a
+                            href={scheduleSong.song.reference_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-muted-foreground hover:text-primary transition-colors"
+                            onClick={(e) => e.stopPropagation()}
+                            title="Abrir referência"
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </a>
+                        )}
                       </div>
                     </div>
-                  ))}
+                  );
+                })}
               </div>
+
+              {/* Player embutido na modal */}
+              {currentTrackId && playerTracks.length > 0 && (
+                <div className="mt-3 rounded-xl border border-primary/20 overflow-hidden">
+                  <AudioPlayer
+                    tracks={playerTracks}
+                    currentTrackId={currentTrackId}
+                    onTrackChange={handleTrackChange}
+                    onClose={() => {
+                      setCurrentTrackId(null);
+                      setPlayerTracks([]);
+                    }}
+                    embedded
+                  />
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -340,7 +517,6 @@ export function ScheduleDetailModal({
           <Button
             variant="outline"
             className="gap-2 w-full sm:w-auto"
-            id="export-whatsapp-single-day"
             onClick={() => {
               const text = buildWeekendWhatsAppText(
                 [schedule],
@@ -370,13 +546,13 @@ export function ScheduleDetailModal({
           </Button>
         </DialogFooter>
       </DialogContent>
-      {/* WhatsApp preview dialog */}
+
+      {/* WhatsApp preview */}
       <Dialog open={showWhatsAppPreview} onOpenChange={setShowWhatsAppPreview}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Exportar WhatsApp</DialogTitle>
           </DialogHeader>
-
           <div className="space-y-3 px-5 py-4">
             <textarea
               className="w-full h-64 sm:h-80 p-3 border rounded resize-y font-mono text-xs sm:text-sm"
@@ -387,7 +563,6 @@ export function ScheduleDetailModal({
               Edite o texto se necessário e clique em Copiar.
             </p>
           </div>
-
           <DialogFooter className="gap-2 flex-col-reverse sm:flex-row">
             <Button
               variant="outline"
@@ -398,7 +573,6 @@ export function ScheduleDetailModal({
             </Button>
             <Button
               className="gap-2 w-full sm:w-auto"
-              id="export-whatsapp-copy"
               onClick={handleCopyFromPreview}
             >
               <FileText className="h-4 w-4" />

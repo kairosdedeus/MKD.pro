@@ -201,7 +201,7 @@ export function CreateSongModal({
               onCheckedChange={(v) => setHasVirtualInstruments(v as boolean)}
             />
             <Label htmlFor="hasVI" className="cursor-pointer">
-              Possui instrumentos sampleados
+              Possui VS
             </Label>
           </div>
 

@@ -1,66 +1,77 @@
-import { supabase } from '@/lib/supabaseClient'
-import { Song, SongFormData } from '@/types'
+import { supabase } from "@/lib/supabaseClient";
+import { Song, SongFormData } from "@/types";
 
 export const songService = {
   async searchSongs(query: string) {
     const { data, error } = await supabase
-      .from('songs')
-      .select('*')
+      .from("songs")
+      .select("*")
       .or(`name.ilike.%${query}%,artist.ilike.%${query}%`)
-      .order('name')
-      .limit(10)
+      .order("name")
+      .limit(10);
 
-    if (error) throw error
-    return data as Song[]
+    if (error) throw error;
+    return data as Song[];
   },
 
   async getSongs() {
     const { data, error } = await supabase
-      .from('songs')
-      .select('*')
-      .order('name')
+      .from("songs")
+      .select("*")
+      .order("name");
 
-    if (error) throw error
-    return data as Song[]
+    if (error) throw error;
+    return data as Song[];
   },
 
   async getSongById(id: string) {
     const { data, error } = await supabase
-      .from('songs')
-      .select('*')
-      .eq('id', id)
-      .single()
+      .from("songs")
+      .select("*")
+      .eq("id", id)
+      .single();
 
-    if (error) throw error
-    return data as Song
+    if (error) throw error;
+    return data as Song;
   },
 
   async createSong(songData: SongFormData) {
-    const { data: authData } = await supabase.auth.getUser()
-    const { data: userProfile } = await supabase
-      .from('users_profile')
-      .select('id')
-      .eq('auth_user_id', authData.user?.id)
-      .single()
+    const { data: authData } = await supabase.auth.getUser();
+    const authUserId = authData.user?.id;
 
-    let audioPath: string | null = null
+    const { data: userProfile } = await supabase
+      .from("users_profile")
+      .select("id")
+      .eq("auth_user_id", authUserId)
+      .single();
+
+    // Usa profile_id se disponível, senão usa auth_user_id como prefixo da pasta
+    const folderPrefix = userProfile?.id ?? authUserId;
+
+    let audioPath: string | null = null;
 
     // Upload de áudio se fornecido
     if (songData.audio_file) {
-      const fileExt = songData.audio_file.name.split('.').pop()
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
-      const filePath = `${userProfile?.id}/${fileName}`
+      const fileExt = songData.audio_file.name.split(".").pop()?.toLowerCase();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `${folderPrefix}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('audio-musicas')
-        .upload(filePath, songData.audio_file)
+        .from("audio-musicas")
+        .upload(filePath, songData.audio_file, {
+          contentType: songData.audio_file.type || "audio/mpeg",
+          upsert: false,
+        });
 
-      if (uploadError) throw uploadError
-      audioPath = filePath
+      if (uploadError) {
+        console.error("Upload error details:", JSON.stringify(uploadError));
+        throw uploadError;
+      }
+      audioPath = filePath;
     }
 
     const { data, error } = await supabase
-      .from('songs')
+      .from("songs")
       .insert({
         name: songData.name,
         artist: songData.artist,
@@ -72,15 +83,15 @@ export const songService = {
         created_by: userProfile?.id,
       })
       .select()
-      .single()
+      .single();
 
-    if (error) throw error
-    return data as Song
+    if (error) throw error;
+    return data as Song;
   },
 
   async updateSong(songId: string, songData: Partial<SongFormData>) {
     const { data, error } = await supabase
-      .from('songs')
+      .from("songs")
       .update({
         name: songData.name,
         artist: songData.artist,
@@ -89,54 +100,82 @@ export const songService = {
         has_virtual_instruments: songData.has_virtual_instruments,
         notes: songData.notes,
       })
-      .eq('id', songId)
+      .eq("id", songId)
       .select()
-      .single()
+      .single();
 
-    if (error) throw error
-    return data as Song
+    if (error) throw error;
+    return data as Song;
   },
 
   async uploadSongAudio(songId: string, file: File) {
-    const { data: authData } = await supabase.auth.getUser()
-    const { data: userProfile } = await supabase
-      .from('users_profile')
-      .select('id')
-      .eq('auth_user_id', authData.user?.id)
-      .single()
+    const { data: authData } = await supabase.auth.getUser();
+    const authUserId = authData.user?.id;
 
-    const fileExt = file.name.split('.').pop()
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
-    const filePath = `${userProfile?.id}/${fileName}`
+    const { data: userProfile } = await supabase
+      .from("users_profile")
+      .select("id")
+      .eq("auth_user_id", authUserId)
+      .single();
+
+    // Usa profile_id se disponível, senão usa auth_user_id como prefixo da pasta
+    const folderPrefix = userProfile?.id ?? authUserId;
+
+    const fileExt = file.name.split(".").pop()?.toLowerCase();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+    const filePath = `${folderPrefix}/${fileName}`;
 
     const { error: uploadError } = await supabase.storage
-      .from('audio-musicas')
-      .upload(filePath, file)
+      .from("audio-musicas")
+      .upload(filePath, file, {
+        contentType: file.type || "audio/mpeg",
+        upsert: false,
+      });
 
-    if (uploadError) throw uploadError
+    if (uploadError) {
+      console.error("Upload error details:", JSON.stringify(uploadError));
+      throw uploadError;
+    }
 
     const { data, error } = await supabase
-      .from('songs')
+      .from("songs")
       .update({ audio_path: filePath })
-      .eq('id', songId)
+      .eq("id", songId)
       .select()
-      .single()
+      .single();
 
-    if (error) throw error
-    return data as Song
+    if (error) throw error;
+    return data as Song;
   },
 
   async getAudioUrl(audioPath: string) {
-    const { data } = supabase.storage
-      .from('audio-musicas')
-      .getPublicUrl(audioPath)
+    // Tenta URL pública primeiro (bucket público)
+    // Se o bucket for privado, usa signed URL com 1 hora de validade
+    try {
+      const { data, error } = await supabase.storage
+        .from("audio-musicas")
+        .createSignedUrl(audioPath, 3600); // 1 hora
 
-    return data.publicUrl
+      if (error) throw error;
+      return data.signedUrl;
+    } catch {
+      // Fallback para URL pública
+      const { data } = supabase.storage
+        .from("audio-musicas")
+        .getPublicUrl(audioPath);
+      return data.publicUrl;
+    }
   },
 
-  async addSongToSchedule(scheduleId: string, songId: string, orderIndex: number, executionKey?: string, notes?: string) {
+  async addSongToSchedule(
+    scheduleId: string,
+    songId: string,
+    orderIndex: number,
+    executionKey?: string,
+    notes?: string,
+  ) {
     const { data, error } = await supabase
-      .from('schedule_songs')
+      .from("schedule_songs")
       .insert({
         schedule_id: scheduleId,
         song_id: songId,
@@ -145,34 +184,39 @@ export const songService = {
         notes,
       })
       .select()
-      .single()
+      .single();
 
-    if (error) throw error
-    return data
+    if (error) throw error;
+    return data;
   },
 
-  async updateScheduleSong(scheduleSongId: string, executionKey?: string, orderIndex?: number, notes?: string) {
+  async updateScheduleSong(
+    scheduleSongId: string,
+    executionKey?: string,
+    orderIndex?: number,
+    notes?: string,
+  ) {
     const { data, error } = await supabase
-      .from('schedule_songs')
+      .from("schedule_songs")
       .update({
         execution_key: executionKey,
         order_index: orderIndex,
         notes,
       })
-      .eq('id', scheduleSongId)
+      .eq("id", scheduleSongId)
       .select()
-      .single()
+      .single();
 
-    if (error) throw error
-    return data
+    if (error) throw error;
+    return data;
   },
 
   async removeSongFromSchedule(scheduleSongId: string) {
     const { error } = await supabase
-      .from('schedule_songs')
+      .from("schedule_songs")
       .delete()
-      .eq('id', scheduleSongId)
+      .eq("id", scheduleSongId);
 
-    if (error) throw error
+    if (error) throw error;
   },
-}
+};
