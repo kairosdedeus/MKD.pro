@@ -411,6 +411,11 @@ dist-ssr/
 .env.production
 .env.development
 
+# Cookies do YouTube (NUNCA commitar)
+cookies.txt
+*.cookies.txt
+ytdlp-service/cookies.txt
+
 # OS
 .DS_Store
 Thumbs.db

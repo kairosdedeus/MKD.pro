@@ -48,15 +48,21 @@ import {
   Laptop,
   Download,
   Headphones,
+  Youtube,
+  Settings,
 } from "lucide-react";
 import { useSongs } from "@/hooks/useSongs";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { CreateSongModal } from "@/components/features/songs/CreateSongModal";
 import { EditSongModal } from "@/components/features/songs/EditSongModal";
+import { YoutubeToAudioModal } from "@/components/features/songs/YoutubeToAudioModal";
+import { YoutubeSettingsModal } from "@/components/features/songs/YoutubeSettingsModal";
 import { AudioPlayer, AudioTrack } from "@/components/shared/AudioPlayer";
 import { songService } from "@/services/songService";
 import { useToast } from "@/components/ui/use-toast";
+import { useAuthStore } from "@/stores/authStore";
+import { isGerencial } from "@/lib/permissions";
 import { Song } from "@/types";
 import { supabase } from "@/lib/supabaseClient";
 import { cn } from "@/lib/utils";
@@ -136,6 +142,8 @@ function Section({
 
 export function SongsPage() {
   const { toast } = useToast();
+  const { profiles } = useAuthStore();
+  const canManage = isGerencial(profiles || []);
   const { songs, loading, refetch } = useSongs();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterKey, setFilterKey] = useState("all");
@@ -145,6 +153,9 @@ export function SongsPage() {
   const [editingSong, setEditingSong] = useState<Song | null>(null);
   const [deletingSong, setDeletingSong] = useState<Song | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [showYoutubeModal, setShowYoutubeModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [youtubeSong, setYoutubeSong] = useState<Song | null>(null);
 
   // Player
   const [playerTracks, setPlayerTracks] = useState<AudioTrack[]>([]);
@@ -286,20 +297,48 @@ export function SongsPage() {
   return (
     <div className="space-y-3 pb-6">
       {/* ── Header compacto ── */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <div>
           <h1 className="text-2xl font-bold text-foreground">🎵 Músicas</h1>
           <p className="text-xs text-muted-foreground">
             {songs.length} no repertório
           </p>
         </div>
-        <Button
-          size="sm"
-          className="gap-1.5 h-9"
-          onClick={() => setShowCreateModal(true)}
-        >
-          <Plus className="h-4 w-4" /> Nova
-        </Button>
+        <div className="flex items-center gap-2">
+          {canManage && (
+            <>
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1.5 h-9 text-red-500 border-red-500/30 hover:bg-red-500/10 hover:text-red-600"
+                onClick={() => {
+                  setYoutubeSong(null);
+                  setShowYoutubeModal(true);
+                }}
+                title="Converter YouTube para MP3"
+              >
+                <Youtube className="h-4 w-4" />
+                <span className="hidden sm:inline">YouTube → MP3</span>
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-9 w-9 p-0 text-muted-foreground"
+                onClick={() => setShowSettingsModal(true)}
+                title="Configurações YouTube"
+              >
+                <Settings className="h-4 w-4" />
+              </Button>
+            </>
+          )}
+          <Button
+            size="sm"
+            className="gap-1.5 h-9"
+            onClick={() => setShowCreateModal(true)}
+          >
+            <Plus className="h-4 w-4" /> Nova
+          </Button>
+        </div>
       </div>
 
       {/* ── Filtros ── */}
@@ -550,6 +589,18 @@ export function SongsPage() {
                     <DropdownMenuItem onClick={() => setEditingSong(song)}>
                       <Pencil className="h-4 w-4 mr-2" /> Editar
                     </DropdownMenuItem>
+                    {canManage && (
+                      <DropdownMenuItem
+                        onClick={() => {
+                          setYoutubeSong(song);
+                          setShowYoutubeModal(true);
+                        }}
+                        className="text-red-500 focus:text-red-600"
+                      >
+                        <Youtube className="h-4 w-4 mr-2" />
+                        YouTube → MP3
+                      </DropdownMenuItem>
+                    )}
                     {song.audio_path && (
                       <DropdownMenuItem
                         onClick={() => handleDownload(song)}
@@ -612,6 +663,18 @@ export function SongsPage() {
         onOpenChange={(o) => !o && setEditingSong(null)}
         song={editingSong}
         onSuccess={refetch}
+      />
+      <YoutubeToAudioModal
+        open={showYoutubeModal}
+        onOpenChange={setShowYoutubeModal}
+        songId={youtubeSong?.id}
+        songName={youtubeSong?.name}
+        defaultUrl={youtubeSong?.reference_url || ""}
+        onSuccess={() => refetch()}
+      />
+      <YoutubeSettingsModal
+        open={showSettingsModal}
+        onOpenChange={setShowSettingsModal}
       />
 
       <AlertDialog
