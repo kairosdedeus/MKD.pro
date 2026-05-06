@@ -1,7 +1,15 @@
 import { useEffect, useState } from "react";
 import { useAuthStore } from "@/stores/authStore";
 import { Button } from "@/components/ui/button";
-import { LogOut, User, KeyRound, ChevronDown } from "lucide-react";
+import {
+  LogOut,
+  User,
+  KeyRound,
+  ChevronDown,
+  CheckCircle2,
+  XCircle,
+  Loader2,
+} from "lucide-react";
 import { NotificationCenter } from "@/components/shared/NotificationCenter";
 import { ThemeSelector } from "@/components/shared/ThemeSelector";
 import {
@@ -21,8 +29,23 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/lib/supabaseClient";
 import { useToast } from "@/components/ui/use-toast";
+
+const EMAIL_SUFFIX = "@mkd.com";
+
+function sanitizePrefix(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9._-]/g, "");
+}
+
+function isValidPrefix(prefix: string): boolean {
+  return /^[a-z0-9][a-z0-9._-]*$/.test(prefix);
+}
 
 function splitName(fullName?: string | null) {
   const parts = (fullName || "").trim().split(/\s+/).filter(Boolean);
@@ -38,108 +61,187 @@ export function Header() {
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
+  const [emailPrefix, setEmailPrefix] = useState("");
+  const [originalPrefix, setOriginalPrefix] = useState("");
+  const [emailAvailable, setEmailAvailable] = useState<boolean | null>(null);
+  const [checkingEmail, setCheckingEmail] = useState(false);
+  const [changePassword, setChangePassword] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
 
+  const fullEmail = emailPrefix ? `${emailPrefix}${EMAIL_SUFFIX}` : "";
+  const emailChanged = emailPrefix !== originalPrefix;
+
   useEffect(() => {
     if (!showProfileDialog || !user) return;
-    const { firstName: currentFirstName, lastName: currentLastName } =
-      splitName(user.nome);
-    setFirstName(currentFirstName);
-    setLastName(currentLastName);
-    setEmail(user.email || "");
+    const { firstName: fn, lastName: ln } = splitName(user.nome);
+    setFirstName(fn);
+    setLastName(ln);
+
+    // Extrair prefixo do email atual
+    // Se o email já é @mkd.com, extrai o prefixo
+    // Se é outro domínio (legado), usa a parte antes do @ como sugestão
+    const currentEmail = user.email || "";
+    let prefix: string;
+    if (currentEmail.endsWith(EMAIL_SUFFIX)) {
+      prefix = currentEmail.slice(0, -EMAIL_SUFFIX.length);
+    } else {
+      // Email legado: gerar sugestão a partir do nome
+      const parts = (user.nome || "").trim().split(/\s+/).filter(Boolean);
+      const first = parts[0]?.charAt(0) || "";
+      const last = parts[parts.length - 1] || "";
+      prefix = sanitizePrefix(`${first}${last}`);
+    }
+    setEmailPrefix(prefix);
+    setOriginalPrefix(prefix);
+    setEmailAvailable(null);
+    setChangePassword(false);
     setNewPassword("");
     setConfirmPassword("");
   }, [showProfileDialog, user]);
 
+  // Verificar disponibilidade do email com debounce
+  useEffect(() => {
+    if (!emailPrefix || !isValidPrefix(emailPrefix)) {
+      setEmailAvailable(null);
+      return;
+    }
+    if (!emailChanged) {
+      setEmailAvailable(true);
+      return;
+    }
+
+    setCheckingEmail(true);
+    setEmailAvailable(null);
+
+    const timer = setTimeout(async () => {
+      try {
+        const { data } = await supabase
+          .from("users_profile")
+          .select("id")
+          .ilike("email", fullEmail)
+          .neq("id", user?.id || "")
+          .limit(1);
+        setEmailAvailable(!data || data.length === 0);
+      } catch {
+        setEmailAvailable(null);
+      } finally {
+        setCheckingEmail(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [emailPrefix, fullEmail, emailChanged, user?.id]);
+
   const handleSaveProfile = async () => {
     if (!user) return;
 
-    const trimmedFirstName = firstName.trim();
-    const trimmedLastName = lastName.trim();
-    const trimmedEmail = email.trim().toLowerCase();
-    const fullName = [trimmedFirstName, trimmedLastName]
-      .filter(Boolean)
-      .join(" ");
-    const emailChanged = trimmedEmail !== user.email;
-    const passwordChanged = !!newPassword || !!confirmPassword;
+    const trimmedFirst = firstName.trim();
+    const trimmedLast = lastName.trim();
 
-    if (!trimmedFirstName) {
+    if (!trimmedFirst) {
       toast({ variant: "destructive", title: "Informe seu nome" });
       return;
     }
-    if (!trimmedLastName) {
+    if (!trimmedLast) {
       toast({ variant: "destructive", title: "Informe seu sobrenome" });
       return;
     }
-    if (!trimmedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
-      toast({ variant: "destructive", title: "Informe um email válido" });
+    if (!emailPrefix || !isValidPrefix(emailPrefix)) {
+      toast({ variant: "destructive", title: "Prefixo de email inválido" });
       return;
     }
-    if (passwordChanged && newPassword !== confirmPassword) {
-      toast({ variant: "destructive", title: "As senhas não coincidem" });
+    if (emailChanged && emailAvailable === false) {
+      toast({ variant: "destructive", title: "Este email já está em uso" });
       return;
     }
-    if (passwordChanged && newPassword.length < 8) {
-      toast({
-        variant: "destructive",
-        title: "Senha deve ter pelo menos 8 caracteres",
-      });
-      return;
+    if (changePassword) {
+      if (newPassword.length < 8) {
+        toast({
+          variant: "destructive",
+          title: "Senha deve ter pelo menos 8 caracteres",
+        });
+        return;
+      }
+      if (newPassword !== confirmPassword) {
+        toast({ variant: "destructive", title: "As senhas não coincidem" });
+        return;
+      }
     }
 
     try {
       setSavingProfile(true);
+      const fullName = [trimmedFirst, trimmedLast].filter(Boolean).join(" ");
 
-      if (emailChanged) {
-        const { data: existingEmail, error: emailCheckError } = await supabase
-          .from("users_profile")
-          .select("id")
-          .eq("email", trimmedEmail)
-          .neq("id", user.id)
-          .maybeSingle();
-
-        if (emailCheckError) throw emailCheckError;
-        if (existingEmail) {
-          toast({ variant: "destructive", title: "Este email já está em uso" });
-          return;
-        }
-      }
-
-      const authUpdates: { email?: string; password?: string } = {};
-      if (emailChanged) authUpdates.email = trimmedEmail;
-      if (passwordChanged) authUpdates.password = newPassword;
-
-      if (Object.keys(authUpdates).length > 0) {
-        const { error: authError } =
-          await supabase.auth.updateUser(authUpdates);
-        if (authError) throw authError;
-      }
-
+      // 1. Atualizar nome no users_profile
       const { data: updatedProfile, error: profileError } = await supabase
         .from("users_profile")
-        .update({
-          nome: fullName,
-          email: trimmedEmail,
-        })
+        .update({ nome: fullName, email: fullEmail } as any)
         .eq("id", user.id)
         .select()
         .single();
 
       if (profileError) throw profileError;
 
-      setUser({
-        ...user,
-        ...updatedProfile,
-      });
+      // 2. Atualizar email no auth.users se mudou
+      if (emailChanged) {
+        const { data: profileData } = await supabase
+          .from("users_profile")
+          .select("auth_user_id")
+          .eq("id", user.id)
+          .single();
+
+        const authUserId = (profileData as any)?.auth_user_id;
+
+        if (authUserId) {
+          try {
+            const { data: rpcResult, error: rpcError } = await (
+              supabase as any
+            ).rpc("update_user_email", {
+              p_auth_user_id: authUserId,
+              p_new_email: fullEmail,
+            });
+
+            if (rpcError || (rpcResult && !rpcResult.success)) {
+              const errMsg =
+                rpcResult?.error || rpcError?.message || "Erro desconhecido";
+              toast({
+                title: "⚠️ Perfil atualizado",
+                description: `Email salvo no perfil. Para atualizar o login execute: supabase/utils/atualizar-email-usuario.sql (${errMsg})`,
+              });
+            } else {
+              setOriginalPrefix(emailPrefix);
+            }
+          } catch {
+            // Função SQL não existe ainda
+            toast({
+              title: "⚠️ Perfil atualizado",
+              description:
+                "Execute supabase/utils/atualizar-email-usuario.sql no Supabase para atualizar o login.",
+            });
+          }
+        }
+      }
+
+      // 3. Atualizar senha se solicitado
+      if (changePassword && newPassword) {
+        const { error: pwError } = await supabase.auth.updateUser({
+          password: newPassword,
+        });
+        if (pwError) throw pwError;
+      }
+
+      // 4. Atualizar store local
+      setUser({ ...user, ...updatedProfile });
 
       toast({
-        title: "Dados atualizados!",
+        title: "✅ Dados atualizados!",
         description: emailChanged
-          ? "Se o Supabase exigir confirmação, valide o novo email antes de usá-lo no login."
-          : undefined,
+          ? `Login atualizado para ${fullEmail}`
+          : changePassword
+            ? "Senha alterada com sucesso"
+            : undefined,
       });
       setShowProfileDialog(false);
     } catch (error: any) {
@@ -152,6 +254,15 @@ export function Header() {
       setSavingProfile(false);
     }
   };
+
+  const canSave =
+    !savingProfile &&
+    firstName.trim().length >= 1 &&
+    lastName.trim().length >= 1 &&
+    isValidPrefix(emailPrefix) &&
+    (!emailChanged || emailAvailable === true) &&
+    (!changePassword ||
+      (newPassword.length >= 8 && newPassword === confirmPassword));
 
   const initials = user?.nome
     ? user.nome
@@ -204,7 +315,11 @@ export function Header() {
                   <User className="h-4 w-4 mr-2 text-primary" />
                   Editar meus dados
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setShowProfileDialog(true)}>
+                <DropdownMenuItem
+                  onClick={() => {
+                    setShowProfileDialog(true);
+                  }}
+                >
                   <KeyRound className="h-4 w-4 mr-2 text-amber-600 dark:text-amber-500" />
                   Alterar senha
                 </DropdownMenuItem>
@@ -229,64 +344,144 @@ export function Header() {
           </DialogHeader>
 
           <div className="space-y-4 py-2">
+            {/* Nome + Sobrenome */}
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label>Nome *</Label>
                 <Input
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   autoComplete="given-name"
+                  placeholder="Ex: Michael"
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label>Sobrenome *</Label>
                 <Input
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   autoComplete="family-name"
+                  placeholder="Ex: Cabrera"
                 />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label>Email de entrada *</Label>
-              <Input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                autoComplete="email"
-              />
+            {/* Email com prefixo editável */}
+            <div className="space-y-1.5">
+              <Label>Email / Login *</Label>
+              <div className="flex items-center gap-0">
+                <div className="relative flex-1">
+                  <Input
+                    value={emailPrefix}
+                    onChange={(e) => {
+                      setEmailPrefix(sanitizePrefix(e.target.value));
+                      setEmailAvailable(null);
+                    }}
+                    className="rounded-r-none border-r-0 font-mono text-sm pr-8"
+                    autoComplete="off"
+                    autoCapitalize="none"
+                    spellCheck={false}
+                    placeholder="prefixo"
+                  />
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                    {checkingEmail && (
+                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    )}
+                    {!checkingEmail &&
+                      emailChanged &&
+                      emailAvailable === true && (
+                        <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                      )}
+                    {!checkingEmail && emailAvailable === false && (
+                      <XCircle className="h-4 w-4 text-destructive" />
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center h-10 px-3 rounded-r-md border border-l-0 bg-muted text-muted-foreground text-sm font-mono select-none">
+                  {EMAIL_SUFFIX}
+                </div>
+              </div>
+              {emailAvailable === false ? (
+                <p className="text-xs text-destructive">
+                  Este email já está em uso
+                </p>
+              ) : emailChanged && emailAvailable === true ? (
+                <p className="text-xs text-emerald-600 dark:text-emerald-400">
+                  ✓ {fullEmail} disponível — login será atualizado
+                </p>
+              ) : !emailChanged ? (
+                <p className="text-xs text-muted-foreground">
+                  Login atual:{" "}
+                  <span className="font-mono">
+                    {originalPrefix}
+                    {EMAIL_SUFFIX}
+                  </span>
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Apenas letras minúsculas, números, ponto e hífen.
+                </p>
+              )}
             </div>
 
-            <div className="rounded-lg border bg-muted/30 p-3 space-y-3">
-              <p className="text-xs font-medium text-muted-foreground">
-                Preencha a senha apenas se quiser alterá-la.
-              </p>
-              <div className="space-y-2">
-                <Label>Nova senha</Label>
-                <Input
-                  type="password"
-                  placeholder="Mínimo 8 caracteres"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  autoComplete="new-password"
+            {/* Checkbox alterar senha */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="changePassword"
+                  checked={changePassword}
+                  onCheckedChange={(v) => {
+                    setChangePassword(v as boolean);
+                    if (!v) {
+                      setNewPassword("");
+                      setConfirmPassword("");
+                    }
+                  }}
                 />
+                <label
+                  htmlFor="changePassword"
+                  className="text-sm font-medium cursor-pointer"
+                >
+                  Deseja alterar a senha?
+                </label>
               </div>
-              <div className="space-y-2">
-                <Label>Confirmar nova senha</Label>
-                <Input
-                  type="password"
-                  placeholder="Repita a nova senha"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  autoComplete="new-password"
-                />
-                {confirmPassword && newPassword !== confirmPassword && (
-                  <p className="text-xs text-red-500">
-                    As senhas não coincidem
-                  </p>
-                )}
-              </div>
+
+              {changePassword && (
+                <div className="rounded-lg border bg-muted/30 p-3 space-y-3">
+                  <div className="space-y-1.5">
+                    <Label>Nova senha</Label>
+                    <Input
+                      type="password"
+                      placeholder="Mínimo 8 caracteres"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      autoComplete="new-password"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Confirmar nova senha</Label>
+                    <Input
+                      type="password"
+                      placeholder="Repita a nova senha"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      autoComplete="new-password"
+                    />
+                    {confirmPassword && newPassword !== confirmPassword && (
+                      <p className="text-xs text-destructive">
+                        As senhas não coincidem
+                      </p>
+                    )}
+                    {confirmPassword &&
+                      newPassword === confirmPassword &&
+                      newPassword.length >= 8 && (
+                        <p className="text-xs text-emerald-600 dark:text-emerald-400">
+                          ✓ Senhas coincidem
+                        </p>
+                      )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -301,7 +496,7 @@ export function Header() {
             </Button>
             <Button
               onClick={handleSaveProfile}
-              disabled={savingProfile}
+              disabled={!canSave}
               className="w-full bg-primary hover:bg-primary/90 text-primary-foreground sm:w-auto"
             >
               {savingProfile ? "Salvando..." : "Salvar alterações"}

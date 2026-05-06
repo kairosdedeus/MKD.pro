@@ -25,7 +25,21 @@ import {
   TEAM_TYPE_LABELS,
 } from "@/lib/team-flow";
 import { useQueryClient } from "@tanstack/react-query";
-import { getAvailableGeneratedEmail } from "@/lib/user-email";
+import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
+
+const EMAIL_SUFFIX = "@mkd.com";
+
+function sanitizePrefix(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9._-]/g, "");
+}
+
+function isValidPrefix(prefix: string): boolean {
+  return /^[a-z0-9][a-z0-9._-]*$/.test(prefix);
+}
 
 interface EditUserModalProps {
   open: boolean;
@@ -47,12 +61,19 @@ export function EditUserModal({
 
   const [nome, setNome] = useState("");
   const [sobrenome, setSobrenome] = useState("");
+  const [emailPrefix, setEmailPrefix] = useState("");
+  const [originalEmail, setOriginalEmail] = useState("");
+  const [emailAvailable, setEmailAvailable] = useState<boolean | null>(null);
+  const [checkingEmail, setCheckingEmail] = useState(false);
   const [telefone, setTelefone] = useState("");
   const [selectedProfiles, setSelectedProfiles] = useState<string[]>([]);
   const [selectedTeamIds, setSelectedTeamIds] = useState<string[]>([]);
-  const [generatedEmail, setGeneratedEmail] = useState("");
   const [saving, setSaving] = useState(false);
 
+  const fullEmail = emailPrefix ? `${emailPrefix}${EMAIL_SUFFIX}` : "";
+  const emailChanged = fullEmail !== originalEmail;
+
+  // Carregar dados do usuário
   useEffect(() => {
     if (!user || !open) return;
 
@@ -60,32 +81,56 @@ export function EditUserModal({
     setNome(parts[0] || "");
     setSobrenome(parts.slice(1).join(" ") || "");
     setTelefone(formatPhone(user.telefone || ""));
-    setGeneratedEmail(user.email);
+
+    // Extrair prefixo do email atual
+    const currentPrefix = user.email.replace(EMAIL_SUFFIX, "");
+    setEmailPrefix(currentPrefix);
+    setOriginalEmail(user.email);
+    setEmailAvailable(null);
+
     loadUserData(user.id);
   }, [user, open]);
 
+  // Verificar disponibilidade quando o prefixo muda (só se mudou)
   useEffect(() => {
-    let active = true;
+    if (!emailPrefix || !isValidPrefix(emailPrefix)) {
+      setEmailAvailable(null);
+      return;
+    }
 
-    if (!nome || !sobrenome || !user?.id) return;
+    // Se voltou ao email original, não precisa verificar
+    if (fullEmail === originalEmail) {
+      setEmailAvailable(true);
+      return;
+    }
 
-    getAvailableGeneratedEmail(nome, sobrenome, user.id)
-      .then((email) => {
-        if (active) setGeneratedEmail(email);
-      })
-      .catch(() => {});
+    setCheckingEmail(true);
+    setEmailAvailable(null);
 
-    return () => {
-      active = false;
-    };
-  }, [nome, sobrenome, user?.id]);
+    const timer = setTimeout(async () => {
+      try {
+        const { data } = await supabase
+          .from("users_profile")
+          .select("id")
+          .ilike("email", fullEmail)
+          .neq("id", user?.id || "")
+          .limit(1);
+        setEmailAvailable(!data || data.length === 0);
+      } catch {
+        setEmailAvailable(null);
+      } finally {
+        setCheckingEmail(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [emailPrefix, fullEmail, originalEmail, user?.id]);
 
   const loadUserData = async (userId: string) => {
     const { data: userProfiles } = await (supabase as any)
       .from("user_profiles")
       .select("profile_id")
       .eq("user_id", userId);
-
     setSelectedProfiles((userProfiles || []).map((up: any) => up.profile_id));
 
     const { data: teamMembers } = await (supabase as any)
@@ -93,10 +138,7 @@ export function EditUserModal({
       .select("team_id")
       .eq("user_id", userId)
       .eq("ativo", true);
-
-    setSelectedTeamIds(
-      (teamMembers || []).map((member: any) => member.team_id),
-    );
+    setSelectedTeamIds((teamMembers || []).map((m: any) => m.team_id));
   };
 
   const selectedTeamTypeCodes = useMemo(
@@ -109,56 +151,43 @@ export function EditUserModal({
     [teams, selectedTeamTypeCodes],
   );
 
-  const missingTeamGroups = teamGroups.filter(
-    (group) => group.teams.length === 0,
-  );
+  const missingTeamGroups = teamGroups.filter((g) => g.teams.length === 0);
   const hasUnselectedTeamGroup = teamGroups.some(
-    (group) =>
-      group.teams.length > 0 &&
-      !group.teams.some((team: any) => selectedTeamIds.includes(team.id)),
+    (g) =>
+      g.teams.length > 0 &&
+      !g.teams.some((t: any) => selectedTeamIds.includes(t.id)),
   );
 
   useEffect(() => {
     const availableIds = new Set(
-      teamGroups.flatMap((group) => group.teams.map((team: any) => team.id)),
+      teamGroups.flatMap((g) => g.teams.map((t: any) => t.id)),
     );
-    const autoSelectedIds = teamGroups
-      .filter((group) => group.teams.length === 1)
-      .map((group) => group.teams[0].id);
-
+    const autoIds = teamGroups
+      .filter((g) => g.teams.length === 1)
+      .map((g) => g.teams[0].id);
     setSelectedTeamIds((prev) =>
       Array.from(
-        new Set([
-          ...prev.filter((id) => availableIds.has(id)),
-          ...autoSelectedIds,
-        ]),
+        new Set([...prev.filter((id) => availableIds.has(id)), ...autoIds]),
       ),
     );
   }, [teamGroups]);
 
-  const toggleProfile = (profileId: string) => {
-    setSelectedProfiles((prev) =>
-      prev.includes(profileId)
-        ? prev.filter((id) => id !== profileId)
-        : [...prev, profileId],
-    );
-  };
-
-  const toggleTeam = (teamId: string) => {
-    setSelectedTeamIds((prev) =>
-      prev.includes(teamId)
-        ? prev.filter((id) => id !== teamId)
-        : [...prev, teamId],
-    );
-  };
-
   const handleSave = async () => {
     if (!user) return;
+
     if (!nome.trim() || !sobrenome.trim()) {
       toast({
         variant: "destructive",
-        title: "Nome e sobrenome sao obrigatorios",
+        title: "Nome e sobrenome são obrigatórios",
       });
+      return;
+    }
+    if (!emailPrefix || !isValidPrefix(emailPrefix)) {
+      toast({ variant: "destructive", title: "Email inválido" });
+      return;
+    }
+    if (emailChanged && emailAvailable === false) {
+      toast({ variant: "destructive", title: "Este email já está em uso" });
       return;
     }
     if (selectedProfiles.length === 0) {
@@ -172,7 +201,7 @@ export function EditUserModal({
       toast({
         variant: "destructive",
         title: "Cadastre uma equipe primeiro",
-        description: `Nao ha equipe cadastrada para: ${missingTeamGroups.map((group) => group.label).join(", ")}.`,
+        description: `Não há equipe para: ${missingTeamGroups.map((g) => g.label).join(", ")}.`,
       });
       return;
     }
@@ -180,8 +209,7 @@ export function EditUserModal({
       toast({
         variant: "destructive",
         title: "Selecione as equipes",
-        description:
-          "Escolha pelo menos uma equipe para cada ministerio selecionado.",
+        description: "Escolha pelo menos uma equipe para cada ministério.",
       });
       return;
     }
@@ -190,17 +218,60 @@ export function EditUserModal({
       setSaving(true);
       const nomeCompleto = `${nome.trim()} ${sobrenome.trim()}`;
 
-      const { error: updateError } = await supabase
+      // 1. Atualizar users_profile
+      const { error: profileError } = await supabase
         .from("users_profile")
         .update({
           nome: nomeCompleto,
-          email: generatedEmail,
+          email: fullEmail,
           telefone: telefone || null,
         } as any)
         .eq("id", user.id);
 
-      if (updateError) throw updateError;
+      if (profileError) throw profileError;
 
+      // 2. Se o email mudou, atualizar auth.users via função SQL
+      if (emailChanged) {
+        // Buscar auth_user_id
+        const { data: profileData } = await supabase
+          .from("users_profile")
+          .select("auth_user_id")
+          .eq("id", user.id)
+          .single();
+
+        const authUserId = (profileData as any)?.auth_user_id;
+
+        if (authUserId) {
+          const { data: authResult, error: authError } = await (
+            supabase as any
+          ).rpc("update_user_email", {
+            p_auth_user_id: authUserId,
+            p_new_email: fullEmail,
+          });
+
+          if (authError) {
+            // Não bloquear — o perfil já foi atualizado
+            console.error("Erro ao atualizar email no auth:", authError);
+            toast({
+              variant: "destructive",
+              title: "Email atualizado no perfil, mas falhou no login",
+              description:
+                "Execute o script supabase/utils/atualizar-email-usuario.sql no Supabase.",
+            });
+          } else if (authResult && !authResult.success) {
+            toast({
+              variant: "destructive",
+              title: "Erro ao atualizar email de login",
+              description: authResult.error,
+            });
+          } else {
+            // Sucesso — atualizar email original para refletir mudança
+            setOriginalEmail(fullEmail);
+          }
+        }
+      }
+
+      // 3. Atualizar perfis
       await (supabase as any)
         .from("user_profiles")
         .delete()
@@ -212,11 +283,11 @@ export function EditUserModal({
         })),
       );
 
+      // 4. Atualizar equipes
       await (supabase as any)
         .from("team_members")
         .delete()
         .eq("user_id", user.id);
-
       if (selectedTeamIds.length > 0) {
         await (supabase as any).from("team_members").upsert(
           selectedTeamIds.map((teamId) => ({
@@ -228,20 +299,36 @@ export function EditUserModal({
         );
       }
 
-      toast({ title: "Usuario atualizado com sucesso!" });
+      toast({
+        title: "✅ Usuário atualizado!",
+        description: emailChanged
+          ? `Email de login atualizado para ${fullEmail}`
+          : undefined,
+      });
       queryClient.invalidateQueries({ queryKey: ["teams"] });
       onOpenChange(false);
       onSuccess?.();
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Erro ao atualizar usuario",
+        title: "Erro ao atualizar usuário",
         description: error.message,
       });
     } finally {
       setSaving(false);
     }
   };
+
+  const canSave =
+    !saving &&
+    nome.trim().length >= 2 &&
+    sobrenome.trim().length >= 2 &&
+    emailPrefix.length > 0 &&
+    isValidPrefix(emailPrefix) &&
+    (emailAvailable === true || !emailChanged) &&
+    selectedProfiles.length > 0 &&
+    missingTeamGroups.length === 0 &&
+    !hasUnselectedTeamGroup;
 
   if (loadingProfiles || loadingTeams) {
     return (
@@ -258,16 +345,17 @@ export function EditUserModal({
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="text-base sm:text-lg">
-            Editar Usuario
+            Editar Usuário
           </DialogTitle>
           <DialogDescription className="text-sm">
-            Atualize os dados do usuario
+            Atualize os dados do usuário
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 px-5 py-4">
+          {/* Nome + Sobrenome */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label>Nome *</Label>
               <Input
                 value={nome}
@@ -276,40 +364,93 @@ export function EditUserModal({
                 autoComplete="off"
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label>Sobrenome *</Label>
               <Input
                 value={sobrenome}
                 onChange={(e) => setSobrenome(e.target.value)}
-                placeholder="Ex: Felipe Cabrera"
+                placeholder="Ex: Cabrera"
                 autoComplete="off"
               />
             </div>
           </div>
 
+          {/* Email editável */}
           <div className="space-y-1.5">
-            <Label>Email / Login</Label>
-            <Input value={generatedEmail} disabled className="bg-muted" />
-            <p className="text-xs text-muted-foreground">
-              Gerado automaticamente: primeira letra do nome + ultimo sobrenome
-              @mkd.com
-            </p>
+            <Label>Email / Login *</Label>
+            <div className="flex items-center gap-0">
+              <div className="relative flex-1">
+                <Input
+                  value={emailPrefix}
+                  onChange={(e) => {
+                    setEmailPrefix(sanitizePrefix(e.target.value));
+                    setEmailAvailable(null);
+                  }}
+                  className="rounded-r-none border-r-0 font-mono text-sm pr-8"
+                  autoComplete="off"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  placeholder="prefixo"
+                />
+                <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                  {checkingEmail && (
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  )}
+                  {!checkingEmail &&
+                    emailChanged &&
+                    emailAvailable === true && (
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    )}
+                  {!checkingEmail && emailAvailable === false && (
+                    <XCircle className="h-4 w-4 text-destructive" />
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center h-10 px-3 rounded-r-md border border-l-0 bg-muted text-muted-foreground text-sm font-mono select-none">
+                {EMAIL_SUFFIX}
+              </div>
+            </div>
+            {emailAvailable === false ? (
+              <p className="text-xs text-destructive">
+                Este email já está em uso
+              </p>
+            ) : emailChanged && emailAvailable === true ? (
+              <p className="text-xs text-emerald-600 dark:text-emerald-400">
+                ✓ {fullEmail} disponível — o login será atualizado
+              </p>
+            ) : !emailChanged ? (
+              <p className="text-xs text-muted-foreground">
+                Login atual: <span className="font-mono">{originalEmail}</span>
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Apenas letras minúsculas, números, ponto e hífen.
+              </p>
+            )}
           </div>
 
-          <div className="space-y-2">
+          {/* Telefone */}
+          <div className="space-y-1.5">
             <Label>Telefone (opcional)</Label>
             <PhoneInput value={telefone} onChange={setTelefone} />
           </div>
 
+          {/* Perfis */}
           <div className="space-y-2">
-            <Label>Perfil do Usuario *</Label>
+            <Label>Perfil do Usuário *</Label>
             <div className="border rounded-md p-4 max-h-48 overflow-y-auto space-y-2">
               {(profiles as any[])?.map((profile: any) => (
                 <div key={profile.id} className="flex items-center space-x-2">
                   <Checkbox
                     id={`edit-profile-${profile.id}`}
                     checked={selectedProfiles.includes(profile.id)}
-                    onCheckedChange={() => toggleProfile(profile.id)}
+                    onCheckedChange={() =>
+                      setSelectedProfiles((prev) =>
+                        prev.includes(profile.id)
+                          ? prev.filter((id) => id !== profile.id)
+                          : [...prev, profile.id],
+                      )
+                    }
                   />
                   <label
                     htmlFor={`edit-profile-${profile.id}`}
@@ -320,14 +461,15 @@ export function EditUserModal({
                 </div>
               ))}
             </div>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               {selectedProfiles.length} perfil(is) selecionado(s)
             </p>
           </div>
 
+          {/* Equipes */}
           {teamGroups.length > 0 && (
             <div className="space-y-2">
-              <Label>Equipes do Usuario *</Label>
+              <Label>Equipes do Usuário *</Label>
               {teamGroups.map((group) => (
                 <div
                   key={group.code}
@@ -339,18 +481,17 @@ export function EditUserModal({
                     </p>
                     <span className="text-xs text-muted-foreground">
                       {
-                        group.teams.filter((team: any) =>
-                          selectedTeamIds.includes(team.id),
+                        group.teams.filter((t: any) =>
+                          selectedTeamIds.includes(t.id),
                         ).length
                       }{" "}
                       selecionada(s)
                     </span>
                   </div>
-
                   {group.teams.length === 0 ? (
                     <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-600 dark:text-amber-400">
-                      Nenhuma equipe cadastrada para este ministerio. Cadastre
-                      uma equipe primeiro em Gerencial &gt; Equipes.
+                      Nenhuma equipe cadastrada. Cadastre em Gerencial →
+                      Equipes.
                     </div>
                   ) : (
                     <div className="space-y-2">
@@ -361,7 +502,13 @@ export function EditUserModal({
                         >
                           <Checkbox
                             checked={selectedTeamIds.includes(team.id)}
-                            onCheckedChange={() => toggleTeam(team.id)}
+                            onCheckedChange={() =>
+                              setSelectedTeamIds((prev) =>
+                                prev.includes(team.id)
+                                  ? prev.filter((id) => id !== team.id)
+                                  : [...prev, team.id],
+                              )
+                            }
                             disabled={group.teams.length === 1}
                           />
                           <span className="font-medium">{team.nome}</span>
@@ -391,17 +538,10 @@ export function EditUserModal({
           </Button>
           <Button
             onClick={handleSave}
-            disabled={
-              saving ||
-              selectedProfiles.length === 0 ||
-              !nome ||
-              !sobrenome ||
-              missingTeamGroups.length > 0 ||
-              hasUnselectedTeamGroup
-            }
+            disabled={!canSave}
             className="bg-primary hover:bg-primary/90 w-full sm:w-auto"
           >
-            {saving ? "Salvando..." : "Salvar Alteracoes"}
+            {saving ? "Salvando..." : "Salvar Alterações"}
           </Button>
         </DialogFooter>
       </DialogContent>
