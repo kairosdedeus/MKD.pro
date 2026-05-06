@@ -40,8 +40,13 @@ import {
   Upload,
   Headphones,
   Download,
+  Play,
+  Pause,
+  Youtube,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
+import { AudioPlayer, AudioTrack } from "@/components/shared/AudioPlayer";
+import { YoutubeMiniplayer } from "@/components/shared/YoutubeMiniplayer";
 
 interface CreateScheduleModalProps {
   open: boolean;
@@ -51,6 +56,20 @@ interface CreateScheduleModalProps {
   initialFixedTeamId?: string | null;
   schedule?: Schedule | null;
   onSuccess?: () => void;
+  /** Músicas do Louvor para o mesmo dia — exibidas como referência (Dança) */
+  worshipSongs?: Array<{
+    order_index: number;
+    execution_key: string | null;
+    song: {
+      id: string;
+      name: string;
+      artist: string | null;
+      original_key: string | null;
+      has_virtual_instruments: boolean;
+      audio_path: string | null;
+      reference_url: string | null;
+    };
+  }>;
 }
 
 // Mapa: functionId -> array de team_member_ids atribuídos
@@ -178,6 +197,7 @@ interface MemberPickerProps {
   allMembers: TeamMember[];
   onAdd: (memberId: string) => void;
   onRemove: (memberId: string) => void;
+  conflicts?: Record<string, string>; // team_member_id -> nome da equipe
 }
 
 function MemberPicker({
@@ -186,6 +206,7 @@ function MemberPicker({
   allMembers,
   onAdd,
   onRemove,
+  conflicts = {},
 }: MemberPickerProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -227,24 +248,37 @@ function MemberPicker({
   return (
     <>
       <div className="flex flex-wrap items-center gap-2 min-h-[2.25rem]">
-        {assigned.map((member) => (
-          <span
-            key={member.id}
-            className={`inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full text-sm font-medium border ${style.pill}`}
-          >
-            <span className="w-5 h-5 rounded-full bg-primary-foreground/60 dark:bg-white/20 flex items-center justify-center text-xs font-bold flex-shrink-0">
-              {(member.user?.nome || "?").charAt(0).toUpperCase()}
-            </span>
-            {member.user?.nome}
-            <button
-              type="button"
-              onClick={() => onRemove(member.id)}
-              className="ml-0.5 rounded-full p-0.5 hover:bg-black/10 transition-colors"
+        {assigned.map((member) => {
+          const hasConflict = !!conflicts[member.id];
+          return (
+            <span
+              key={member.id}
+              className={`inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full text-sm font-medium border ${
+                hasConflict
+                  ? "bg-destructive/10 text-destructive border-destructive/30"
+                  : style.pill
+              }`}
+              title={
+                hasConflict
+                  ? `⚠️ Já escalado em "${conflicts[member.id]}"`
+                  : undefined
+              }
             >
-              <X className="h-3 w-3" />
-            </button>
-          </span>
-        ))}
+              <span className="w-5 h-5 rounded-full bg-primary-foreground/60 dark:bg-white/20 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                {(member.user?.nome || "?").charAt(0).toUpperCase()}
+              </span>
+              {member.user?.nome}
+              {hasConflict && <span className="text-xs">⚠️</span>}
+              <button
+                type="button"
+                onClick={() => onRemove(member.id)}
+                className="ml-0.5 rounded-full p-0.5 hover:bg-black/10 transition-colors"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          );
+        })}
 
         <button
           ref={triggerRef}
@@ -286,27 +320,46 @@ function MemberPicker({
                 {query ? "Nenhum resultado" : "Todos já adicionados"}
               </p>
             ) : (
-              available.map((member) => (
-                <button
-                  key={member.id}
-                  type="button"
-                  onClick={() => {
-                    onAdd(member.id);
-                    setQuery("");
-                    setOpen(false);
-                  }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-accent transition-colors text-left"
-                >
-                  <span
-                    className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${style.bg} ${style.text}`}
+              available.map((member) => {
+                const hasConflict = !!conflicts[member.id];
+                const conflictTeam = conflicts[member.id];
+                return (
+                  <button
+                    key={member.id}
+                    type="button"
+                    onClick={() => {
+                      onAdd(member.id);
+                      setQuery("");
+                      setOpen(false);
+                    }}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 transition-colors text-left ${
+                      hasConflict
+                        ? "hover:bg-destructive/5 opacity-70"
+                        : "hover:bg-accent"
+                    }`}
                   >
-                    {(member.user?.nome || "?").charAt(0).toUpperCase()}
-                  </span>
-                  <span className="text-sm font-medium text-foreground">
-                    {member.user?.nome}
-                  </span>
-                </button>
-              ))
+                    <span
+                      className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
+                        hasConflict
+                          ? "bg-destructive/10 text-destructive"
+                          : `${style.bg} ${style.text}`
+                      }`}
+                    >
+                      {(member.user?.nome || "?").charAt(0).toUpperCase()}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-sm font-medium text-foreground block truncate">
+                        {member.user?.nome}
+                      </span>
+                      {hasConflict && (
+                        <span className="text-xs text-destructive block truncate">
+                          ⚠️ Escalado em "{conflictTeam}"
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })
             )}
           </div>
         </div>
@@ -324,6 +377,7 @@ export function CreateScheduleModal({
   initialFixedTeamId,
   schedule,
   onSuccess,
+  worshipSongs,
 }: CreateScheduleModalProps) {
   const { toast } = useToast();
   const isEditing = !!schedule;
@@ -338,6 +392,19 @@ export function CreateScheduleModal({
   // Data
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [teamFunctions, setTeamFunctions] = useState<TeamFunction[]>([]);
+
+  // Player de áudio das músicas do Louvor
+  const [worshipPlayerTracks, setWorshipPlayerTracks] = useState<AudioTrack[]>(
+    [],
+  );
+  const [worshipCurrentTrackId, setWorshipCurrentTrackId] = useState<
+    string | null
+  >(null);
+  const [worshipLoadingId, setWorshipLoadingId] = useState<string | null>(null);
+  const [youtubePlayerUrl, setYoutubePlayerUrl] = useState<string | null>(null);
+  const [youtubePlayerTitle, setYoutubePlayerTitle] = useState<
+    string | undefined
+  >();
   const [fixedTeams, setFixedTeams] = useState<WorshipFixedTeam[]>([]);
 
   // Novo modelo: mapa de functionId -> [memberId, ...]
@@ -367,6 +434,10 @@ export function CreateScheduleModal({
   const [showFixedTeamForm, setShowFixedTeamForm] = useState(false);
   const [fixedTeamName, setFixedTeamName] = useState("");
   const [savingFixedTeam, setSavingFixedTeam] = useState(false);
+  // Conflitos: mapa team_member_id -> nome da equipe onde já está escalado
+  const [memberConflicts, setMemberConflicts] = useState<
+    Record<string, string>
+  >({});
 
   useEffect(() => {
     if (open) loadData();
@@ -430,6 +501,33 @@ export function CreateScheduleModal({
       .catch(() => setDateConflict(false));
   }, [date, teamId, isEditing]);
 
+  // Verificar conflitos de membros em outras equipes na mesma data
+  useEffect(() => {
+    if (!date || !teamId || teamMembers.length === 0) {
+      setMemberConflicts({});
+      return;
+    }
+    // Pegar user_ids de todos os membros da equipe
+    const userIds = teamMembers
+      .map((m) => m.user?.id)
+      .filter(Boolean) as string[];
+    if (!userIds.length) return;
+
+    scheduleService
+      .checkMembersConflicts(userIds, date, teamId)
+      .then((conflicts) => {
+        // Converter user_id -> team_member_id para usar no mapa de assignments
+        const byMemberId: Record<string, string> = {};
+        teamMembers.forEach((m) => {
+          if (m.user?.id && conflicts[m.user.id]) {
+            byMemberId[m.id] = conflicts[m.user.id];
+          }
+        });
+        setMemberConflicts(byMemberId);
+      })
+      .catch(() => setMemberConflicts({}));
+  }, [date, teamId, teamMembers]);
+
   const loadData = async () => {
     try {
       setLoadingData(true);
@@ -482,6 +580,18 @@ export function CreateScheduleModal({
   // ── Assignments ───────────────────────────────────────────────────────────
 
   const addToFunction = (fnId: string, memberId: string) => {
+    // Bloquear se o membro já está escalado em outra equipe neste dia
+    if (memberConflicts[memberId]) {
+      const teamName = memberConflicts[memberId];
+      const member = teamMembers.find((m) => m.id === memberId);
+      const memberName = member?.user?.nome?.split(" ")[0] || "Este membro";
+      toast({
+        variant: "destructive",
+        title: `⚠️ Conflito de escala`,
+        description: `${memberName} já está escalado(a) em "${teamName}" neste dia.`,
+      });
+      return;
+    }
     setAssignments((prev) => {
       const next = new Map(prev);
       const current = next.get(fnId) || [];
@@ -726,6 +836,58 @@ export function CreateScheduleModal({
     setDragOverIndex(null);
   };
 
+  // ── Player músicas do Louvor ──────────────────────────────────────────────
+
+  const handleWorshipPlay = async (songId: string, audioPath: string) => {
+    const existing = worshipPlayerTracks.find((t) => t.id === songId);
+    if (existing?.audioUrl) {
+      setWorshipCurrentTrackId(songId);
+      return;
+    }
+    try {
+      setWorshipLoadingId(songId);
+      const url = await songService.getAudioUrl(audioPath);
+      const allTracks: AudioTrack[] = (worshipSongs || [])
+        .filter((ss) => ss.song.audio_path)
+        .map((ss) => ({
+          id: ss.song.id,
+          name: ss.song.name,
+          artist: ss.song.artist || undefined,
+          audioUrl: ss.song.id === songId ? url : "",
+          key: ss.execution_key || ss.song.original_key || undefined,
+        }));
+      setWorshipPlayerTracks(allTracks);
+      setWorshipCurrentTrackId(songId);
+    } catch {
+      toast({ variant: "destructive", title: "Erro ao reproduzir áudio" });
+    } finally {
+      setWorshipLoadingId(null);
+    }
+  };
+
+  const handleWorshipTrackChange = async (id: string | null) => {
+    if (!id) {
+      setWorshipCurrentTrackId(null);
+      return;
+    }
+    const track = worshipPlayerTracks.find((t) => t.id === id);
+    if (track?.audioUrl) {
+      setWorshipCurrentTrackId(id);
+      return;
+    }
+    const ws = (worshipSongs || []).find((ss) => ss.song.id === id);
+    if (!ws?.song.audio_path) return;
+    try {
+      const url = await songService.getAudioUrl(ws.song.audio_path);
+      setWorshipPlayerTracks((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, audioUrl: url } : t)),
+      );
+      setWorshipCurrentTrackId(id);
+    } catch {
+      toast({ variant: "destructive", title: "Erro ao carregar faixa" });
+    }
+  };
+
   // ── Download de áudio ─────────────────────────────────────────────────────
 
   const handleDownload = async (song: SelectedSong) => {
@@ -754,6 +916,26 @@ export function CreateScheduleModal({
       toast({ variant: "destructive", title: "Adicione pelo menos um membro" });
       return;
     }
+
+    // Bloquear se algum membro já escalado tem conflito em outra equipe
+    const conflictedMembers = members
+      .filter((m) => memberConflicts[m.team_member_id])
+      .map((m) => {
+        const member = teamMembers.find((tm) => tm.id === m.team_member_id);
+        const name = member?.user?.nome?.split(" ")[0] || "Membro";
+        const team = memberConflicts[m.team_member_id];
+        return `${name} (${team})`;
+      });
+
+    if (conflictedMembers.length > 0) {
+      toast({
+        variant: "destructive",
+        title: "⚠️ Conflito de escala",
+        description: `${conflictedMembers.join(", ")} já ${conflictedMembers.length === 1 ? "está escalado" : "estão escalados"} em outra equipe neste dia. Remova-${conflictedMembers.length === 1 ? "o" : "os"} antes de salvar.`,
+      });
+      return;
+    }
+
     try {
       setLoading(true);
       if (!isEditing) {
@@ -991,6 +1173,7 @@ export function CreateScheduleModal({
                               fn={fn}
                               assignedIds={assignedIds}
                               allMembers={teamMembers}
+                              conflicts={memberConflicts}
                               onAdd={(memberId) =>
                                 addToFunction(fn.id, memberId)
                               }
@@ -1341,6 +1524,174 @@ export function CreateScheduleModal({
                 </div>
               )}
             </div>
+
+            {/* ── Músicas do Louvor (referência para a Dança) ── */}
+            {worshipSongs && worshipSongs.length > 0 && (
+              <div className="space-y-3 rounded-xl border border-amber-500/20 bg-amber-500/5 p-3 sm:p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-sm font-semibold text-amber-700 dark:text-amber-400">
+                      🎵 Músicas do Louvor
+                    </Label>
+                    <p className="text-xs text-amber-600/70 dark:text-amber-500/70 mt-0.5">
+                      Referência para a coreografia
+                    </p>
+                  </div>
+                  <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                    {worshipSongs.length} música
+                    {worshipSongs.length !== 1 ? "s" : ""}
+                  </span>
+                </div>
+
+                {/* Player de áudio */}
+                {worshipCurrentTrackId && worshipPlayerTracks.length > 0 && (
+                  <div className="rounded-xl border border-amber-500/30 overflow-hidden">
+                    <AudioPlayer
+                      tracks={worshipPlayerTracks}
+                      currentTrackId={worshipCurrentTrackId}
+                      onTrackChange={handleWorshipTrackChange}
+                      onClose={() => {
+                        setWorshipCurrentTrackId(null);
+                        setWorshipPlayerTracks([]);
+                      }}
+                      embedded
+                    />
+                  </div>
+                )}
+
+                {/* Miniplayer YouTube */}
+                {youtubePlayerUrl && (
+                  <YoutubeMiniplayer
+                    url={youtubePlayerUrl}
+                    title={youtubePlayerTitle}
+                    onClose={() => {
+                      setYoutubePlayerUrl(null);
+                      setYoutubePlayerTitle(undefined);
+                    }}
+                  />
+                )}
+
+                {/* Lista de músicas */}
+                <div className="space-y-1">
+                  {[...worshipSongs]
+                    .sort((a, b) => a.order_index - b.order_index)
+                    .map((ss, index) => {
+                      const song = ss.song;
+                      const key = ss.execution_key || song.original_key;
+                      const hasAudio = !!song.audio_path;
+                      const hasYoutube =
+                        !!song.reference_url?.includes("youtube") ||
+                        !!song.reference_url?.includes("youtu.be");
+                      const isPlaying = worshipCurrentTrackId === song.id;
+                      const isLoading = worshipLoadingId === song.id;
+
+                      return (
+                        <div
+                          key={`worship-${song.id}-${index}`}
+                          className="flex items-center gap-2 p-2.5 rounded-xl bg-card border border-amber-500/10 hover:border-amber-500/30 transition-colors"
+                        >
+                          {/* Play áudio */}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              hasAudio &&
+                              handleWorshipPlay(song.id, song.audio_path!)
+                            }
+                            disabled={!hasAudio}
+                            className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
+                              hasAudio
+                                ? "bg-amber-500/10 hover:bg-amber-500/20 cursor-pointer"
+                                : "bg-muted cursor-default"
+                            }`}
+                            title={hasAudio ? "Reproduzir áudio" : "Sem áudio"}
+                          >
+                            {isLoading ? (
+                              <div className="w-3 h-3 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+                            ) : isPlaying ? (
+                              <Pause className="h-3 w-3 text-amber-600 dark:text-amber-400" />
+                            ) : (
+                              <Play
+                                className={`h-3 w-3 ${hasAudio ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"}`}
+                              />
+                            )}
+                          </button>
+
+                          {/* Info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="text-xs font-bold text-amber-600/60 dark:text-amber-500/60 flex-shrink-0">
+                                {index + 1}.
+                              </span>
+                              <p className="text-sm font-medium truncate">
+                                {song.name}
+                              </p>
+                              {hasAudio && (
+                                <span
+                                  title="Possui áudio"
+                                  className="flex items-center justify-center w-4 h-4 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex-shrink-0"
+                                >
+                                  <Headphones className="h-2.5 w-2.5" />
+                                </span>
+                              )}
+                              {song.has_virtual_instruments && (
+                                <span
+                                  title="Virtual Sample"
+                                  className="flex items-center justify-center w-4 h-4 rounded bg-muted text-muted-foreground flex-shrink-0"
+                                >
+                                  <Laptop className="h-2.5 w-2.5" />
+                                </span>
+                              )}
+                            </div>
+                            {song.artist && (
+                              <p className="text-xs text-muted-foreground truncate">
+                                {song.artist}
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Tom + YouTube */}
+                          <div className="flex items-center gap-1.5 flex-shrink-0">
+                            {key && (
+                              <span className="text-xs bg-amber-500/10 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded font-medium">
+                                {key}
+                              </span>
+                            )}
+                            {song.reference_url && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (hasYoutube) {
+                                    setYoutubePlayerUrl(song.reference_url!);
+                                    setYoutubePlayerTitle(song.name);
+                                  } else {
+                                    window.open(song.reference_url!, "_blank");
+                                  }
+                                }}
+                                className={`flex items-center justify-center w-6 h-6 rounded transition-colors ${
+                                  hasYoutube
+                                    ? "text-red-500 hover:bg-red-500/10"
+                                    : "text-muted-foreground hover:text-primary hover:bg-accent"
+                                }`}
+                                title={
+                                  hasYoutube
+                                    ? "Abrir no miniplayer"
+                                    : "Abrir referência"
+                                }
+                              >
+                                {hasYoutube ? (
+                                  <Youtube className="h-3.5 w-3.5" />
+                                ) : (
+                                  <Music className="h-3.5 w-3.5" />
+                                )}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+            )}
           </div>
         )}
 

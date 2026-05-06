@@ -210,7 +210,7 @@ function buildWeekendWhatsAppText(
     const dayName = format(date, "EEEE", { locale: ptBR }).toUpperCase();
 
     lines.push("");
-    lines.push(`🗓  ${dayNum} *${dayName}*`);
+    lines.push(`🗓 *${dayName}* ${dayNum}`);
 
     const songs = [...(schedule.songs || [])].sort(
       (a, b) => a.order_index - b.order_index,
@@ -222,17 +222,14 @@ function buildWeekendWhatsAppText(
       songs.forEach((ss, i) => {
         const song = ss.song;
         if (!song) return;
-
         const num = i + 1;
-        const name = song.name;
-        const artist = song.artist ? `(${song.artist})` : "";
         const key = ss.execution_key || song.original_key || "";
-        const keyStr = key ? `${key},` : "";
-        const link = song.reference_url ? ` (${song.reference_url})` : "";
-
-        lines.push(`${num} - ${name} ${artist} ${keyStr}${link}`.trim());
+        const keyStr = key ? ` - ${key}` : "";
+        lines.push(`${num} - ${song.name}${keyStr}`);
       });
     }
+
+    lines.push("___________________________________________________________");
   });
 
   return lines.join("\n").trim();
@@ -1391,13 +1388,24 @@ export function WorshipDashboard() {
           <DialogHeader>
             <DialogTitle>📱 Exportar Fim de Semana</DialogTitle>
           </DialogHeader>
-          <Textarea
-            value={weekendWhatsAppText}
-            readOnly
-            rows={14}
-            className="font-mono text-xs resize-none"
-          />
-          <DialogFooter>
+          <div className="space-y-3 px-5 py-4">
+            <Textarea
+              value={weekendWhatsAppText}
+              onChange={(e) => setWeekendWhatsAppText(e.target.value)}
+              rows={16}
+              className="font-mono text-xs resize-y"
+            />
+            <p className="text-xs text-muted-foreground">
+              Edite o texto se necessário e clique em Copiar.
+            </p>
+          </div>
+          <DialogFooter className="gap-2 flex-col-reverse sm:flex-row">
+            <button
+              onClick={() => setShowWeekendWhatsApp(false)}
+              className="w-full sm:w-auto rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-semibold hover:bg-accent transition-colors"
+            >
+              Fechar
+            </button>
             <button
               onClick={async () => {
                 try {
@@ -1411,7 +1419,7 @@ export function WorshipDashboard() {
                   });
                 }
               }}
-              className="w-full rounded-lg bg-primary text-primary-foreground py-2.5 text-sm font-semibold hover:bg-primary/90 transition-colors"
+              className="w-full sm:w-auto rounded-lg bg-primary text-primary-foreground px-4 py-2.5 text-sm font-semibold hover:bg-primary/90 transition-colors"
             >
               Copiar texto
             </button>

@@ -59,6 +59,7 @@ import { EditSongModal } from "@/components/features/songs/EditSongModal";
 import { YoutubeToAudioModal } from "@/components/features/songs/YoutubeToAudioModal";
 import { YoutubeSettingsModal } from "@/components/features/songs/YoutubeSettingsModal";
 import { AudioPlayer, AudioTrack } from "@/components/shared/AudioPlayer";
+import { YoutubeMiniplayer } from "@/components/shared/YoutubeMiniplayer";
 import { songService } from "@/services/songService";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuthStore } from "@/stores/authStore";
@@ -162,6 +163,10 @@ export function SongsPage() {
   const [currentTrackId, setCurrentTrackId] = useState<string | null>(null);
   const [loadingAudioId, setLoadingAudioId] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [youtubePlayerUrl, setYoutubePlayerUrl] = useState<string | null>(null);
+  const [youtubePlayerTitle, setYoutubePlayerTitle] = useState<
+    string | undefined
+  >();
 
   const filtered = songs
     .filter((s) => {
@@ -561,17 +566,35 @@ export function SongsPage() {
                       )}
                     </button>
                   )}
-                  {song.reference_url && (
-                    <a
-                      href={song.reference_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-muted-foreground hover:text-primary transition-colors"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <ExternalLink className="h-3.5 w-3.5" />
-                    </a>
-                  )}
+                  {song.reference_url &&
+                    (() => {
+                      const url = song.reference_url!;
+                      const isYt =
+                        url.includes("youtube") || url.includes("youtu.be");
+                      return (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (isYt) {
+                              setYoutubePlayerUrl(url);
+                              setYoutubePlayerTitle(song.name);
+                            } else {
+                              window.open(url, "_blank");
+                            }
+                          }}
+                          className={`flex items-center justify-center w-6 h-6 rounded-lg transition-colors ${isYt ? "text-red-500 hover:bg-red-500/10" : "text-muted-foreground hover:text-primary hover:bg-accent"}`}
+                          title={
+                            isYt ? "Abrir no miniplayer" : "Abrir referência"
+                          }
+                        >
+                          {isYt ? (
+                            <Youtube className="h-3.5 w-3.5" />
+                          ) : (
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          )}
+                        </button>
+                      );
+                    })()}
                 </div>
 
                 {/* Menu */}
@@ -612,18 +635,31 @@ export function SongsPage() {
                           : "Baixar áudio"}
                       </DropdownMenuItem>
                     )}
-                    {song.reference_url && (
-                      <DropdownMenuItem asChild>
-                        <a
-                          href={song.reference_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <ExternalLink className="h-4 w-4 mr-2" /> Abrir
-                          referência
-                        </a>
-                      </DropdownMenuItem>
-                    )}
+                    {song.reference_url &&
+                      (() => {
+                        const url = song.reference_url!;
+                        const isYt =
+                          url.includes("youtube") || url.includes("youtu.be");
+                        return (
+                          <DropdownMenuItem
+                            onClick={() => {
+                              if (isYt) {
+                                setYoutubePlayerUrl(url);
+                                setYoutubePlayerTitle(song.name);
+                              } else {
+                                window.open(url, "_blank");
+                              }
+                            }}
+                          >
+                            {isYt ? (
+                              <Youtube className="h-4 w-4 mr-2 text-red-500" />
+                            ) : (
+                              <ExternalLink className="h-4 w-4 mr-2" />
+                            )}
+                            {isYt ? "Abrir no miniplayer" : "Abrir referência"}
+                          </DropdownMenuItem>
+                        );
+                      })()}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       className="text-destructive focus:text-destructive"
@@ -650,6 +686,22 @@ export function SongsPage() {
             setPlayerTracks([]);
           }}
         />
+      )}
+
+      {/* Miniplayer YouTube — fixo na parte inferior */}
+      {youtubePlayerUrl && (
+        <div className="fixed bottom-16 left-0 right-0 z-50 px-2 pb-1 sm:bottom-0 sm:px-4 sm:pb-4 md:left-56">
+          <div className="mx-auto max-w-lg">
+            <YoutubeMiniplayer
+              url={youtubePlayerUrl}
+              title={youtubePlayerTitle}
+              onClose={() => {
+                setYoutubePlayerUrl(null);
+                setYoutubePlayerTitle(undefined);
+              }}
+            />
+          </div>
+        </div>
       )}
 
       {/* Modais */}

@@ -305,4 +305,97 @@ export const scheduleService = {
     if (error) throw error;
     return data;
   },
+
+  /**
+   * Verifica conflitos de escala para múltiplos membros (por user_id) numa data.
+   * Retorna um mapa: user_id -> nome da equipe onde já está escalado.
+   * Ignora a própria equipe (teamId) para não bloquear edições.
+   */
+  async checkMembersConflicts(
+    userIds: string[],
+    date: string,
+    excludeTeamId?: string,
+  ): Promise<Record<string, string>> {
+    if (!userIds.length || !date) return {};
+
+    const { data, error } = await supabase
+      .from("schedule_members")
+      .select(
+        `
+        team_member:team_members!inner (
+          user_id,
+          user:users_profile (nome)
+        ),
+        schedule:schedules!inner (
+          date,
+          team_id,
+          team:teams (nome)
+        )
+      `,
+      )
+      .eq("schedule.date", date)
+      .in("team_member.user_id", userIds);
+
+    if (error) throw error;
+
+    const conflicts: Record<string, string> = {};
+    (data || []).forEach((row: any) => {
+      const teamId = row.schedule?.team_id;
+      if (excludeTeamId && teamId === excludeTeamId) return;
+      const userId = row.team_member?.user_id;
+      const teamName = row.schedule?.team?.nome || "outra equipe";
+      if (userId) conflicts[userId] = teamName;
+    });
+
+    return conflicts;
+  },
+
+  /** Busca escalas de uma equipe por tipo (ex: "louvor") num mês */
+  async getSchedulesByTeamType(teamTypeCode: string, date: Date) {
+    const start = startOfMonth(date).toISOString().split("T")[0];
+    const end = endOfMonth(date).toISOString().split("T")[0];
+
+    const { data, error } = await supabase
+      .from("schedules")
+      .select(
+        `
+        id, date, title, status,
+        team:teams!inner (
+          id, nome,
+          team_type:team_types!inner (codigo)
+        ),
+        songs:schedule_songs (
+          order_index,
+          execution_key,
+          song:songs (id, name, artist, original_key, has_virtual_instruments, audio_path, reference_url)
+        )
+      `,
+      )
+      .gte("date", start)
+      .lte("date", end)
+      .eq("team.team_type.codigo", teamTypeCode)
+      .order("date");
+
+    if (error) throw error;
+    return (data || []) as Array<{
+      id: string;
+      date: string;
+      title: string | null;
+      status: string;
+      team: { id: string; nome: string };
+      songs: Array<{
+        order_index: number;
+        execution_key: string | null;
+        song: {
+          id: string;
+          name: string;
+          artist: string | null;
+          original_key: string | null;
+          has_virtual_instruments: boolean;
+          audio_path: string | null;
+          reference_url: string | null;
+        };
+      }>;
+    }>;
+  },
 };

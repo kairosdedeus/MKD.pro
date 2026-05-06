@@ -20,6 +20,7 @@ import {
   Laptop,
   ExternalLink,
   Download,
+  Youtube,
 } from "lucide-react";
 import { Schedule } from "@/types";
 import { useToast } from "@/components/ui/use-toast";
@@ -28,6 +29,7 @@ import { useEffect, useState } from "react";
 import { ptBR } from "date-fns/locale";
 import { songService } from "@/services/songService";
 import { AudioPlayer, AudioTrack } from "@/components/shared/AudioPlayer";
+import { YoutubeMiniplayer } from "@/components/shared/YoutubeMiniplayer";
 import { cn } from "@/lib/utils";
 
 interface ScheduleDetailModalProps {
@@ -36,6 +38,20 @@ interface ScheduleDetailModalProps {
   schedule: Schedule;
   onEdit: () => void;
   onDelete: () => void;
+  /** Músicas do Louvor para o mesmo dia (exibidas na modal da Dança) */
+  worshipSongs?: Array<{
+    order_index: number;
+    execution_key: string | null;
+    song: {
+      id: string;
+      name: string;
+      artist: string | null;
+      original_key: string | null;
+      has_virtual_instruments: boolean;
+      audio_path: string | null;
+      reference_url: string | null;
+    };
+  }>;
 }
 
 const STATUS_LABELS: Record<
@@ -118,6 +134,7 @@ export function ScheduleDetailModal({
   schedule,
   onEdit,
   onDelete,
+  worshipSongs,
 }: ScheduleDetailModalProps) {
   const status = STATUS_LABELS[schedule.status] || STATUS_LABELS.draft;
   const { toast } = useToast();
@@ -130,12 +147,17 @@ export function ScheduleDetailModal({
   const [currentTrackId, setCurrentTrackId] = useState<string | null>(null);
   const [loadingAudioId, setLoadingAudioId] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [youtubePlayerUrl, setYoutubePlayerUrl] = useState<string | null>(null);
+  const [youtubePlayerTitle, setYoutubePlayerTitle] = useState<
+    string | undefined
+  >();
 
   // Fechar player ao fechar modal
   useEffect(() => {
     if (!open) {
       setCurrentTrackId(null);
       setPlayerTracks([]);
+      setYoutubePlayerUrl(null);
     }
   }, [open]);
 
@@ -499,18 +521,40 @@ export function ScheduleDetailModal({
                               {scheduleSong.execution_key}
                             </span>
                           )}
-                        {scheduleSong.song?.reference_url && (
-                          <a
-                            href={scheduleSong.song.reference_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-muted-foreground hover:text-primary transition-colors"
-                            onClick={(e) => e.stopPropagation()}
-                            title="Abrir referência"
-                          >
-                            <ExternalLink className="h-3.5 w-3.5" />
-                          </a>
-                        )}
+                        {scheduleSong.song?.reference_url &&
+                          (() => {
+                            const url = scheduleSong.song.reference_url!;
+                            const isYt =
+                              url.includes("youtube") ||
+                              url.includes("youtu.be");
+                            return (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (isYt) {
+                                    setYoutubePlayerUrl(url);
+                                    setYoutubePlayerTitle(
+                                      scheduleSong.song?.name,
+                                    );
+                                  } else {
+                                    window.open(url, "_blank");
+                                  }
+                                }}
+                                className={`flex items-center justify-center w-6 h-6 rounded transition-colors ${isYt ? "text-red-500 hover:bg-red-500/10" : "text-muted-foreground hover:text-primary hover:bg-accent"}`}
+                                title={
+                                  isYt
+                                    ? "Abrir no miniplayer"
+                                    : "Abrir referência"
+                                }
+                              >
+                                {isYt ? (
+                                  <Youtube className="h-3.5 w-3.5" />
+                                ) : (
+                                  <ExternalLink className="h-3.5 w-3.5" />
+                                )}
+                              </button>
+                            );
+                          })()}
                         {hasAudio && (
                           <button
                             onClick={() => handleDownload(scheduleSong.id)}
@@ -547,6 +591,126 @@ export function ScheduleDetailModal({
                 </div>
               )}
             </div>
+          )}
+
+          {/* ── Músicas do Louvor (apenas quando passadas via prop) ── */}
+          {worshipSongs && worshipSongs.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                <Music className="h-4 w-4 text-amber-500" />
+                <span>Músicas do Louvor</span>
+                <span className="text-xs text-muted-foreground">
+                  ({worshipSongs.length})
+                </span>
+              </div>
+              <div className="space-y-1">
+                {[...worshipSongs]
+                  .sort((a, b) => a.order_index - b.order_index)
+                  .map((ss, index) => {
+                    const song = ss.song;
+                    const key = ss.execution_key || song.original_key;
+                    return (
+                      <div
+                        key={`${song.id}-${index}`}
+                        className="flex items-center gap-2 sm:gap-3 p-2.5 border border-amber-500/20 bg-amber-500/5 rounded-xl"
+                      >
+                        <span className="w-6 h-6 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                          {index + 1}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <p className="text-sm font-medium truncate">
+                              {song.name}
+                            </p>
+                            {song.audio_path && (
+                              <span
+                                title="Possui áudio"
+                                className="flex items-center justify-center w-5 h-5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex-shrink-0"
+                              >
+                                <Headphones className="h-3 w-3" />
+                              </span>
+                            )}
+                            {song.has_virtual_instruments && (
+                              <span
+                                title="Virtual Sample"
+                                className="flex items-center justify-center w-5 h-5 rounded-md bg-muted text-muted-foreground flex-shrink-0"
+                              >
+                                <Laptop className="h-3 w-3" />
+                              </span>
+                            )}
+                          </div>
+                          {song.artist && (
+                            <p className="text-xs text-muted-foreground truncate">
+                              {song.artist}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          {key && (
+                            <span className="text-xs bg-amber-500/10 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded-md font-medium">
+                              {key}
+                            </span>
+                          )}
+                          {song.reference_url &&
+                            (() => {
+                              const url = song.reference_url!;
+                              const isYt =
+                                url.includes("youtube") ||
+                                url.includes("youtu.be");
+                              return (
+                                <button
+                                  onClick={() => {
+                                    if (isYt) {
+                                      setYoutubePlayerUrl(url);
+                                      setYoutubePlayerTitle(song.name);
+                                    } else {
+                                      window.open(url, "_blank");
+                                    }
+                                  }}
+                                  className={`flex items-center justify-center w-6 h-6 rounded transition-colors ${isYt ? "text-red-500 hover:bg-red-500/10" : "text-muted-foreground hover:text-primary hover:bg-accent"}`}
+                                  title={
+                                    isYt
+                                      ? "Abrir no miniplayer"
+                                      : "Abrir referência"
+                                  }
+                                >
+                                  {isYt ? (
+                                    <Youtube className="h-3.5 w-3.5" />
+                                  ) : (
+                                    <ExternalLink className="h-3.5 w-3.5" />
+                                  )}
+                                </button>
+                              );
+                            })()}
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          )}
+
+          {/* Aviso quando Louvor tem escala mas sem músicas */}
+          {worshipSongs && worshipSongs.length === 0 && (
+            <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-3 flex items-center gap-2.5">
+              <Music className="h-4 w-4 text-amber-500 flex-shrink-0" />
+              <p className="text-sm text-amber-700 dark:text-amber-400">
+                O Louvor tem escala neste dia mas ainda não adicionou músicas.
+              </p>
+            </div>
+          )}
+
+          {/* Miniplayer YouTube */}
+          {youtubePlayerUrl && (
+            <YoutubeMiniplayer
+              inline
+              url={youtubePlayerUrl}
+              title={youtubePlayerTitle}
+              onClose={() => {
+                setYoutubePlayerUrl(null);
+                setYoutubePlayerTitle(undefined);
+              }}
+            />
           )}
         </div>
 

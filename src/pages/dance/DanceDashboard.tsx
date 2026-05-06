@@ -14,6 +14,10 @@ import {
   FileText,
   Home,
   PersonStanding,
+  Music2,
+  Headphones,
+  Laptop,
+  ExternalLink,
 } from "lucide-react";
 import { CreateScheduleModal } from "@/components/features/schedules/CreateScheduleModal";
 import { ScheduleDetailModal } from "@/components/features/schedules/ScheduleDetailModal";
@@ -37,6 +41,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useSchedules, useDeleteSchedule } from "@/hooks/useSchedules";
 import { useTeams } from "@/hooks/useTeams";
+import { scheduleService } from "@/services/scheduleService";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { EmptyState } from "@/components/shared/EmptyState";
 import {
@@ -289,6 +294,18 @@ export function DanceDashboard() {
   } = useSchedules(danceTeam?.id || "", currentMonth);
   const deleteSchedule = useDeleteSchedule();
 
+  // Escalas do Louvor para mostrar músicas no calendário da Dança
+  const [worshipSchedules, setWorshipSchedules] = useState<
+    Awaited<ReturnType<typeof scheduleService.getSchedulesByTeamType>>
+  >([]);
+
+  useEffect(() => {
+    scheduleService
+      .getSchedulesByTeamType("louvor", currentMonth)
+      .then(setWorshipSchedules)
+      .catch(() => setWorshipSchedules([]));
+  }, [currentMonth]);
+
   const canManage =
     !!user &&
     (isGerencial(profiles || []) || isLeader(profiles || [], "danca"));
@@ -301,6 +318,18 @@ export function DanceDashboard() {
   const getDaySchedules = (day: Date) =>
     schedules.filter((s) => s.date === format(day, "yyyy-MM-dd"));
   const selectedDaySchedules = getDaySchedules(selectedDate);
+
+  // Músicas do Louvor para o dia selecionado
+  const getWorshipSongsForDay = (day: Date) => {
+    const dateStr = format(day, "yyyy-MM-dd");
+    const ws = worshipSchedules.filter((s) => s.date === dateStr);
+    const allSongs = ws.flatMap((s) =>
+      [...(s.songs || [])].sort((a, b) => a.order_index - b.order_index),
+    );
+    return { schedules: ws, songs: allSongs };
+  };
+  const selectedDayWorship = getWorshipSongsForDay(selectedDate);
+
   const whatsAppText = buildWhatsAppText(
     schedules,
     currentMonth,
@@ -409,6 +438,11 @@ export function DanceDashboard() {
                 const isToday = isSameDay(day, new Date());
                 const inMonth = isSameMonth(day, currentMonth);
                 const hasSchedule = daySchedules.length > 0;
+                const hasWorshipSongs = worshipSchedules.some(
+                  (s) =>
+                    s.date === format(day, "yyyy-MM-dd") &&
+                    (s.songs || []).length > 0,
+                );
                 const isUserScheduled =
                   !!user &&
                   daySchedules.some((s) =>
@@ -453,7 +487,7 @@ export function DanceDashboard() {
                     )}
                   >
                     <span>{format(day, "d")}</span>
-                    {(hasSchedule || isUserScheduled) && (
+                    {(hasSchedule || isUserScheduled || hasWorshipSongs) && (
                       <div className="absolute bottom-1 flex items-center gap-0.5">
                         {hasSchedule && (
                           <span
@@ -470,6 +504,14 @@ export function DanceDashboard() {
                             className={cn(
                               "w-1.5 h-1.5 rounded-full",
                               isSelected ? "bg-emerald-200" : "bg-emerald-500",
+                            )}
+                          />
+                        )}
+                        {hasWorshipSongs && (
+                          <span
+                            className={cn(
+                              "w-1.5 h-1.5 rounded-full",
+                              isSelected ? "bg-amber-200" : "bg-amber-500",
                             )}
                           />
                         )}
@@ -492,6 +534,12 @@ export function DanceDashboard() {
                 <span className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0" />
                 <span className="text-xs text-muted-foreground">
                   Você escalado(a)
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0" />
+                <span className="text-xs text-muted-foreground">
+                  Músicas do Louvor
                 </span>
               </div>
               <div className="flex items-center gap-1.5">
@@ -558,6 +606,27 @@ export function DanceDashboard() {
                   </div>
                 )}
               </CollapsibleSection>
+
+              {/* Indicador de músicas do Louvor — detalhes na modal da escala */}
+              {selectedDayWorship.schedules.length > 0 && (
+                <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-3 flex items-center gap-2.5">
+                  <Music2 className="h-4 w-4 text-amber-500 flex-shrink-0" />
+                  <p className="text-sm text-amber-700 dark:text-amber-400">
+                    {selectedDayWorship.songs.length > 0 ? (
+                      <>
+                        O Louvor tem{" "}
+                        <strong>
+                          {selectedDayWorship.songs.length} música
+                          {selectedDayWorship.songs.length !== 1 ? "s" : ""}
+                        </strong>{" "}
+                        neste dia. Abra a escala para ver.
+                      </>
+                    ) : (
+                      "O Louvor tem escala neste dia mas ainda não adicionou músicas."
+                    )}
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
@@ -892,6 +961,15 @@ export function DanceDashboard() {
         teamId={danceTeam.id}
         selectedDate={format(selectedDate, "yyyy-MM-dd")}
         schedule={editingSchedule}
+        worshipSongs={(() => {
+          const dateStr =
+            editingSchedule?.date || format(selectedDate, "yyyy-MM-dd");
+          const ws = worshipSchedules.filter((s) => s.date === dateStr);
+          if (ws.length === 0) return undefined;
+          return ws.flatMap((s) =>
+            [...(s.songs || [])].sort((a, b) => a.order_index - b.order_index),
+          );
+        })()}
         onSuccess={() => {
           refetch();
           setEditingSchedule(null);
@@ -903,6 +981,16 @@ export function DanceDashboard() {
           open={showDetailModal}
           onOpenChange={setShowDetailModal}
           schedule={selectedSchedule}
+          worshipSongs={(() => {
+            const dateStr = selectedSchedule.date;
+            const ws = worshipSchedules.filter((s) => s.date === dateStr);
+            if (ws.length === 0) return undefined; // sem escala do Louvor = não mostra nada
+            return ws.flatMap((s) =>
+              [...(s.songs || [])].sort(
+                (a, b) => a.order_index - b.order_index,
+              ),
+            );
+          })()}
           onEdit={() => {
             setShowDetailModal(false);
             setEditingSchedule(selectedSchedule);
