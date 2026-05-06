@@ -294,3 +294,9 @@
     @apply bg-[hsl(0_0%_10%)] border-[hsl(0_0%_18%)];
   }
 }
+
+/* ── FIX: YouTube iframe dentro de modais ─────────────────── */
+[data-radix-dialog-content] iframe {
+  position: relative;
+  z-index: 1;
+}

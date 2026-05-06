@@ -245,27 +245,41 @@ function buildWhatsAppText(
   const groups = groupSchedulesByWeekend(schedules).filter(
     (g) => g.schedules.length > 0,
   );
+
   const lines = [
-    `🎶 ESCALA – ${mo} / ${yr}`,
-    "",
-    `📍 ${teamName.toUpperCase()}`,
+    `🎶 ESCALA`,
+    `📍 ${teamName.toUpperCase()} – ${mo} / ${yr}`,
     "",
   ];
+
   groups.forEach((g, i) => {
     const ss = g.schedules;
     const main = ss[0];
     const first = parseISO(ss[0].date);
     const last = parseISO(ss[ss.length - 1].date);
+
+    // Título da equipe (se houver)
+    const teamTitle = main.title ? `*${main.title.toUpperCase()}*` : "";
+
+    // Data do fim de semana
     if (ss.length === 1) {
       lines.push(
-        `🗓 *${format(first, "EEEE", { locale: ptBR }).toUpperCase()}* - ${format(first, "dd")}`,
+        `🗓 *${format(first, "EEEE", { locale: ptBR }).toUpperCase()}* ${format(first, "dd")}`,
       );
     } else {
       lines.push(
         `🗓 *${format(first, "EEEE", { locale: ptBR }).toUpperCase()}* ${format(first, "dd")} e *${format(last, "EEEE", { locale: ptBR }).toUpperCase()}* ${format(last, "dd")}`,
       );
     }
+
+    // Adiciona título da equipe se existir
+    if (teamTitle) {
+      lines.push(teamTitle);
+    }
+
     const fmt = (ns: string[]) => (ns.length ? ns.join(", ") : "-");
+
+    // Membros por função
     lines.push(
       `🎙️ Ministros: ${fmt(getMembersByFunction(main, ["Vocal"]))}`,
       `🎙️ Backs: ${fmt(getMembersByFunction(main, ["BackVocal", "Back Vocal"]))}`,
@@ -274,8 +288,13 @@ function buildWhatsAppText(
       `🥁 Bateria: ${fmt(getMembersByFunction(main, ["Bateria"]))}`,
       `🎸 Baixo: ${fmt(getMembersByFunction(main, ["Baixo"]))}`,
     );
-    if (i < groups.length - 1) lines.push("");
+
+    // Separador entre fins de semana
+    if (i < groups.length - 1) {
+      lines.push("___________________________________", "");
+    }
   });
+
   return lines.join("\n").trim();
 }
 
@@ -442,6 +461,7 @@ export function WorshipDashboard() {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showFixedTeamModal, setShowFixedTeamModal] = useState(false);
   const [showWhatsApp, setShowWhatsApp] = useState(false);
+  const [monthlyWhatsAppText, setMonthlyWhatsAppText] = useState("");
   const [weekendWhatsAppText, setWeekendWhatsAppText] = useState("");
   const [showWeekendWhatsApp, setShowWeekendWhatsApp] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(
@@ -510,11 +530,6 @@ export function WorshipDashboard() {
   const getDaySchedules = (day: Date) =>
     schedules.filter((s) => s.date === format(day, "yyyy-MM-dd"));
   const selectedDaySchedules = getDaySchedules(selectedDate);
-  const whatsAppText = buildWhatsAppText(
-    schedules,
-    currentMonth,
-    worshipTeam?.nome || "Louvor",
-  );
 
   const handleDelete = async (schedule: Schedule) => {
     try {
@@ -591,7 +606,15 @@ export function WorshipDashboard() {
               variant="outline"
               size="sm"
               className="gap-1.5 text-xs h-8"
-              onClick={() => setShowWhatsApp(true)}
+              onClick={() => {
+                const text = buildWhatsAppText(
+                  schedules,
+                  currentMonth,
+                  worshipTeam?.nome || "MKD-MUSIC",
+                );
+                setMonthlyWhatsAppText(text);
+                setShowWhatsApp(true);
+              }}
               disabled={schedules.length === 0}
             >
               <FileText className="h-3.5 w-3.5" />
@@ -1351,33 +1374,53 @@ export function WorshipDashboard() {
 
       {/* Dialog: exportar WhatsApp mensal */}
       <Dialog open={showWhatsApp} onOpenChange={setShowWhatsApp}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>📱 Exportar Mês para WhatsApp</DialogTitle>
+        <DialogContent className="w-[calc(100vw-0.5rem)] sm:w-full max-w-2xl h-[98vh] sm:h-auto sm:max-h-[90vh] flex flex-col p-0 gap-0">
+          <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b flex-shrink-0">
+            <DialogTitle className="text-base sm:text-lg">
+              📱 Exportar Mês para WhatsApp
+            </DialogTitle>
           </DialogHeader>
-          <Textarea
-            value={whatsAppText}
-            readOnly
-            rows={12}
-            className="font-mono text-xs resize-none"
-          />
-          <DialogFooter>
-            <button
+
+          <div className="space-y-3 px-4 sm:px-6 py-4 overflow-y-auto flex-1">
+            <Textarea
+              value={monthlyWhatsAppText}
+              onChange={(e) => setMonthlyWhatsAppText(e.target.value)}
+              rows={20}
+              className="font-mono text-xs sm:text-sm resize-y min-h-[400px]"
+              placeholder="O texto da escala aparecerá aqui..."
+            />
+            <p className="text-xs text-muted-foreground">
+              Edite o texto se necessário antes de copiar.
+            </p>
+          </div>
+
+          <DialogFooter className="px-4 sm:px-6 py-3 sm:py-4 border-t bg-muted/30 gap-2 flex-shrink-0 flex-col-reverse sm:flex-row">
+            <Button
+              variant="outline"
+              onClick={() => setShowWhatsApp(false)}
+              className="w-full sm:w-auto"
+            >
+              Fechar
+            </Button>
+            <Button
               onClick={async () => {
                 try {
-                  await navigator.clipboard.writeText(whatsAppText);
-                  toast({ title: "Copiado para a área de transferência!" });
+                  await navigator.clipboard.writeText(monthlyWhatsAppText);
+                  toast({ title: "✅ Copiado para a área de transferência!" });
+                  setShowWhatsApp(false);
                 } catch {
                   toast({
                     variant: "destructive",
                     title: "Não foi possível copiar",
+                    description: "Copie manualmente o texto.",
                   });
                 }
               }}
-              className="w-full rounded-lg bg-primary text-primary-foreground py-2.5 text-sm font-semibold hover:bg-primary/90 transition-colors"
+              className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
             >
+              <FileText className="h-4 w-4" />
               Copiar texto
-            </button>
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -702,15 +702,18 @@ export function ScheduleDetailModal({
 
           {/* Miniplayer YouTube */}
           {youtubePlayerUrl && (
-            <YoutubeMiniplayer
-              inline
-              url={youtubePlayerUrl}
-              title={youtubePlayerTitle}
-              onClose={() => {
-                setYoutubePlayerUrl(null);
-                setYoutubePlayerTitle(undefined);
-              }}
-            />
+            <div className="mb-4">
+              <YoutubeMiniplayer
+                inline
+                disableDetach
+                url={youtubePlayerUrl}
+                title={youtubePlayerTitle}
+                onClose={() => {
+                  setYoutubePlayerUrl(null);
+                  setYoutubePlayerTitle(undefined);
+                }}
+              />
+            </div>
           )}
         </div>
 

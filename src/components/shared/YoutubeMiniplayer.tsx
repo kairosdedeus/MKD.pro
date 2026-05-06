@@ -15,6 +15,8 @@ interface YoutubeMiniplayerProps {
   onClose: () => void;
   /** Quando true, renderiza inline (dentro de modal). Quando false/omitido, renderiza flutuante. */
   inline?: boolean;
+  /** Quando true, desabilita o botão de "soltar" no modo inline. */
+  disableDetach?: boolean;
 }
 
 function extractYoutubeId(url: string): string | null {
@@ -215,13 +217,14 @@ function InlineMiniplayer({
   url,
   title,
   onClose,
+  disableDetach,
 }: Omit<YoutubeMiniplayerProps, "inline">) {
   const videoId = extractYoutubeId(url);
   const [expanded, setExpanded] = useState(false);
   const [floating, setFloating] = useState(false);
 
   if (!videoId) return null;
-  if (floating) {
+  if (floating && !disableDetach) {
     return <FloatingMiniplayer url={url} title={title} onClose={onClose} />;
   }
 
@@ -236,14 +239,16 @@ function InlineMiniplayer({
           {title || "YouTube"}
         </span>
         <div className="flex items-center gap-0.5 flex-shrink-0">
-          {/* Botão "soltar" — transforma em flutuante */}
-          <button
-            onClick={() => setFloating(true)}
-            className="p-1 rounded text-muted-foreground hover:text-primary transition-colors"
-            title="Soltar — arrastar livremente"
-          >
-            <GripVertical className="h-3.5 w-3.5" />
-          </button>
+          {/* Botão "soltar" — transforma em flutuante (apenas se não desabilitado) */}
+          {!disableDetach && (
+            <button
+              onClick={() => setFloating(true)}
+              className="p-1 rounded text-muted-foreground hover:text-primary transition-colors"
+              title="Soltar — arrastar livremente"
+            >
+              <GripVertical className="h-3.5 w-3.5" />
+            </button>
+          )}
           <a
             href={url}
             target="_blank"
@@ -299,9 +304,17 @@ export function YoutubeMiniplayer({
   title,
   onClose,
   inline,
+  disableDetach,
 }: YoutubeMiniplayerProps) {
   if (inline) {
-    return <InlineMiniplayer url={url} title={title} onClose={onClose} />;
+    return (
+      <InlineMiniplayer
+        url={url}
+        title={title}
+        onClose={onClose}
+        disableDetach={disableDetach}
+      />
+    );
   }
   return <FloatingMiniplayer url={url} title={title} onClose={onClose} />;
 }

@@ -1561,14 +1561,18 @@ export function CreateScheduleModal({
 
                 {/* Miniplayer YouTube */}
                 {youtubePlayerUrl && (
-                  <YoutubeMiniplayer
-                    url={youtubePlayerUrl}
-                    title={youtubePlayerTitle}
-                    onClose={() => {
-                      setYoutubePlayerUrl(null);
-                      setYoutubePlayerTitle(undefined);
-                    }}
-                  />
+                  <div className="mb-4">
+                    <YoutubeMiniplayer
+                      inline
+                      disableDetach
+                      url={youtubePlayerUrl}
+                      title={youtubePlayerTitle}
+                      onClose={() => {
+                        setYoutubePlayerUrl(null);
+                        setYoutubePlayerTitle(undefined);
+                      }}
+                    />
+                  </div>
                 )}
 
                 {/* Lista de músicas */}
