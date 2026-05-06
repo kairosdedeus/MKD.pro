@@ -19,7 +19,17 @@ export function usePermissions() {
   const canViewSchedules = isGerencial || isLiderLouvor || isMembroLouvor;
 
   /** Pode gerenciar usuários e equipes */
-  const canManageUsers = isGerencial;
+  const canManageUsers =
+    isGerencial ||
+    codes.some((c) =>
+      [
+        "lider_louvor",
+        "lider_danca",
+        "lider_obreiros",
+        "lider_midia",
+        "lider_celula",
+      ].includes(c),
+    );
 
   return {
     isGerencial,

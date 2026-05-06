@@ -102,6 +102,33 @@ function ProtectedGerencialRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function ProtectedUsersRoute({ children }: { children: React.ReactNode }) {
+  const { profiles } = useAuthStore();
+  const { isLeader: checkLeader } = {
+    isLeader: (p: typeof profiles) =>
+      p.some((x) =>
+        [
+          "gerencial",
+          "lider_louvor",
+          "lider_danca",
+          "lider_obreiros",
+          "lider_midia",
+          "lider_celula",
+        ].includes(x.codigo),
+      ),
+  };
+
+  if (!checkLeader(profiles)) {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <AccessDeniedPage />
+      </Suspense>
+    );
+  }
+
+  return <>{children}</>;
+}
+
 function ProtectedSongsRoute({ children }: { children: React.ReactNode }) {
   const { user, profiles } = useAuthStore();
   const { teams, loading } = useTeams();
@@ -233,11 +260,11 @@ function App() {
           <Route
             path="gerencial/usuarios"
             element={
-              <ProtectedGerencialRoute>
+              <ProtectedUsersRoute>
                 <Suspense fallback={<PageLoader />}>
                   <UsersPage />
                 </Suspense>
-              </ProtectedGerencialRoute>
+              </ProtectedUsersRoute>
             }
           />
           <Route
