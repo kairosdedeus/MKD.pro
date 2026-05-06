@@ -34,7 +34,13 @@ SELECT unnest(ARRAY['Vocal','BackVocal','Guitarra','Baixo','Bateria','Teclado'])
 FROM team_types WHERE codigo = 'louvor'
 ON CONFLICT DO NOTHING;
 
--- 4. Funções de Mídia
+-- 4. Funções de Dança
+INSERT INTO team_functions (nome, team_type_id)
+SELECT unnest(ARRAY['Ministerial', 'Ballet']), id
+FROM team_types WHERE codigo = 'danca'
+ON CONFLICT DO NOTHING;
+
+-- 5. Funções de Mídia
 INSERT INTO team_functions (nome, team_type_id)
 SELECT unnest(ARRAY['Projeção','Som','Transmissão']), id
 FROM team_types WHERE codigo = 'midia'

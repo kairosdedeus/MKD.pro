@@ -132,6 +132,18 @@ const FUNCTION_COLORS: Record<
     border: "border-pink-500/20",
     pill: "bg-pink-500/10 text-pink-600 dark:text-pink-400 border-pink-500/30",
   },
+  Ministerial: {
+    bg: "bg-violet-500/5",
+    text: "text-violet-600 dark:text-violet-400",
+    border: "border-violet-500/20",
+    pill: "bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/30",
+  },
+  Ballet: {
+    bg: "bg-rose-500/5",
+    text: "text-rose-600 dark:text-rose-400",
+    border: "border-rose-500/20",
+    pill: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30",
+  },
 };
 
 const FUNCTION_ICONS: Record<string, string> = {
@@ -144,6 +156,8 @@ const FUNCTION_ICONS: Record<string, string> = {
   Projeção: "📽️",
   Som: "🔊",
   Transmissão: "📡",
+  Ministerial: "💃",
+  Ballet: "🩰",
 };
 
 function getFunctionStyle(nome: string) {
@@ -175,7 +189,8 @@ function MemberPicker({
 }: MemberPickerProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const ref = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const style = getFunctionStyle(fn.nome);
 
   const assigned = assignedIds
@@ -187,26 +202,35 @@ function MemberPicker({
     return (m.user?.nome || "").toLowerCase().includes(query.toLowerCase());
   });
 
-  // Fechar ao clicar fora
+  const handleOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    setQuery("");
+  };
+
   useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-        setQuery("");
-      }
-    }
-    if (open) document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      const path = e.composedPath();
+      const inTrigger = triggerRef.current && path.includes(triggerRef.current);
+      const inDropdown =
+        dropdownRef.current && path.includes(dropdownRef.current);
+      if (!inTrigger && !inDropdown) handleClose();
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
   return (
-    <div className="relative" ref={ref}>
-      {/* Chips dos membros atribuídos + botão adicionar */}
+    <>
       <div className="flex flex-wrap items-center gap-2 min-h-[2.25rem]">
         {assigned.map((member) => (
           <span
             key={member.id}
-            className={`inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full text-sm font-medium border ${style.pill} group`}
+            className={`inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full text-sm font-medium border ${style.pill}`}
           >
             <span className="w-5 h-5 rounded-full bg-primary-foreground/60 dark:bg-white/20 flex items-center justify-center text-xs font-bold flex-shrink-0">
               {(member.user?.nome || "?").charAt(0).toUpperCase()}
@@ -216,32 +240,33 @@ function MemberPicker({
               type="button"
               onClick={() => onRemove(member.id)}
               className="ml-0.5 rounded-full p-0.5 hover:bg-black/10 transition-colors"
-              aria-label={`Remover ${member.user?.nome}`}
             >
               <X className="h-3 w-3" />
             </button>
           </span>
         ))}
 
-        {/* Botão + adicionar */}
         <button
+          ref={triggerRef}
           type="button"
-          onClick={() => setOpen((prev) => !prev)}
-          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm border-2 border-dashed transition-all
-            ${
-              open
-                ? `${style.bg} ${style.text} ${style.border} border-solid`
-                : "border-border text-muted-foreground hover:border-muted-foreground hover:text-foreground"
-            }`}
+          onClick={() => (open ? handleClose() : handleOpen())}
+          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm border-2 border-dashed transition-all ${
+            open
+              ? `${style.bg} ${style.text} ${style.border} border-solid`
+              : "border-border text-muted-foreground hover:border-muted-foreground hover:text-foreground"
+          }`}
         >
           <Plus className="h-3.5 w-3.5" />
           {assigned.length === 0 ? "Adicionar" : "Mais"}
         </button>
       </div>
 
-      {/* Dropdown de busca */}
       {open && (
-        <div className="absolute left-0 top-full mt-1 z-30 w-64 bg-card border border-border rounded-xl shadow-xl overflow-hidden">
+        <div
+          ref={dropdownRef}
+          className="absolute left-0 top-full mt-1 z-[9999] w-64 bg-card border border-border rounded-xl shadow-2xl overflow-hidden"
+          onMouseDown={(e) => e.stopPropagation()}
+        >
           <div className="p-2 border-b border-border">
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
@@ -286,7 +311,7 @@ function MemberPicker({
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
 
@@ -919,7 +944,7 @@ export function CreateScheduleModal({
                   </p>
                 </div>
               ) : (
-                <div className="rounded-xl border border-border overflow-hidden divide-y divide-border">
+                <div className="rounded-xl border border-border divide-y divide-border [&>*:first-child]:rounded-t-xl [&>*:last-child]:rounded-b-xl">
                   {teamFunctions
                     .slice()
                     .sort((a, b) => {
@@ -961,7 +986,7 @@ export function CreateScheduleModal({
                           </div>
 
                           {/* Picker de membros */}
-                          <div className="flex-1 min-w-0">
+                          <div className="flex-1 min-w-0 relative">
                             <MemberPicker
                               fn={fn}
                               assignedIds={assignedIds}

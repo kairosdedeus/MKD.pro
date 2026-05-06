@@ -86,6 +86,16 @@ const FUNCTION_COLORS: Record<
     text: "text-emerald-600 dark:text-emerald-400",
     pill: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
   },
+  Ministerial: {
+    bg: "bg-violet-500/5",
+    text: "text-violet-600 dark:text-violet-400",
+    pill: "bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/30",
+  },
+  Ballet: {
+    bg: "bg-rose-500/5",
+    text: "text-rose-600 dark:text-rose-400",
+    pill: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30",
+  },
 };
 
 const FUNCTION_ICONS: Record<string, string> = {
@@ -98,6 +108,8 @@ const FUNCTION_ICONS: Record<string, string> = {
   Projeção: "📽️",
   Som: "🔊",
   Transmissão: "📡",
+  Ministerial: "💃",
+  Ballet: "🩰",
 };
 
 export function ScheduleDetailModal({
