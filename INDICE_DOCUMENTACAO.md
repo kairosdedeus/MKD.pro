@@ -8,13 +8,23 @@
 
 ### Para Começar Agora
 
-1. **LEIA-ME.txt** (3.6K) - Guia rápido em texto simples
-2. **README.md** (7.2K) - Instruções de instalação e uso
+1. **GUIA_EXECUCAO_FINAL.md** (NOVO! 🔥) - 🚀 **COMECE AQUI!** Sistema 100% IDs
+2. **LEIA-ME.txt** (3.6K) - Guia rápido em texto simples
+3. **README.md** (7.2K) - Instruções de instalação e uso
+
+### Sistema 100% Baseado em IDs (NOVO! 🔥)
+
+4. **GUIA_EXECUCAO_FINAL.md** - 🚀 **COMECE AQUI!** Guia completo passo a passo
+5. **SCRIPTS_PRONTOS_EXECUTAR.md** - Scripts prontos com IDs reais
+6. **RESUMO_FINAL_SISTEMA_IDS.md** - Resumo técnico completo
+7. **PLANO_REFATORACAO_IDS.md** - Plano de refatoração detalhado
+8. **IMPLEMENTACAO_SISTEMA_IDS.md** - Guia de implementação técnico
+9. **EXECUTE_AGORA.md** - Checklist rápido de 4 passos
 
 ### Documentação Completa
 
-3. **CONCLUSAO_FINAL.md** (8.7K) - Resumo executivo do projeto finalizado
-4. **PROJETO_FINAL.md** (11K) - Documentação técnica completa
+10. **CONCLUSAO_FINAL.md** (8.7K) - Resumo executivo do projeto finalizado
+11. **PROJETO_FINAL.md** (11K) - Documentação técnica completa
 
 ---
 
