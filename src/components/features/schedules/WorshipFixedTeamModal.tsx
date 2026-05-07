@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -307,6 +307,7 @@ export function WorshipFixedTeamModal({
     setName(preset?.nome || "");
     if (!preset) {
       setAssignments(new Map());
+      setAssignments(new Map());
       return;
     }
 
@@ -428,6 +429,7 @@ export function WorshipFixedTeamModal({
             <div className="flex items-center justify-between gap-3">
               <Label className="text-base font-semibold">
                 Membros por função
+                Membros por função
               </Label>
               <span className="text-xs text-muted-foreground">
                 {totalAssigned} membro(s) escalado(s)
@@ -436,7 +438,7 @@ export function WorshipFixedTeamModal({
 
             {members.length === 0 ? (
               <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-                <Users className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                <Users className="mx-auto mb-2 h-8 w-8 opacity-40" />
                 Adicione membros na equipe de Louvor antes de criar uma equipe
                 padrão.
               </div>
