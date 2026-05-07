@@ -106,7 +106,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
       </div>
 
       <nav className="flex-1 px-3 pb-4 space-y-4 overflow-y-auto">
-        {isManagement && (
+        {isAnyLeader && (
           <div>
             <h3
               className="px-2 text-[10px] font-semibold uppercase tracking-widest mb-1"
