@@ -1,3 +1,18 @@
+-- ============================================================================
+-- ⚠️ ATENÇÃO: ESTE SCRIPT ESTÁ DEPRECADO
+-- ============================================================================
+-- Este script usa matching por NOME em vez de IDs, o que causa problemas
+-- quando usuários mudam seus nomes. O relacionamento é perdido e os membros
+-- não aparecem mais nas escalas.
+--
+-- 🔴 PROBLEMA: Linhas 87-93 usam LIKE e unaccent() para match por nome
+-- ✅ SOLUÇÃO: Use o novo script que trabalha com IDs
+--
+-- NOVO SCRIPT: supabase/utils/atualizar-equipes-fixas-louvor-por-id.sql
+-- DOCUMENTAÇÃO: docs/PROBLEMA_RELACIONAMENTO_POR_NOME.md
+-- SCRIPT AUXILIAR: supabase/utils/obter-ids-para-equipes-fixas.sql
+--
+-- ============================================================================
 -- Atualiza as equipes fixas do Louvor com os membros corretos
 -- Execute este script após ter criado os usuários no sistema
 
