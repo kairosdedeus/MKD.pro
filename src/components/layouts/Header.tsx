@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuthStore } from "@/stores/authStore";
 import { Button } from "@/components/ui/button";
+import { LogoCompact } from "@/components/shared/Logo";
 import {
   LogOut,
   User,
@@ -277,10 +278,13 @@ export function Header() {
     <>
       <header className="header-bg border-b">
         <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6">
-          <h2 className="min-w-0 truncate text-sm font-semibold text-foreground sm:text-base">
-            Bem-vindo,{" "}
-            <span className="text-primary">{user?.nome?.split(" ")[0]}</span>
-          </h2>
+          <div className="flex items-center gap-3 min-w-0">
+            <LogoCompact className="flex-shrink-0" />
+            <h2 className="min-w-0 truncate text-sm font-semibold text-foreground sm:text-base">
+              Bem-vindo,{" "}
+              <span className="text-primary">{user?.nome?.split(" ")[0]}</span>
+            </h2>
+          </div>
 
           <div className="flex items-center gap-1">
             <ThemeSelector />

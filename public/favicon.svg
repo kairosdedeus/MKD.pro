@@ -1,0 +1,51 @@
+<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+
+  <!-- Fundo preto -->
+  <rect width="1024" height="1024" fill="#000000"/>
+
+  <!-- D (branco) — arco semicircular grosso, abre para a esquerda -->
+  <!-- Arco externo raio=270, interno raio=160, centro em (512,512) -->
+  <!-- Vai de -90° (topo) até +90° (base), lado direito -->
+  <path
+    d="M 430,242
+       A 270,270 0 0 1 430,782
+       L 430,672
+       A 160,160 0 0 0 430,352
+       Z"
+    fill="#EFEFEF"
+  />
+
+  <!-- K (azul ciano) — barra vertical + dois braços diagonais do meio -->
+
+  <!-- Barra vertical: estreita, do topo ao fundo -->
+  <rect x="272" y="242" width="70" height="540" fill="#29ABD4"/>
+
+  <!--
+    Braços do K:
+    - Partem do ponto médio da barra (x≈342, y=512)
+    - Braço superior: sobe para a direita até (490, 370)
+    - Braço inferior: desce para a direita até (490, 654)
+    - Espessura: ~55px (usar stroke ou polygon)
+  -->
+
+  <!-- Braço superior do K (diagonal de cima) -->
+  <!-- De (342, 512) até (490, 370), espessura 55 -->
+  <line
+    x1="342" y1="512"
+    x2="490" y2="370"
+    stroke="#29ABD4"
+    stroke-width="58"
+    stroke-linecap="square"
+  />
+
+  <!-- Braço inferior do K (diagonal de baixo) -->
+  <!-- De (342, 512) até (490, 654), espessura 55 -->
+  <line
+    x1="342" y1="512"
+    x2="490" y2="654"
+    stroke="#29ABD4"
+    stroke-width="58"
+    stroke-linecap="square"
+  />
+
+</svg>
