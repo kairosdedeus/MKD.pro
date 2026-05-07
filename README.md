@@ -40,11 +40,25 @@
 - 📅 Calendário interativo de escalas
 - 👥 Gestão de equipes e membros
 - 🎵 Cadastro e gerenciamento de músicas
+- 🔄 **Sistema de Rodízio Automático** - Rodízio inteligente de equipes fixas
 - 🔄 Integração entre ministérios (Louvor → Dança → Mídia)
 - 📊 Dashboard gerencial com estatísticas
 - 🔐 Autenticação e autorização com RLS
 - 📱 Interface responsiva (Mobile First)
 - 🎨 Design moderno e intuitivo
+
+## 🎯 Sistema de Rodízio Automático
+
+O sistema possui um módulo avançado de rodízio automático de equipes:
+
+- **Equipe X** sempre no 1º final de semana do mês
+- **Sequência configurável** via drag & drop (ex: A1 → B1 → C1 → A2 → B2 → C2)
+- **Continuidade entre meses** - respeita o histórico do mês anterior
+- **Ativar/desativar equipes** - controle de equipes no rodízio
+- **Preview da sequência** - visualização antes de salvar
+- **Interface gerencial completa** - modal de configuração intuitivo
+
+Para mais detalhes, consulte a [documentação do sistema de rodízio](docs/SISTEMA_RODIZIO_EQUIPES.md).
 
 ## 🛠️ Configuração do Projeto
 

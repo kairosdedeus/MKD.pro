@@ -426,3 +426,14 @@ coverage/
 
 # TypeScript
 *.tsbuildinfo
+
+# Archive folders (documentação e scripts temporários)
+docs/archive/
+supabase/utils/archive/
+
+# Arquivos temporários de desenvolvimento
+*.tmp
+*.temp
+*~.md
+TEMP_*.md
+DEBUG_*.md

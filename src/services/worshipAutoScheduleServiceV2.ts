@@ -464,22 +464,28 @@ export const worshipAutoScheduleServiceV2 = {
     }
 
     // Buscar regras de rodízio do banco
-    const [bassistRules, drummerRules, presets, members, functions, fixedAssignments] =
-      await Promise.all([
-        getBassistRotationRules(),
-        getDrummerRotationRules(),
-        worshipFixedTeamService.getByTeamId(teamId),
-        teamService.getTeamMembers(teamId),
-        ensureFunctions(team.team_type_id, [
-          "Vocal",
-          "BackVocal",
-          "Bateria",
-          "Baixo",
-          "Teclado",
-          "Guitarra",
-        ]),
-        getFixedFunctionAssignments(teamId),
-      ]);
+    const [
+      bassistRules,
+      drummerRules,
+      presets,
+      members,
+      functions,
+      fixedAssignments,
+    ] = await Promise.all([
+      getBassistRotationRules(),
+      getDrummerRotationRules(),
+      worshipFixedTeamService.getByTeamId(teamId),
+      teamService.getTeamMembers(teamId),
+      ensureFunctions(team.team_type_id, [
+        "Vocal",
+        "BackVocal",
+        "Bateria",
+        "Baixo",
+        "Teclado",
+        "Guitarra",
+      ]),
+      getFixedFunctionAssignments(teamId),
+    ]);
 
     // Validar regras
     if (bassistRules.length === 0) {
@@ -609,7 +615,7 @@ export const worshipAutoScheduleServiceV2 = {
           team_id: teamId,
           date: dateText,
           title: preset.nome,
-          notes: `Gerada automaticamente. Bateria: ${drummerMember.user?.nome}. Baixo: ${bassistMember.user?.nome}.`,
+          notes: "",
           status: "draft",
           members: scheduleMembers,
           songs: [],

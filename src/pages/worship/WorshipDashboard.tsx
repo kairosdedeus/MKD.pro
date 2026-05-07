@@ -22,10 +22,12 @@ import {
   MonitorPlay,
   Volume2,
   Circle,
+  RotateCw,
 } from "lucide-react";
 import { CreateScheduleModal } from "@/components/features/schedules/CreateScheduleModal";
 import { ScheduleDetailModal } from "@/components/features/schedules/ScheduleDetailModal";
 import { WorshipFixedTeamModal } from "@/components/features/schedules/WorshipFixedTeamModal";
+import { RotationConfigModal } from "@/components/features/schedules/RotationConfigModal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -460,6 +462,7 @@ export function WorshipDashboard() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showFixedTeamModal, setShowFixedTeamModal] = useState(false);
+  const [showRotationConfig, setShowRotationConfig] = useState(false);
   const [showWhatsApp, setShowWhatsApp] = useState(false);
   const [monthlyWhatsAppText, setMonthlyWhatsAppText] = useState("");
   const [weekendWhatsAppText, setWeekendWhatsAppText] = useState("");
@@ -692,7 +695,7 @@ export function WorshipDashboard() {
                   !!user &&
                   daySchedules.some((s) =>
                     (s.members || []).some(
-                      (m) =>
+                      (m: any) =>
                         m.team_member?.user?.id === user.id ||
                         (m.team_member as any)?.user_id === user.id,
                     ),
@@ -849,17 +852,27 @@ export function WorshipDashboard() {
                   title="Equipes padrão"
                   badge={fixedTeams.length > 0 ? fixedTeams.length : undefined}
                   action={
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-7 text-xs gap-1 mr-1"
-                      onClick={() => {
-                        setEditingFixedTeam(null);
-                        setShowFixedTeamModal(true);
-                      }}
-                    >
-                      <Plus className="h-3 w-3" /> Nova
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs gap-1"
+                        onClick={() => setShowRotationConfig(true)}
+                      >
+                        <RotateCw className="h-3 w-3" /> Rodízio
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs gap-1 mr-1"
+                        onClick={() => {
+                          setEditingFixedTeam(null);
+                          setShowFixedTeamModal(true);
+                        }}
+                      >
+                        <Plus className="h-3 w-3" /> Nova
+                      </Button>
+                    </div>
                   }
                 >
                   {loadingFixedTeams ? (
@@ -1317,6 +1330,15 @@ export function WorshipDashboard() {
         preset={editingFixedTeam}
         onSuccess={() => {
           setShowFixedTeamModal(false);
+          loadFixedTeams();
+        }}
+      />
+
+      <RotationConfigModal
+        open={showRotationConfig}
+        onOpenChange={setShowRotationConfig}
+        teamId={worshipTeam.id}
+        onSuccess={() => {
           loadFixedTeams();
         }}
       />

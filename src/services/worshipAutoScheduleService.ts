@@ -361,6 +361,7 @@ export const worshipAutoScheduleService = {
         blockIndex === 0
           ? FIRST_WEEKEND_TEAM_CODE
           : nextFromCycle(TEAM_SEQUENCE, lastTeamCode);
+
       const preset = presetMap.get(teamCode)!;
 
       const drummerName =
@@ -415,7 +416,8 @@ export const worshipAutoScheduleService = {
         created += 1;
       }
 
-      lastTeamCode = teamCode;
+      lastTeamCode =
+        teamCode === FIRST_WEEKEND_TEAM_CODE ? lastTeamCode : teamCode;
       lastDrummerName = drummerName;
       lastBassistName = bassistName;
     }
