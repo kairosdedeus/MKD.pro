@@ -40,7 +40,7 @@ escalas_maio(data, titulo, membro_email, funcao_nome) AS (
         -- SÁBADO 02 e DOMINGO 03 (Equipe X)
         ('2026-05-02', 'Culto Sábado', 'melhorlider@mkd.com', 'Vocal'),
         ('2026-05-02', 'Culto Sábado', 'vinizoiazul@mkd.com', 'Vocal'),
-        ('2026-05-02', 'Culto Sábado', 'maralakeuri@mkd.com', 'BackVocal'),
+        ('2026-05-02', 'Culto Sábado', 'maraiakeuri@mkd.com', 'BackVocal'),
         ('2026-05-02', 'Culto Sábado', 'alicesilva@mkd.com', 'BackVocal'),
         ('2026-05-02', 'Culto Sábado', 'joaovitor@mkd.com', 'BackVocal'),
         ('2026-05-02', 'Culto Sábado', 'melhorlider@mkd.com', 'Teclado'),
@@ -50,7 +50,7 @@ escalas_maio(data, titulo, membro_email, funcao_nome) AS (
         
         ('2026-05-03', 'Culto Domingo', 'melhorlider@mkd.com', 'Vocal'),
         ('2026-05-03', 'Culto Domingo', 'vinizoiazul@mkd.com', 'Vocal'),
-        ('2026-05-03', 'Culto Domingo', 'maralakeuri@mkd.com', 'BackVocal'),
+        ('2026-05-03', 'Culto Domingo', 'maraiakeuri@mkd.com', 'BackVocal'),
         ('2026-05-03', 'Culto Domingo', 'alicesilva@mkd.com', 'BackVocal'),
         ('2026-05-03', 'Culto Domingo', 'joaovitor@mkd.com', 'BackVocal'),
         ('2026-05-03', 'Culto Domingo', 'melhorlider@mkd.com', 'Teclado'),
@@ -99,7 +99,7 @@ escalas_maio(data, titulo, membro_email, funcao_nome) AS (
         -- SÁBADO 23 e DOMINGO 24 (Equipe C-2)
         ('2026-05-23', 'Culto Sábado', 'lucas@mkd.com', 'Vocal'),
         ('2026-05-23', 'Culto Sábado', 'isabel@mkd.com', 'Vocal'),
-        ('2026-05-23', 'Culto Sábado', 'maralakeuri@mkd.com', 'BackVocal'),
+        ('2026-05-23', 'Culto Sábado', 'maraiakeuri@mkd.com', 'BackVocal'),
         ('2026-05-23', 'Culto Sábado', 'joaovitor@mkd.com', 'BackVocal'),
         ('2026-05-23', 'Culto Sábado', 'melhorlider@mkd.com', 'Teclado'),
         ('2026-05-23', 'Culto Sábado', 'vinizoiazul@mkd.com', 'Guitarra'),
@@ -108,7 +108,7 @@ escalas_maio(data, titulo, membro_email, funcao_nome) AS (
         
         ('2026-05-24', 'Culto Domingo', 'lucas@mkd.com', 'Vocal'),
         ('2026-05-24', 'Culto Domingo', 'isabel@mkd.com', 'Vocal'),
-        ('2026-05-24', 'Culto Domingo', 'maralakeuri@mkd.com', 'BackVocal'),
+        ('2026-05-24', 'Culto Domingo', 'maraiakeuri@mkd.com', 'BackVocal'),
         ('2026-05-24', 'Culto Domingo', 'joaovitor@mkd.com', 'BackVocal'),
         ('2026-05-24', 'Culto Domingo', 'melhorlider@mkd.com', 'Teclado'),
         ('2026-05-24', 'Culto Domingo', 'vinizoiazul@mkd.com', 'Guitarra'),

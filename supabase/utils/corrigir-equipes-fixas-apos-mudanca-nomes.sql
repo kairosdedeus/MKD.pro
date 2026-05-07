@@ -60,7 +60,7 @@ official_members(preset_name, member_email, function_name, sort_order) AS (
         ('Equipe B-2', 'jhonata@mkd.com', 'BackVocal', 4),       -- Jhonata nemmer
         
         -- EQUIPE C-1
-        ('Equipe C-1', 'maralakeuri@mkd.com', 'Vocal', 1),       -- Wallesca do Bruno
+        ('Equipe C-1', 'maraiakeuri@mkd.com', 'Vocal', 1),       -- Wallesca do Bruno
         ('Equipe C-1', 'joaovitor@mkd.com', 'Vocal', 2),         -- João Vitor
         ('Equipe C-1', 'lucas@mkd.com', 'BackVocal', 3),         -- Lucas Tchucky
         ('Equipe C-1', 'isabel@mkd.com', 'BackVocal', 4),        -- Isabel Cabrera
@@ -68,14 +68,14 @@ official_members(preset_name, member_email, function_name, sort_order) AS (
         -- EQUIPE C-2
         ('Equipe C-2', 'lucas@mkd.com', 'Vocal', 1),             -- Lucas Tchucky
         ('Equipe C-2', 'isabel@mkd.com', 'Vocal', 2),            -- Isabel Cabrera
-        ('Equipe C-2', 'maralakeuri@mkd.com', 'BackVocal', 3),   -- Wallesca do Bruno
+        ('Equipe C-2', 'maraiakeuri@mkd.com', 'BackVocal', 3),   -- Wallesca do Bruno
         ('Equipe C-2', 'joaovitor@mkd.com', 'BackVocal', 4),     -- João Vitor
         
         -- EQUIPE X (primeira semana do mês)
         ('Equipe X', 'melhorlider@mkd.com', 'Vocal', 1),         -- Michael Cabrera
         ('Equipe X', 'vinizoiazul@mkd.com', 'Vocal', 2),         -- Vinicius Guitarra
         ('Equipe X', 'joaovitor@mkd.com', 'BackVocal', 3),       -- João Vitor
-        ('Equipe X', 'maralakeuri@mkd.com', 'BackVocal', 4),     -- Wallesca do Bruno
+        ('Equipe X', 'maraiakeuri@mkd.com', 'BackVocal', 4),     -- Wallesca do Bruno
         ('Equipe X', 'alicesilva@mkd.com', 'BackVocal', 5)       -- Alice Silva
 ),
 -- Fazer o match dos membros usando EMAIL (identificador único e imutável)
@@ -163,7 +163,7 @@ SELECT
         WHEN 'alicesilva@mkd.com' THEN 'Alice Cantora → Alice Silva'
         WHEN 'gabisena@mkd.com' THEN 'Gabriela Sena (sem mudança)'
         WHEN 'mariadonilson@mkd.com' THEN 'Maria Cantora → Maria do Nilson'
-        WHEN 'maralakeuri@mkd.com' THEN 'Wallesca cantora → Wallesca do Bruno'
+        WHEN 'maraiakeuri@mkd.com' THEN 'Wallesca cantora → Wallesca do Bruno'
         WHEN 'joaovitor@mkd.com' THEN 'João Cantor → João Vitor'
         WHEN 'lucas@mkd.com' THEN 'Lucas Tchucky (sem mudança)'
         WHEN 'isabel@mkd.com' THEN 'Isabel Cabrera (sem mudança)'
@@ -180,7 +180,7 @@ WHERE up.email IN (
     'alicesilva@mkd.com',
     'gabisena@mkd.com',
     'mariadonilson@mkd.com',
-    'maralakeuri@mkd.com',
+    'maraiakeuri@mkd.com',
     'joaovitor@mkd.com',
     'lucas@mkd.com',
     'isabel@mkd.com',

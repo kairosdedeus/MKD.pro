@@ -102,7 +102,7 @@ Criados 2 scripts para evitar o problema:
 | Lais Cantora      | **Lais do Cris**      | lais@mkd.com          |
 | Alice Cantora     | **Alice Silva**       | alicesilva@mkd.com    |
 | Maria Cantora     | **Maria do Nilson**   | mariadonilson@mkd.com |
-| Wallesca cantora  | **Wallesca do Bruno** | maralakeuri@mkd.com   |
+| Wallesca cantora  | **Wallesca do Bruno** | maraiakeuri@mkd.com   |
 | João Cantor       | **João Vitor**        | joaovitor@mkd.com     |
 | Gabriela Sena     | **Gabriela Sena**     | gabisena@mkd.com      |
 | Lucas Tchucky     | **Lucas Tchucky**     | lucas@mkd.com         |

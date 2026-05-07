@@ -142,7 +142,7 @@ SELECT nome, email FROM users_profile
 WHERE email IN (
     'melhorlider@mkd.com',
     'vinizoiazul@mkd.com',
-    'maralakeuri@mkd.com',
+    'maraiakeuri@mkd.com',
     -- ... outros emails
 )
 ORDER BY nome;

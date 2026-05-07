@@ -83,7 +83,7 @@ users_sem_team_member AS (
           'alicesilva@mkd.com',
           'gabisena@mkd.com',
           'mariadonilson@mkd.com',
-          'maralakeuri@mkd.com',
+          'maraiakeuri@mkd.com',
           'joaovitor@mkd.com',
           'lucas@mkd.com',
           'isabel@mkd.com',

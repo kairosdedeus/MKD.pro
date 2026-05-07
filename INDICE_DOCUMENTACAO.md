@@ -130,13 +130,28 @@
 
 ### 4. Features Específicas
 
-#### **docs/ACESSO_LIDERES_USUARIOS.md** (5.2K) ⭐ NOVO
+#### **docs/ACESSO_LIDERES_USUARIOS.md** (5.2K)
 
 - Acesso ao dashboard de Usuários para líderes
 - Análise do sistema de permissões
 - Solução implementada
 - Testes recomendados
 - Impacto e princípios aplicados
+
+#### **docs/PROBLEMA_RELACIONAMENTO_POR_NOME.md** (8.5K) ⭐ IMPORTANTE
+
+- Problema de relacionamentos por nome
+- Por que usar IDs em vez de nomes
+- Scripts deprecados vs novos
+- Solução implementada
+- Prevenção de problemas futuros
+
+#### **docs/CORRECAO_EQUIPES_FIXAS.md** (6.2K)
+
+- Correção de equipes fixas após mudança de nomes
+- Script de correção automática
+- Mapeamento de nomes antigos → novos
+- Como usar
 
 #### **docs/WORSHIP_DASHBOARD_REFACTOR.md** (3.9K)
 
@@ -152,6 +167,52 @@
 - Configuração do Railway
 - Variáveis de ambiente
 - Como usar
+
+---
+
+### 5. Correções e Troubleshooting
+
+#### **SOLUCAO_TCHUCKY_SUMIU.md** (7.8K) 🚨 NOVO
+
+- Solução completa para usuário que sumiu das escalas
+- Diagnóstico detalhado
+- Scripts de correção
+- Prevenção de problemas
+- Guia passo a passo
+
+#### **RESUMO_PROBLEMA_TCHUCKY.md** (4.2K) 🚨 NOVO
+
+- Resumo executivo do problema
+- Checklist de ações
+- Próximos passos
+- Resultado esperado
+
+#### **SOLUCAO_PROBLEMA_ESCALAS.md** (5.5K)
+
+- Solução para escalas sem membros
+- Diagnóstico de problemas
+- Scripts de correção
+- Validação
+
+#### **RESTAURAR_ESCALA_MAIO.md** (4.8K)
+
+- Restauração completa das escalas de maio
+- Script de restauração
+- Validação
+- Troubleshooting
+
+#### **GUIA_RAPIDO_CORRECAO_ESCALAS.md** (3.2K)
+
+- Guia rápido para corrigir escalas
+- Diagnóstico rápido
+- Scripts de correção
+- Validação
+
+---
+
+### 6. Implementação e Refatoração
+
+_Esta seção foi movida para "Arquitetura e Código" acima_
 
 ---
 
@@ -185,6 +246,14 @@
 2. **README.md** - Configuração
 3. **PROJETO_FINAL.md** - Arquitetura
 
+### Para Troubleshooting 🚨
+
+1. **RESUMO_PROBLEMA_TCHUCKY.md** - Problema atual
+2. **SOLUCAO_TCHUCKY_SUMIU.md** - Solução detalhada
+3. **GUIA_RAPIDO_CORRECAO_ESCALAS.md** - Guia rápido
+4. **docs/PROBLEMA_RELACIONAMENTO_POR_NOME.md** - Prevenção
+5. **supabase/utils/README.md** - Scripts disponíveis
+
 ---
 
 ## 📁 ESTRUTURA DE ARQUIVOS
@@ -196,18 +265,37 @@
 ├── CONCLUSAO_FINAL.md             # Resumo executivo final
 ├── PROJETO_FINAL.md               # Documentação técnica completa
 ├── INDICE_DOCUMENTACAO.md         # Este arquivo
+├── SOLUCAO_TCHUCKY_SUMIU.md       # 🚨 Solução problema Tchucky
+├── RESUMO_PROBLEMA_TCHUCKY.md     # 🚨 Resumo executivo
+├── SOLUCAO_PROBLEMA_ESCALAS.md    # Solução escalas sem membros
+├── RESTAURAR_ESCALA_MAIO.md       # Restauração escalas maio
+├── GUIA_RAPIDO_CORRECAO_ESCALAS.md # Guia rápido correção
 │
-└── docs/
-    ├── RESUMO_PROJETO.md          # Resumo executivo
-    ├── PROJECT_STATUS_FINAL.md    # Status detalhado
-    ├── MELHORIAS_APLICADAS.md     # Clean Code aplicado
-    ├── REFATORACAO_CONCLUIDA.md   # Refatoração do service
-    ├── ACESSO_LIDERES_USUARIOS.md # Acesso de líderes ao dashboard
-    ├── IMPLEMENTATION_STATUS.md   # Status (legado)
-    ├── IMPLEMENTATION_CHECKLIST.md # Checklist de features
-    ├── DEPLOY.md                  # Guia de deploy
-    ├── WORSHIP_DASHBOARD_REFACTOR.md # Refatoração Louvor
-    └── YOUTUBE_TO_AUDIO.md        # Serviço de conversão
+├── docs/
+│   ├── RESUMO_PROJETO.md          # Resumo executivo
+│   ├── PROJECT_STATUS_FINAL.md    # Status detalhado
+│   ├── MELHORIAS_APLICADAS.md     # Clean Code aplicado
+│   ├── REFATORACAO_CONCLUIDA.md   # Refatoração do service
+│   ├── ACESSO_LIDERES_USUARIOS.md # Acesso de líderes
+│   ├── PROBLEMA_RELACIONAMENTO_POR_NOME.md # ⭐ IDs vs Nomes
+│   ├── CORRECAO_EQUIPES_FIXAS.md  # Correção equipes fixas
+│   ├── IMPLEMENTATION_STATUS.md   # Status (legado)
+│   ├── IMPLEMENTATION_CHECKLIST.md # Checklist de features
+│   ├── DEPLOY.md                  # Guia de deploy
+│   ├── WORSHIP_DASHBOARD_REFACTOR.md # Refatoração Louvor
+│   └── YOUTUBE_TO_AUDIO.md        # Serviço de conversão
+│
+└── supabase/utils/
+    ├── README.md                  # 📋 Guia de scripts SQL
+    ├── adicionar-tchucky-escalas-maio.sql # 🚨 Correção Tchucky
+    ├── diagnosticar-tchucky.sql   # 🔍 Diagnóstico Tchucky
+    ├── diagnosticar-usuario-sumiu.sql # 🔍 Template
+    ├── restaurar-escala-maio-2026.sql # 🔄 Restauração
+    ├── adicionar-funcoes-escalas-maio.sql # 🔧 Funções
+    ├── verificar-escalas-maio.sql # 📊 Validação
+    ├── diagnosticar-escalas-sem-membros.sql # 🔍 Diagnóstico
+    ├── EXECUTE-PRIMEIRO-diagnostico-rapido.sql # 🔍 Rápido
+    └── ... (outros scripts)
 ```
 
 ---
@@ -260,14 +348,30 @@
 
 → **docs/REFATORACAO_CONCLUIDA.md**
 
+#### "Usuário sumiu das escalas?" 🚨
+
+→ **RESUMO_PROBLEMA_TCHUCKY.md** ou **SOLUCAO_TCHUCKY_SUMIU.md**
+
+#### "Escalas sem membros?"
+
+→ **GUIA_RAPIDO_CORRECAO_ESCALAS.md** ou **SOLUCAO_PROBLEMA_ESCALAS.md**
+
+#### "Scripts SQL disponíveis?"
+
+→ **supabase/utils/README.md**
+
+#### "Por que usar IDs em vez de nomes?"
+
+→ **docs/PROBLEMA_RELACIONAMENTO_POR_NOME.md**
+
 ---
 
 ## 📊 ESTATÍSTICAS DA DOCUMENTAÇÃO
 
 ### Total de Documentos
 
-- **13 arquivos** de documentação
-- **~97KB** de conteúdo
+- **18 arquivos** de documentação principal
+- **~125KB** de conteúdo
 - **100%** de cobertura do projeto
 
 ### Por Categoria
@@ -275,7 +379,9 @@
 - **Status e Progresso:** 5 arquivos (38KB)
 - **Arquitetura e Código:** 3 arquivos (29KB)
 - **Instalação e Deploy:** 3 arquivos (12KB)
-- **Features Específicas:** 3 arquivos (12KB)
+- **Features Específicas:** 5 arquivos (26KB)
+- **Correções e Troubleshooting:** 5 arquivos (25KB)
+- **Scripts SQL:** 10+ arquivos (supabase/utils/)
 
 ### Qualidade
 
@@ -285,6 +391,8 @@
 - ✅ Métricas e estatísticas
 - ✅ Diagramas e estruturas
 - ✅ Índice organizado
+- ✅ Scripts de correção prontos
+- ✅ Troubleshooting detalhado
 
 ---
 
@@ -312,6 +420,16 @@
 - **docs/WORSHIP_DASHBOARD_REFACTOR.md** - Feature específica
 - **docs/YOUTUBE_TO_AUDIO.md** - Serviço externo
 
+### Documentos de Troubleshooting 🚨
+
+1. 🚨 **RESUMO_PROBLEMA_TCHUCKY.md** - Problema atual
+2. 🚨 **SOLUCAO_TCHUCKY_SUMIU.md** - Solução completa
+3. **GUIA_RAPIDO_CORRECAO_ESCALAS.md** - Guia rápido
+4. **SOLUCAO_PROBLEMA_ESCALAS.md** - Escalas sem membros
+5. **RESTAURAR_ESCALA_MAIO.md** - Restauração completa
+6. **docs/PROBLEMA_RELACIONAMENTO_POR_NOME.md** - Prevenção
+7. **supabase/utils/README.md** - Scripts SQL
+
 ---
 
 ## 🏆 CONCLUSÃO
@@ -323,12 +441,14 @@ A documentação do **Sistema de Escalas Ministeriais** está **completa e organ
 ✅ Status e progresso  
 ✅ Deploy e CI/CD  
 ✅ Features específicas  
-✅ Melhorias e refatorações
+✅ Melhorias e refatorações  
+✅ Troubleshooting e correções 🚨  
+✅ Scripts SQL prontos para uso
 
-**Total:** 13 documentos, ~97KB de conteúdo técnico de alta qualidade.
+**Total:** 18+ documentos, ~125KB de conteúdo técnico de alta qualidade.
 
 ---
 
-**Última atualização:** 06 de Maio de 2026  
-**Versão:** 1.0.0  
-**Status:** ✅ COMPLETO
+**Última atualização:** 07 de Maio de 2026  
+**Versão:** 1.1.0  
+**Status:** ✅ COMPLETO + TROUBLESHOOTING

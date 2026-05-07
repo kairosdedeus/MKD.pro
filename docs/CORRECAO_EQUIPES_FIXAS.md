@@ -19,7 +19,7 @@ Usuários mudaram seus nomes no sistema e as equipes fixas pararam de funcionar.
 | Lais Cantora     | Lais do Cris      | lais@mkd.com          |
 | Alice Cantora    | Alice Silva       | alicesilva@mkd.com    |
 | Maria Cantora    | Maria do Nilson   | mariadonilson@mkd.com |
-| Wallesca cantora | Wallesca do Bruno | maralakeuri@mkd.com   |
+| Wallesca cantora | Wallesca do Bruno | maraiakeuri@mkd.com   |
 | João Cantor      | João Vitor        | joaovitor@mkd.com     |
 
 ---
