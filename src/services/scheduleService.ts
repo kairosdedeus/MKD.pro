@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabaseClient";
 import { Schedule, ScheduleFormData } from "@/types";
 import { startOfMonth, endOfMonth } from "date-fns";
+import { notificationService } from "@/services/notificationService";
 
 /**
  * Service para gerenciamento de escalas ministeriais.
@@ -74,6 +75,14 @@ async function getCurrentUserId(): Promise<string | null> {
  */
 function formatDateToISO(date: Date): string {
   return date.toISOString().split("T")[0];
+}
+
+async function safelyNotify(fn: () => Promise<void>) {
+  try {
+    await fn();
+  } catch (error) {
+    console.warn("Não foi possível registrar notificação de escala:", error);
+  }
 }
 
 // ============================================================================
@@ -154,6 +163,10 @@ export const scheduleService = {
     if (scheduleData.songs && scheduleData.songs.length > 0) {
       await this._insertScheduleSongs(schedule.id, scheduleData.songs);
     }
+
+    await safelyNotify(() =>
+      notificationService.notifyScheduleCreated(schedule.id),
+    );
 
     return schedule;
   },
@@ -273,6 +286,8 @@ export const scheduleService = {
     scheduleData: Partial<ScheduleFormData>,
   ) {
     const userId = await getCurrentUserId();
+    const previousSchedule =
+      await notificationService.getScheduleSnapshot(scheduleId);
 
     // Atualizar dados básicos
     const schedule = await this._updateScheduleBasicData(
@@ -294,6 +309,13 @@ export const scheduleService = {
         await this._insertScheduleSongs(scheduleId, scheduleData.songs);
       }
     }
+
+    await safelyNotify(() =>
+      notificationService.notifyScheduleUpdated(
+        scheduleId,
+        previousSchedule?.status,
+      ),
+    );
 
     return schedule;
   },
@@ -373,12 +395,20 @@ export const scheduleService = {
    * @param scheduleId - ID da escala a ser deletada
    */
   async deleteSchedule(scheduleId: string) {
+    const schedule = await notificationService.getScheduleSnapshot(scheduleId);
+
     const { error } = await supabase
       .from("schedules")
       .delete()
       .eq("id", scheduleId);
 
     if (error) throw error;
+
+    if (schedule) {
+      await safelyNotify(() =>
+        notificationService.notifyScheduleDeleted(schedule),
+      );
+    }
   },
 
   /**

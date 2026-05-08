@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Plus,
@@ -270,6 +271,8 @@ function ScheduleCard({
 // ── Componente principal ─────────────────────────────────────
 export function DanceDashboard() {
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const handledScheduleParamRef = useRef<string | null>(null);
   const { user, profiles } = useAuthStore();
   const [tab, setTab] = useState<"inicio" | "agenda">("inicio");
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -294,6 +297,9 @@ export function DanceDashboard() {
   } = useSchedules(danceTeam?.id || "", currentMonth);
   const deleteSchedule = useDeleteSchedule();
 
+  const dateParam = searchParams.get("date");
+  const scheduleParam = searchParams.get("schedule");
+
   // Escalas do Louvor para mostrar músicas no calendário da Dança
   const [worshipSchedules, setWorshipSchedules] = useState<
     Awaited<ReturnType<typeof scheduleService.getSchedulesByTeamType>>
@@ -309,6 +315,31 @@ export function DanceDashboard() {
   const canManage =
     !!user &&
     (isGerencial(profiles || []) || isLeader(profiles || [], "danca"));
+
+  useEffect(() => {
+    if (!dateParam) return;
+    const targetDate = parseISO(dateParam);
+    if (Number.isNaN(targetDate.getTime())) return;
+
+    setTab("inicio");
+    setSelectedDate(targetDate);
+    setCurrentMonth(targetDate);
+  }, [dateParam]);
+
+  useEffect(() => {
+    if (!scheduleParam || loadingSchedules) return;
+    if (handledScheduleParamRef.current === scheduleParam) return;
+
+    const schedule = schedules.find((item) => item.id === scheduleParam);
+    if (!schedule) return;
+
+    handledScheduleParamRef.current = scheduleParam;
+    setSelectedSchedule(schedule);
+    setSelectedDate(parseISO(schedule.date));
+    setCurrentMonth(parseISO(schedule.date));
+    setTab("inicio");
+    setShowDetailModal(true);
+  }, [loadingSchedules, scheduleParam, schedules]);
 
   // Calendário
   const monthStart = startOfMonth(currentMonth);

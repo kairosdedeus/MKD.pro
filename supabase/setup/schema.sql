@@ -197,6 +197,38 @@ CREATE TABLE cell_attendance (
     CONSTRAINT unique_attendance UNIQUE (cell_meeting_id, user_id)
 );
 
+CREATE TABLE app_notifications (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    type TEXT NOT NULL CHECK (
+        type IN (
+            'schedule_created',
+            'schedule_updated',
+            'schedule_published',
+            'schedule_deleted',
+            'schedule_assigned',
+            'info'
+        )
+    ),
+    title TEXT NOT NULL,
+    message TEXT NOT NULL,
+    link TEXT,
+    schedule_id UUID REFERENCES schedules(id) ON DELETE SET NULL,
+    team_id UUID REFERENCES teams(id) ON DELETE CASCADE,
+    actor_user_id UUID REFERENCES users_profile(id) ON DELETE SET NULL,
+    metadata JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE app_notification_recipients (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    notification_id UUID REFERENCES app_notifications(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES users_profile(id) ON DELETE CASCADE,
+    read_at TIMESTAMP WITH TIME ZONE,
+    dismissed_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    CONSTRAINT unique_notification_recipient UNIQUE (notification_id, user_id)
+);
+
 -- =====================================================
 -- ÍNDICES
 -- =====================================================
@@ -223,6 +255,11 @@ CREATE INDEX idx_cell_members_cell ON cell_members(cell_id);
 CREATE INDEX idx_cell_members_user ON cell_members(user_id);
 CREATE INDEX idx_cell_meetings_cell ON cell_meetings(cell_id);
 CREATE INDEX idx_cell_meetings_date ON cell_meetings(date);
+CREATE INDEX idx_app_notifications_created_at ON app_notifications(created_at DESC);
+CREATE INDEX idx_app_notifications_schedule ON app_notifications(schedule_id);
+CREATE INDEX idx_app_notifications_team ON app_notifications(team_id);
+CREATE INDEX idx_app_notification_recipients_user ON app_notification_recipients(user_id, dismissed_at, read_at, created_at DESC);
+CREATE INDEX idx_app_notification_recipients_notification ON app_notification_recipients(notification_id);
 
 -- =====================================================
 -- TRIGGERS PARA UPDATED_AT

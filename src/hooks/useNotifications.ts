@@ -1,101 +1,96 @@
-import { useState, useEffect, useCallback } from 'react'
-import { supabase } from '@/lib/supabaseClient'
-import { useAuthStore } from '@/stores/authStore'
+import { useCallback, useEffect, useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
+import { useAuthStore } from "@/stores/authStore";
+import {
+  AppNotification,
+  notificationService,
+} from "@/services/notificationService";
 
-export interface Notification {
-  id: string
-  type: 'new_schedule' | 'schedule_updated' | 'schedule_deleted' | 'info'
-  title: string
-  message: string
-  read: boolean
-  createdAt: Date
-  link?: string
-}
-
-let notificationId = 0
-const generateId = () => `notif-${++notificationId}-${Date.now()}`
+export type Notification = AppNotification;
 
 export function useNotifications() {
-  const { user } = useAuthStore()
-  const [notifications, setNotifications] = useState<Notification[]>([])
+  const { user } = useAuthStore();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const addNotification = useCallback((notif: Omit<Notification, 'id' | 'read' | 'createdAt'>) => {
-    setNotifications(prev => [{
-      ...notif,
-      id: generateId(),
-      read: false,
-      createdAt: new Date(),
-    }, ...prev].slice(0, 50)) // máximo 50 notificações
-  }, [])
+  const loadNotifications = useCallback(async () => {
+    if (!user?.id) {
+      setNotifications([]);
+      return;
+    }
 
-  const markAsRead = useCallback((id: string) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
-  }, [])
+    try {
+      setLoading(true);
+      const data = await notificationService.listForCurrentUser();
+      setNotifications(data);
+    } catch (error) {
+      console.warn("Não foi possível carregar notificações:", error);
+      setNotifications([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id]);
 
-  const markAllAsRead = useCallback(() => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })))
-  }, [])
-
-  const clearAll = useCallback(() => setNotifications([]), [])
-
-  const unreadCount = notifications.filter(n => !n.read).length
-
-  // Supabase Realtime — escutar novas escalas
   useEffect(() => {
-    if (!user) return
+    loadNotifications();
+  }, [loadNotifications]);
+
+  useEffect(() => {
+    if (!user?.id) return;
 
     const channel = supabase
-      .channel('schedules-realtime')
+      .channel(`notifications:${user.id}`)
       .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'schedules' },
-        (payload) => {
-          const schedule = payload.new as any
-          addNotification({
-            type: 'new_schedule',
-            title: '🎵 Nova escala criada',
-            message: schedule.title
-              ? `"${schedule.title}" para ${schedule.date}`
-              : `Nova escala para ${schedule.date}`,
-            link: '/louvor',
-          })
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'schedules' },
-        (payload) => {
-          const schedule = payload.new as any
-          // Só notificar se mudou para publicada
-          if (schedule.status === 'published' && payload.old?.status !== 'published') {
-            addNotification({
-              type: 'schedule_updated',
-              title: '✅ Escala publicada',
-              message: schedule.title
-                ? `"${schedule.title}" foi publicada`
-                : `Escala de ${schedule.date} foi publicada`,
-              link: '/louvor',
-            })
-          }
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: 'DELETE', schema: 'public', table: 'schedules' },
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "app_notification_recipients",
+          filter: `user_id=eq.${user.id}`,
+        },
         () => {
-          addNotification({
-            type: 'schedule_deleted',
-            title: '🗑️ Escala removida',
-            message: 'Uma escala foi excluída',
-          })
-        }
+          loadNotifications();
+        },
       )
-      .subscribe()
+      .subscribe();
 
     return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [user, addNotification])
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, loadNotifications]);
 
-  return { notifications, unreadCount, addNotification, markAsRead, markAllAsRead, clearAll }
+  const markAsRead = useCallback(async (recipientId: string) => {
+    setNotifications((prev) =>
+      prev.map((notification) =>
+        notification.recipientId === recipientId
+          ? { ...notification, read: true }
+          : notification,
+      ),
+    );
+    await notificationService.markAsRead(recipientId);
+  }, []);
+
+  const markAllAsRead = useCallback(async () => {
+    setNotifications((prev) =>
+      prev.map((notification) => ({ ...notification, read: true })),
+    );
+    await notificationService.markAllAsRead();
+  }, []);
+
+  const clearAll = useCallback(async () => {
+    setNotifications([]);
+    await notificationService.dismissAll();
+  }, []);
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  return {
+    notifications,
+    unreadCount,
+    loading,
+    refetch: loadNotifications,
+    markAsRead,
+    markAllAsRead,
+    clearAll,
+  };
 }
