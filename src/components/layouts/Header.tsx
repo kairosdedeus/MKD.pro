@@ -321,93 +321,103 @@ export function Header() {
   return (
     <>
       <header className="header-bg border-b">
-        <div className="flex flex-col gap-2 px-4 py-3 sm:px-6 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <LogoCompact className="flex-shrink-0" />
-            <h2 className="min-w-0 truncate text-sm font-semibold text-foreground sm:text-base">
-              Bem-vindo,{" "}
-              <span className="text-primary">{user?.nome?.split(" ")[0]}</span>
-            </h2>
-          </div>
-
-          {/* Abas dos Dashboards */}
-          {allowedDashboards.length > 0 && (
-            <div className="flex items-center sm:order-none order-3">
-              <nav className="flex items-center gap-1 bg-muted rounded-md p-1 overflow-x-auto max-w-full">
-                {allowedDashboards.map((dashboard) => {
-                  const isActive = location.pathname === dashboard.href;
-                  return (
-                    <NavLink
-                      key={dashboard.code}
-                      to={dashboard.href}
-                      className={cn(
-                        "flex items-center gap-1 sm:gap-2 px-2 py-1.5 text-xs sm:text-sm font-medium rounded-sm transition-all whitespace-nowrap",
-                        isActive
-                          ? "bg-background text-foreground shadow-sm"
-                          : "text-muted-foreground hover:text-foreground hover:bg-accent",
-                      )}
-                    >
-                      <dashboard.icon className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                      {dashboard.name}
-                    </NavLink>
-                  );
-                })}
-              </nav>
-            </div>
-          )}
-
-          <div className="flex items-center gap-1 sm:order-none order-2">
-            <ThemeSelector />
-            <NotificationCenter />
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="flex items-center gap-2 h-9 px-2"
-                >
-                  <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold">
-                    {initials}
-                  </div>
-                  <span className="text-sm text-muted-foreground hidden sm:block max-w-48 truncate">
-                    {user?.email}
+        <div className="flex flex-col gap-2 px-4 py-2 sm:px-6">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-3 min-w-0">
+              <LogoCompact className="flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-foreground">
+                  Bem-vindo,{" "}
+                  <span className="text-primary">
+                    {user?.nome?.split(" ")[0]}
                   </span>
-                  <ChevronDown className="h-3 w-3 text-muted-foreground" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium truncate">{user?.nome}</p>
-                    <p className="text-xs text-muted-foreground truncate">
+                </p>
+                <p className="hidden truncate text-xs text-muted-foreground sm:block">
+                  Acesse seus dashboards rapidamente
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <div className="hidden sm:flex">
+                <ThemeSelector />
+              </div>
+              <NotificationCenter />
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="flex items-center gap-2 h-8 px-2"
+                  >
+                    <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold">
+                      {initials}
+                    </div>
+                    <span className="text-sm text-muted-foreground hidden sm:block max-w-48 truncate">
                       {user?.email}
-                    </p>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setShowProfileDialog(true)}>
-                  <User className="h-4 w-4 mr-2 text-primary" />
-                  Editar meus dados
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => {
-                    setShowProfileDialog(true);
-                  }}
-                >
-                  <KeyRound className="h-4 w-4 mr-2 text-amber-600 dark:text-amber-500" />
-                  Alterar senha
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={logout}
-                  className="text-red-600 dark:text-red-500 focus:text-red-600 dark:focus:text-red-500"
-                >
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Sair
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                    </span>
+                    <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium truncate">
+                        {user?.nome}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {user?.email}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setShowProfileDialog(true)}>
+                    <User className="h-4 w-4 mr-2 text-primary" />
+                    Editar meus dados
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setShowProfileDialog(true);
+                    }}
+                  >
+                    <KeyRound className="h-4 w-4 mr-2 text-amber-600 dark:text-amber-500" />
+                    Alterar senha
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={logout}
+                    className="text-red-600 dark:text-red-500 focus:text-red-600 dark:focus:text-red-500"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sair
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
+
+          {allowedDashboards.length > 0 && (
+            <nav className="flex gap-2 overflow-x-auto rounded-lg bg-muted px-1 py-1 max-w-full">
+              {allowedDashboards.map((dashboard) => {
+                const isActive = location.pathname === dashboard.href;
+                return (
+                  <NavLink
+                    key={dashboard.code}
+                    to={dashboard.href}
+                    className={cn(
+                      "flex items-center gap-1 sm:gap-2 px-2 py-1 text-xs sm:text-sm font-medium rounded-lg transition-all whitespace-nowrap",
+                      isActive
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground hover:bg-accent",
+                    )}
+                  >
+                    <dashboard.icon className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                    {dashboard.name}
+                  </NavLink>
+                );
+              })}
+            </nav>
+          )}
         </div>
       </header>
 
