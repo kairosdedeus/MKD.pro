@@ -598,17 +598,17 @@ export function WorshipDashboard() {
   return (
     <div className="pb-20 space-y-3">
       {/* ── Header ── */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-foreground">🎵 Louvor</h1>
           <p className="text-xs text-muted-foreground">{worshipTeam.nome}</p>
         </div>
         {canManage && (
-          <div className="flex gap-2">
+          <div className="flex gap-1.5 sm:gap-2">
             <Button
               variant="outline"
               size="sm"
-              className="gap-1.5 text-xs h-8"
+              className="h-8 gap-1.5 rounded-full px-2.5 text-xs sm:rounded-md sm:px-3"
               onClick={() => {
                 const text = buildWhatsAppText(
                   schedules,
@@ -626,7 +626,7 @@ export function WorshipDashboard() {
             <Button
               variant="outline"
               size="sm"
-              className="gap-1.5 text-xs h-8"
+              className="h-8 gap-1.5 rounded-full px-2.5 text-xs sm:rounded-md sm:px-3"
               onClick={handleGenerateMonthly}
               disabled={generating}
             >
@@ -644,14 +644,14 @@ export function WorshipDashboard() {
         {/* ── Coluna esquerda: calendário + conteúdo das abas ── */}
         <div className="space-y-3">
           {/* Calendário */}
-          <div className="rounded-2xl border border-border bg-card p-4">
+          <div className="rounded-2xl border border-border bg-card p-3 sm:p-4">
             {/* Navegação do mês */}
-            <div className="flex items-center justify-between mb-3">
+            <div className="mb-3 flex items-center justify-between gap-3">
               <div>
-                <p className="text-lg font-bold capitalize">
+                <p className="text-base font-bold capitalize sm:text-lg">
                   {format(currentMonth, "MMMM yyyy", { locale: ptBR })}
                 </p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-[11px] text-muted-foreground sm:text-xs">
                   Selecione a data desejada
                 </p>
               </div>
@@ -712,8 +712,8 @@ export function WorshipDashboard() {
                       setSelectedDate(day);
                       if (!inMonth) setCurrentMonth(day);
                       if (daySchedules.length > 0) {
-                        setSelectedSchedule(daySchedules[0]);
-                        setShowDetailModal(true);
+                        setEditingSchedule(daySchedules[0]);
+                        setShowCreateModal(true);
                       } else {
                         setEditingSchedule(null);
                         setSelectedFixedTeamId(null);
@@ -721,7 +721,7 @@ export function WorshipDashboard() {
                       }
                     }}
                     className={cn(
-                      "relative flex flex-col items-center justify-center h-10 rounded-xl text-sm font-semibold transition-all",
+                      "relative flex h-9 flex-col items-center justify-center rounded-xl text-sm font-semibold transition-all sm:h-10",
                       isSelected &&
                         "bg-primary text-primary-foreground shadow-md",
                       !isSelected &&
@@ -1423,14 +1423,17 @@ export function WorshipDashboard() {
 
       {/* Dialog: exportar WhatsApp mensal */}
       <Dialog open={showWhatsApp} onOpenChange={setShowWhatsApp}>
-        <DialogContent className="w-[calc(100vw-0.5rem)] sm:w-full max-w-2xl h-[98vh] sm:h-auto sm:max-h-[90vh] flex flex-col p-0 gap-0">
+        <DialogContent className="max-w-2xl sm:h-auto sm:max-h-[90vh] flex flex-col p-0 gap-0">
           <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b flex-shrink-0">
             <DialogTitle className="text-base sm:text-lg">
               📱 Exportar Mês para WhatsApp
             </DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-3 px-4 sm:px-6 py-4 overflow-y-auto flex-1">
+          <div
+            data-dialog-body=""
+            className="space-y-3 px-4 sm:px-6 py-4 overflow-y-auto flex-1"
+          >
             <Textarea
               value={monthlyWhatsAppText}
               onChange={(e) => setMonthlyWhatsAppText(e.target.value)}
@@ -1480,7 +1483,7 @@ export function WorshipDashboard() {
           <DialogHeader>
             <DialogTitle>📱 Exportar Fim de Semana</DialogTitle>
           </DialogHeader>
-          <div className="space-y-3 px-5 py-4">
+          <div data-dialog-body="" className="space-y-3 px-5 py-4">
             <Textarea
               value={weekendWhatsAppText}
               onChange={(e) => setWeekendWhatsAppText(e.target.value)}

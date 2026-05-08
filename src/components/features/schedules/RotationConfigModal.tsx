@@ -202,7 +202,7 @@ export function RotationConfigModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+      <DialogContent className="max-w-2xl sm:max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <RotateCw className="h-5 w-5 text-primary" />
@@ -215,7 +215,10 @@ export function RotationConfigModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
+        <div
+          data-dialog-body=""
+          className="flex-1 overflow-y-auto px-4 py-4 space-y-4 sm:px-6 sm:space-y-6"
+        >
           {/* Equipe do 1º Final de Semana */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">

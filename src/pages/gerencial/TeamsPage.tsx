@@ -86,25 +86,29 @@ export function TeamsPage() {
   if (loading) return <LoadingSpinner />;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Equipes</h1>
-          <p className="text-muted-foreground mt-2">
+          <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
+            Equipes
+          </h1>
+          <p className="mt-1 text-xs text-muted-foreground sm:mt-2 sm:text-base">
             Gerencie as equipes dos ministérios
           </p>
         </div>
         <Button
           onClick={() => setCreateModalOpen(true)}
-          className="flex items-center gap-2"
+          size="sm"
+          className="flex h-9 items-center gap-2 rounded-full sm:h-10 sm:rounded-md"
         >
-          <Plus className="h-4 w-4" /> Nova Equipe
+          <Plus className="h-4 w-4" />
+          <span className="hidden sm:inline">Nova Equipe</span>
         </Button>
       </div>
 
-      <Card>
+      <Card className="overflow-hidden">
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
+          <CardTitle className="flex items-center justify-between gap-3">
             <span>Todas as Equipes</span>
             <span className="text-sm font-normal text-muted-foreground">
               {teams.length} equipe(s)
@@ -113,96 +117,98 @@ export function TeamsPage() {
         </CardHeader>
         <CardContent>
           {teams.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Ministério</TableHead>
-                  <TableHead>Líder</TableHead>
-                  <TableHead>Membros</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="w-12" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {teams.map((team) => (
-                  <TableRow key={team.id}>
-                    <TableCell className="font-medium">{team.nome}</TableCell>
-                    <TableCell>
-                      <span
-                        className={`text-xs px-2 py-1 rounded-full font-medium ${
-                          MINISTRY_COLORS[(team as any).team_type?.codigo] ||
-                          "bg-gray-100 text-gray-700"
-                        }`}
-                      >
-                        {(team as any).team_type?.nome || "—"}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {(team as any).leader?.nome ? (
-                          <>
-                            <div className="w-6 h-6 rounded-full bg-primary/15 flex items-center justify-center text-xs font-semibold text-primary">
-                              {(team as any).leader.nome
-                                .charAt(0)
-                                .toUpperCase()}
-                            </div>
-                            <span className="text-sm">
-                              {(team as any).leader.nome}
-                            </span>
-                          </>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">
-                            —
-                          </span>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <UsersIcon className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">
-                          {team.members?.length || 0}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={team.ativo ? "default" : "secondary"}>
-                        {team.ativo ? "Ativo" : "Inativo"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                          >
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => setEditingTeam(team)}
-                          >
-                            <Pencil className="h-4 w-4 mr-2 text-blue-600" />{" "}
-                            Editar
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            className="text-red-600 focus:text-red-600"
-                            onClick={() => setDeactivatingTeam(team)}
-                          >
-                            <PowerOff className="h-4 w-4 mr-2" /> Desativar
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
+            <div className="table-responsive">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Ministério</TableHead>
+                    <TableHead>Líder</TableHead>
+                    <TableHead>Membros</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="w-12" />
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {teams.map((team) => (
+                    <TableRow key={team.id}>
+                      <TableCell className="font-medium">{team.nome}</TableCell>
+                      <TableCell>
+                        <span
+                          className={`text-xs px-2 py-1 rounded-full font-medium ${
+                            MINISTRY_COLORS[(team as any).team_type?.codigo] ||
+                            "bg-gray-100 text-gray-700"
+                          }`}
+                        >
+                          {(team as any).team_type?.nome || "—"}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {(team as any).leader?.nome ? (
+                            <>
+                              <div className="w-6 h-6 rounded-full bg-primary/15 flex items-center justify-center text-xs font-semibold text-primary">
+                                {(team as any).leader.nome
+                                  .charAt(0)
+                                  .toUpperCase()}
+                              </div>
+                              <span className="text-sm">
+                                {(team as any).leader.nome}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">
+                              —
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <UsersIcon className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm">
+                            {team.members?.length || 0}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={team.ativo ? "default" : "secondary"}>
+                          {team.ativo ? "Ativo" : "Inativo"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => setEditingTeam(team)}
+                            >
+                              <Pencil className="h-4 w-4 mr-2 text-blue-600" />{" "}
+                              Editar
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-red-600 focus:text-red-600"
+                              onClick={() => setDeactivatingTeam(team)}
+                            >
+                              <PowerOff className="h-4 w-4 mr-2" /> Desativar
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           ) : (
             <EmptyState
               icon={UsersIcon}

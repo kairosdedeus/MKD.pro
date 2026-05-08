@@ -244,7 +244,10 @@ export function EditTeamModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-5">
+        <div
+          data-dialog-body=""
+          className="space-y-4 px-4 py-4 sm:space-y-5 sm:px-5"
+        >
           {/* Nome */}
           <div className="space-y-2">
             <Label>Nome da Equipe *</Label>
@@ -281,7 +284,7 @@ export function EditTeamModal({
               </span>
             </div>
 
-            <div className="border rounded-lg divide-y max-h-72 overflow-y-auto">
+            <div className="border rounded-2xl divide-y max-h-72 overflow-y-auto sm:rounded-lg">
               {(allUsers as any[])?.map((user: any) => {
                 const isLeader = user.id === leaderId;
                 const member = members.find((m) => m.userId === user.id);
@@ -355,7 +358,7 @@ export function EditTeamModal({
                     {isSelected &&
                       member!.expanded &&
                       teamFunctions.length > 0 && (
-                        <div className="mt-2 ml-10 p-2 bg-muted rounded-lg">
+                        <div className="mt-2 p-2 bg-muted rounded-xl sm:ml-10 sm:rounded-lg">
                           <p className="text-xs text-muted-foreground mb-2">
                             Funções:
                           </p>
@@ -397,13 +400,14 @@ export function EditTeamModal({
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={saving}
+            className="w-full sm:w-auto"
           >
             Cancelar
           </Button>
           <Button
             onClick={handleSave}
             disabled={saving}
-            className="bg-primary hover:bg-primary/90"
+            className="w-full bg-primary hover:bg-primary/90 sm:w-auto"
           >
             {saving ? "Salvando..." : "💾 Salvar Alterações"}
           </Button>

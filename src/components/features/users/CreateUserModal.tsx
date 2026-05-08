@@ -320,7 +320,11 @@ export function CreateUserModal({
           <DialogDescription>Crie um novo usuário no sistema</DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 px-5 py-4">
+        <form
+          onSubmit={handleSubmit}
+          data-dialog-body=""
+          className="space-y-4 px-4 py-4 sm:px-5"
+        >
           {/* Nome + Sobrenome */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
@@ -432,7 +436,7 @@ export function CreateUserModal({
           {/* Perfis */}
           <div className="space-y-2">
             <Label>Perfil do Usuário *</Label>
-            <div className="border rounded-md p-4 max-h-48 overflow-y-auto space-y-2">
+            <div className="border rounded-2xl p-3 max-h-48 overflow-y-auto space-y-2 sm:rounded-md sm:p-4">
               {(profiles as any[])?.map((profile: any) => (
                 <div key={profile.id} className="flex items-center space-x-2">
                   <Checkbox
@@ -467,7 +471,7 @@ export function CreateUserModal({
               {teamGroups.map((group) => (
                 <div
                   key={group.code}
-                  className="rounded-lg border p-3 space-y-2"
+                  className="rounded-2xl border p-3 space-y-2 sm:rounded-lg"
                 >
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-semibold">

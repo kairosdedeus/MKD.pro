@@ -366,7 +366,7 @@ export function DanceDashboard() {
   return (
     <div className="pb-20 space-y-3">
       {/* ── Header ── */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-foreground">💃 Dança</h1>
           <p className="text-xs text-muted-foreground">{danceTeam.nome}</p>
@@ -376,7 +376,7 @@ export function DanceDashboard() {
             <Button
               variant="outline"
               size="sm"
-              className="gap-1.5 text-xs h-8"
+              className="h-8 gap-1.5 rounded-full px-2.5 text-xs sm:rounded-md sm:px-3"
               onClick={() => setShowWhatsApp(true)}
               disabled={schedules.length === 0}
             >
@@ -392,13 +392,13 @@ export function DanceDashboard() {
         {/* ── Coluna esquerda ── */}
         <div className="space-y-3">
           {/* Calendário */}
-          <div className="rounded-2xl border border-border bg-card p-4">
-            <div className="flex items-center justify-between mb-3">
+          <div className="rounded-2xl border border-border bg-card p-3 sm:p-4">
+            <div className="mb-3 flex items-center justify-between gap-3">
               <div>
-                <p className="text-lg font-bold capitalize">
+                <p className="text-base font-bold capitalize sm:text-lg">
                   {format(currentMonth, "MMMM yyyy", { locale: ptBR })}
                 </p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-[11px] text-muted-foreground sm:text-xs">
                   Selecione a data desejada
                 </p>
               </div>
@@ -464,15 +464,15 @@ export function DanceDashboard() {
                       setSelectedDate(day);
                       if (!inMonth) setCurrentMonth(day);
                       if (daySchedules.length > 0) {
-                        setSelectedSchedule(daySchedules[0]);
-                        setShowDetailModal(true);
+                        setEditingSchedule(daySchedules[0]);
+                        setShowCreateModal(true);
                       } else if (canManage) {
                         setEditingSchedule(null);
                         setShowCreateModal(true);
                       }
                     }}
                     className={cn(
-                      "relative flex flex-col items-center justify-center h-10 rounded-xl text-sm font-semibold transition-all",
+                      "relative flex h-9 flex-col items-center justify-center rounded-xl text-sm font-semibold transition-all sm:h-10",
                       isSelected &&
                         "bg-primary text-primary-foreground shadow-md",
                       !isSelected &&
@@ -1059,12 +1059,14 @@ export function DanceDashboard() {
           <DialogHeader>
             <DialogTitle>📱 Exportar Mês para WhatsApp</DialogTitle>
           </DialogHeader>
-          <Textarea
-            value={whatsAppText}
-            readOnly
-            rows={12}
-            className="font-mono text-xs resize-none"
-          />
+          <div data-dialog-body="" className="px-4 py-4 sm:px-5">
+            <Textarea
+              value={whatsAppText}
+              readOnly
+              rows={12}
+              className="font-mono text-xs resize-none"
+            />
+          </div>
           <DialogFooter>
             <button
               onClick={async () => {

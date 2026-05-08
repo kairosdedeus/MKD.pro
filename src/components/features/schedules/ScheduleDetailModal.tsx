@@ -332,7 +332,7 @@ export function ScheduleDetailModal({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 sm:space-y-5 px-5 py-4">
+        <div data-dialog-body="" className="space-y-4 sm:space-y-5 px-5 py-4">
           {/* Info básica */}
           <div className="flex items-center gap-3 p-3 bg-primary/5 rounded-xl">
             <div>
@@ -764,7 +764,7 @@ export function ScheduleDetailModal({
           <DialogHeader>
             <DialogTitle>Exportar WhatsApp</DialogTitle>
           </DialogHeader>
-          <div className="space-y-3 px-5 py-4">
+          <div data-dialog-body="" className="space-y-3 px-5 py-4">
             <textarea
               className="w-full h-64 sm:h-80 p-3 border rounded resize-y font-mono text-xs sm:text-sm"
               value={whatsAppText}

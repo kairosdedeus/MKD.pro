@@ -111,7 +111,7 @@ export function EditSongModal({
           <DialogTitle>✏️ Editar Música</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 px-5 py-4">
+        <div data-dialog-body="" className="space-y-4 px-4 py-4 sm:px-5">
           {/* Nome */}
           <div className="space-y-1.5">
             <Label>Nome da Música *</Label>

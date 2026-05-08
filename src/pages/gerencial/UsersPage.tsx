@@ -257,24 +257,31 @@ export function UsersPage() {
   if (isLoading) return <LoadingSpinner />;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Usuários</h1>
-          <p className="text-muted-foreground mt-2">
+          <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
+            Usuários
+          </h1>
+          <p className="mt-1 text-xs text-muted-foreground sm:mt-2 sm:text-base">
             Gerencie os usuários do sistema
           </p>
         </div>
-        <Button onClick={() => setCreateModalOpen(true)} className="gap-2">
-          <Plus className="h-4 w-4" /> Novo Usuário
+        <Button
+          onClick={() => setCreateModalOpen(true)}
+          size="sm"
+          className="h-9 gap-2 rounded-full sm:h-10 sm:rounded-md"
+        >
+          <Plus className="h-4 w-4" />
+          <span className="hidden sm:inline">Novo Usuário</span>
         </Button>
       </div>
 
       {/* Tabela */}
-      <Card>
+      <Card className="overflow-hidden">
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
+          <CardTitle className="flex items-center justify-between gap-3">
             <span>Todos os Usuários</span>
             <span className="text-sm font-normal text-muted-foreground">
               {users?.length || 0} usuário(s)
@@ -509,7 +516,7 @@ export function UsersPage() {
           <DialogHeader>
             <DialogTitle>🔑 Redefinir Senha</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-2">
+          <div data-dialog-body="" className="space-y-4 px-4 py-4 sm:px-5">
             <div className="p-3 bg-muted rounded-lg">
               <p className="text-sm text-muted-foreground">
                 Usuário:{" "}
@@ -547,7 +554,10 @@ export function UsersPage() {
               </p>
             </div>
           </div>
-          <div className="flex gap-2 justify-end">
+          <div
+            data-dialog-footer=""
+            className="flex flex-col-reverse gap-2 border-t border-border bg-muted/30 px-4 py-3 sm:flex-row sm:justify-end sm:px-5 sm:py-4"
+          >
             <Button
               variant="outline"
               onClick={() => setResetPasswordUser(null)}
@@ -577,16 +587,19 @@ export function UsersPage() {
             </DialogTitle>
           </DialogHeader>
           {loadingHistory ? (
-            <div className="flex justify-center py-8">
+            <div data-dialog-body="" className="flex justify-center py-8">
               <LoadingSpinner />
             </div>
           ) : historyData.length === 0 ? (
-            <div className="py-8 text-center text-muted-foreground">
+            <div
+              data-dialog-body=""
+              className="py-8 text-center text-muted-foreground"
+            >
               <History className="h-10 w-10 mx-auto mb-2 opacity-30" />
               <p>Nenhuma escala encontrada para este usuário</p>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div data-dialog-body="" className="space-y-2 px-4 py-4 sm:px-5">
               {historyData.map((item: any) => {
                 const schedule = item.schedule;
                 if (!schedule) return null;

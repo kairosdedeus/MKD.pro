@@ -407,14 +407,17 @@ export function WorshipFixedTeamModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
+      <DialogContent className="max-w-3xl sm:max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>
             {isEditing ? "Editar equipe padrão" : "Nova equipe padrão"}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-5">
+        <div
+          data-dialog-body=""
+          className="flex-1 overflow-y-auto px-4 py-4 space-y-4 sm:px-6 sm:space-y-5"
+        >
           <div className="space-y-1.5">
             <Label>Nome da equipe *</Label>
             <Input
@@ -428,8 +431,7 @@ export function WorshipFixedTeamModal({
           <div className="space-y-3">
             <div className="flex items-center justify-between gap-3">
               <Label className="text-base font-semibold">
-                Membros por função
-                Membros por função
+                Membros por função Membros por função
               </Label>
               <span className="text-xs text-muted-foreground">
                 {totalAssigned} membro(s) escalado(s)

@@ -35,29 +35,31 @@ const DialogContent = React.forwardRef<
       ref={ref}
       aria-describedby={undefined}
       className={cn(
-        // Posicionamento centralizado
-        "fixed left-[50%] top-[50%] z-50 translate-x-[-50%] translate-y-[-50%]",
+        // Posicionamento centralizado no desktop; sheet inferior no mobile
+        "fixed left-[50%] top-auto bottom-0 z-50 translate-x-[-50%] translate-y-0 sm:top-[50%] sm:bottom-auto sm:translate-y-[-50%]",
         // Tamanho: não ocupa tela toda, com margem lateral
-        "w-[calc(100%-2rem)] max-w-lg",
+        "w-full sm:w-[calc(100%-2rem)] max-w-lg",
         // Altura máxima com scroll interno
-        "max-h-[85vh] overflow-y-auto",
+        "max-h-[92dvh] sm:max-h-[85vh] overflow-hidden",
         // Visual: arredondado, borda, sombra
-        "rounded-2xl border border-border bg-background shadow-2xl",
+        "rounded-t-3xl border border-border bg-background shadow-2xl sm:rounded-2xl",
         // Layout interno
         "flex flex-col gap-0 p-0",
         // Animações
         "duration-200",
         "data-[state=open]:animate-in data-[state=closed]:animate-out",
         "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-        "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
-        "data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%]",
-        "data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]",
+        "data-[state=closed]:slide-out-to-bottom-2 data-[state=open]:slide-in-from-bottom-2",
+        "sm:data-[state=closed]:zoom-out-95 sm:data-[state=open]:zoom-in-95",
+        "sm:data-[state=closed]:slide-out-to-left-1/2 sm:data-[state=closed]:slide-out-to-top-[48%]",
+        "sm:data-[state=open]:slide-in-from-left-1/2 sm:data-[state=open]:slide-in-from-top-[48%]",
         className,
       )}
+      data-dialog-content=""
       {...props}
     >
       {children}
-      <DialogPrimitive.Close className="absolute right-3 top-3 rounded-xl p-1.5 opacity-60 ring-offset-background transition-all hover:opacity-100 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
+      <DialogPrimitive.Close className="absolute right-3 top-3 rounded-full p-2 opacity-60 ring-offset-background transition-all hover:opacity-100 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
         <X className="h-4 w-4" />
         <span className="sr-only">Fechar</span>
       </DialogPrimitive.Close>
@@ -72,9 +74,10 @@ const DialogHeader = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "flex flex-col space-y-1 px-5 pt-5 pb-4 border-b border-border flex-shrink-0",
+      "flex flex-col space-y-1 px-4 pt-5 pb-3 border-b border-border flex-shrink-0 sm:px-5 sm:pb-4",
       className,
     )}
+    data-dialog-header=""
     {...props}
   />
 );
@@ -86,9 +89,10 @@ const DialogFooter = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "flex flex-col-reverse sm:flex-row sm:justify-end gap-2 px-5 py-4 border-t border-border bg-muted/30 flex-shrink-0",
+      "flex flex-col-reverse sm:flex-row sm:justify-end gap-2 px-4 py-3 border-t border-border bg-muted/30 flex-shrink-0 sm:px-5 sm:py-4",
       className,
     )}
+    data-dialog-footer=""
     {...props}
   />
 );
@@ -101,7 +105,7 @@ const DialogTitle = React.forwardRef<
   <DialogPrimitive.Title
     ref={ref}
     className={cn(
-      "text-base font-semibold leading-none tracking-tight pr-8",
+      "text-base font-semibold leading-tight tracking-tight pr-9",
       className,
     )}
     {...props}

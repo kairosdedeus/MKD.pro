@@ -150,7 +150,10 @@ export function YoutubeSettingsModal({
           ))}
         </div>
 
-        <div className="flex-1 overflow-y-auto px-1 py-4 space-y-4">
+        <div
+          data-dialog-body=""
+          className="flex-1 overflow-y-auto px-1 py-4 space-y-4"
+        >
           {/* ── Tab: API ── */}
           {tab === "api" && (
             <div className="space-y-5">

@@ -989,7 +989,7 @@ export function CreateScheduleModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-3xl sm:max-h-[90vh]">
         {/* Header */}
         <DialogHeader>
           <DialogTitle className="text-lg sm:text-xl">
@@ -1002,7 +1002,10 @@ export function CreateScheduleModal({
             <LoadingSpinner />
           </div>
         ) : (
-          <div className="px-5 py-4 space-y-5 sm:space-y-6">
+          <div
+            data-dialog-body=""
+            className="space-y-4 px-4 py-4 sm:space-y-6 sm:px-5"
+          >
             {/* ── Informações básicas ── */}
             <div className="space-y-4">
               <div className="space-y-1.5">

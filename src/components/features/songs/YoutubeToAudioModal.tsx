@@ -37,7 +37,10 @@ export function YoutubeToAudioModal({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="px-5 py-6 flex flex-col items-center gap-5 text-center">
+        <div
+          data-dialog-body=""
+          className="px-5 py-6 flex flex-col items-center gap-5 text-center"
+        >
           {/* Ícone animado */}
           <div className="relative">
             <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">

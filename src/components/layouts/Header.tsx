@@ -427,7 +427,7 @@ export function Header() {
             <DialogTitle>Meus dados</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4 py-2">
+          <div data-dialog-body="" className="space-y-4 px-4 py-4 sm:px-5">
             {/* Nome + Sobrenome */}
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">

@@ -302,20 +302,20 @@ export function SongsPage() {
   return (
     <div className="space-y-3 pb-6">
       {/* ── Header compacto ── */}
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-foreground">🎵 Músicas</h1>
           <p className="text-xs text-muted-foreground">
             {songs.length} no repertório
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           {canManage && (
             <>
               <Button
                 size="sm"
                 variant="outline"
-                className="gap-1.5 h-9 text-red-500 border-red-500/30 hover:bg-red-500/10 hover:text-red-600"
+                className="h-9 gap-1.5 rounded-full px-2.5 text-red-500 border-red-500/30 hover:bg-red-500/10 hover:text-red-600 sm:rounded-md sm:px-3"
                 onClick={() => {
                   setYoutubeSong(null);
                   setShowYoutubeModal(true);
@@ -328,7 +328,7 @@ export function SongsPage() {
               <Button
                 size="sm"
                 variant="ghost"
-                className="h-9 w-9 p-0 text-muted-foreground"
+                className="h-9 w-9 rounded-full p-0 text-muted-foreground sm:rounded-md"
                 onClick={() => setShowSettingsModal(true)}
                 title="Configurações YouTube"
               >
@@ -338,7 +338,7 @@ export function SongsPage() {
           )}
           <Button
             size="sm"
-            className="gap-1.5 h-9"
+            className="h-9 gap-1.5 rounded-full px-3 sm:rounded-md"
             onClick={() => setShowCreateModal(true)}
           >
             <Plus className="h-4 w-4" /> Nova
@@ -354,7 +354,7 @@ export function SongsPage() {
             placeholder="Buscar por nome ou artista..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 h-9"
+            className="h-9 rounded-full pl-9 sm:rounded-md"
           />
           {searchQuery && (
             <button
@@ -369,7 +369,11 @@ export function SongsPage() {
         {/* Filtro de tom — seletor visual */}
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="h-9 gap-1.5">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 gap-1.5 rounded-full sm:rounded-md"
+            >
               <SlidersHorizontal className="h-3.5 w-3.5" />
               {filterKey !== "all" ? (
                 <span className="font-semibold text-primary">{filterKey}</span>
@@ -404,7 +408,7 @@ export function SongsPage() {
             setSortDir(d as SortDir);
           }}
         >
-          <SelectTrigger className="w-36 h-9">
+          <SelectTrigger className="w-32 h-9 rounded-full sm:w-36 sm:rounded-md">
             <ArrowUpDown className="h-3.5 w-3.5 mr-1.5" />
             <SelectValue />
           </SelectTrigger>
@@ -421,7 +425,7 @@ export function SongsPage() {
           <Button
             variant="ghost"
             size="sm"
-            className="h-9"
+            className="h-9 rounded-full sm:rounded-md"
             onClick={() => {
               setSearchQuery("");
               setFilterKey("all");
