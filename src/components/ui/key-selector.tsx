@@ -2,6 +2,8 @@ import { cn } from "@/lib/utils";
 
 const BASE_NOTES = ["C", "D", "E", "F", "G", "A", "B"] as const;
 type BaseNote = (typeof BASE_NOTES)[number];
+const SHARPABLE_NOTES: BaseNote[] = ["C", "D", "F", "G", "A"];
+const FLATABLE_NOTES: BaseNote[] = ["D", "E", "G", "A", "B"];
 type Modifier = "" | "#" | "b";
 type Mode = "maior" | "menor";
 
@@ -47,6 +49,12 @@ function buildKey(
   return `${note}${modifier}${mode === "menor" ? "m" : ""}`;
 }
 
+function isModifierAllowed(note: BaseNote | null, modifier: Modifier) {
+  if (!note || modifier === "") return true;
+  if (modifier === "#") return SHARPABLE_NOTES.includes(note);
+  return FLATABLE_NOTES.includes(note);
+}
+
 // Classes base reutilizáveis
 const btnBase = "rounded-xl border transition-all font-medium";
 const btnActive =
@@ -68,12 +76,15 @@ export function KeySelector({
       onChange("");
       return;
     }
-    onChange(buildKey(n, modifier, mode));
+    const nextModifier = isModifierAllowed(n, modifier) ? modifier : "";
+    onChange(buildKey(n, nextModifier, mode));
   };
 
   const setModifier = (m: Modifier) => {
     if (!note) return;
-    onChange(buildKey(note, modifier === m ? "" : m, mode));
+    const nextModifier = modifier === m ? "" : m;
+    if (!isModifierAllowed(note, nextModifier)) return;
+    onChange(buildKey(note, nextModifier, mode));
   };
 
   const setMode = (m: Mode) => {
@@ -110,12 +121,12 @@ export function KeySelector({
             key={m}
             type="button"
             onClick={() => setModifier(m)}
-            disabled={!note}
+            disabled={!note || !isModifierAllowed(note, m)}
             className={cn(
               btnBase,
               "h-10 text-base",
               modifier === m ? btnActive : btnInactive,
-              !note && btnDisabled,
+              (!note || !isModifierAllowed(note, m)) && btnDisabled,
             )}
           >
             {m === "b" ? "♭" : "#"}

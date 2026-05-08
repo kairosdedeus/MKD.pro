@@ -10,6 +10,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { KeySelector } from "@/components/ui/key-selector";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/use-toast";
@@ -1484,14 +1489,33 @@ export function CreateScheduleModal({
                           <span className="text-xs text-muted-foreground">
                             Tom:
                           </span>
-                          <Input
-                            value={song.execution_key || ""}
-                            onChange={(e) =>
-                              updateSongKey(song.song_id, e.target.value)
-                            }
-                            className="w-16 h-7 text-xs text-center px-1"
-                            placeholder="C"
-                          />
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="h-8 min-w-16 rounded-xl px-3 text-sm font-semibold"
+                              >
+                                {song.execution_key ||
+                                  song.original_key ||
+                                  "Tom"}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent
+                              align="end"
+                              className="w-[min(22rem,calc(100vw-2rem))] p-4"
+                            >
+                              <KeySelector
+                                value={song.execution_key || ""}
+                                onChange={(key) =>
+                                  updateSongKey(song.song_id, key)
+                                }
+                                label="Tom da escala"
+                                allowEmpty
+                              />
+                            </PopoverContent>
+                          </Popover>
                         </div>
                         {/* Download */}
                         {song.audio_path && (
