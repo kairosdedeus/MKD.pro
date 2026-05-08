@@ -111,15 +111,15 @@ function Section({
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="rounded-2xl border border-border bg-card overflow-hidden">
-      <div className="flex w-full items-center gap-3 px-4 py-4">
+    <div className="overflow-hidden rounded-3xl border border-border bg-card sm:rounded-2xl">
+      <div className="flex w-full items-center gap-3 px-4 py-3.5 sm:py-4">
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
           className="flex flex-1 items-center gap-3 text-left min-w-0"
         >
           <Icon className="h-5 w-5 text-primary flex-shrink-0" />
-          <span className="flex-1 font-semibold text-foreground truncate">
+          <span className="flex-1 truncate text-base font-semibold text-foreground">
             {title}
           </span>
           {badge !== undefined && (
@@ -132,10 +132,14 @@ function Section({
             )}
           />
         </button>
-        {action && <div className="flex-shrink-0">{action}</div>}
+        {action && (
+          <div className="hidden flex-shrink-0 sm:block">{action}</div>
+        )}
       </div>
       {open && (
-        <div className="border-t border-border px-4 pb-4 pt-3">{children}</div>
+        <div className="border-t border-border px-3 pb-3 pt-2 sm:px-4 sm:pb-4 sm:pt-3">
+          {children}
+        </div>
       )}
     </div>
   );
@@ -184,6 +188,9 @@ export function SongsPage() {
       return sortDir === "asc" ? va.localeCompare(vb) : vb.localeCompare(va);
     });
 
+  const isYoutubeUrl = (url?: string | null) =>
+    !!url && (url.includes("youtube") || url.includes("youtu.be"));
+
   const handlePlay = async (song: Song) => {
     if (!song.audio_path) return;
 
@@ -219,6 +226,18 @@ export function SongsPage() {
       toast({ variant: "destructive", title: "Erro ao reproduzir áudio" });
     } finally {
       setLoadingAudioId(null);
+    }
+  };
+
+  const handlePrimaryPlay = (song: Song) => {
+    if (song.audio_path) {
+      handlePlay(song);
+      return;
+    }
+
+    if (isYoutubeUrl(song.reference_url)) {
+      setYoutubePlayerUrl(song.reference_url!);
+      setYoutubePlayerTitle(song.name);
     }
   };
 
@@ -300,12 +319,17 @@ export function SongsPage() {
   };
 
   return (
-    <div className="space-y-3 pb-6">
+    <div className="space-y-4 pb-6">
       {/* ── Header compacto ── */}
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">🎵 Músicas</h1>
-          <p className="text-xs text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <Music2 className="h-6 w-6 text-primary" />
+            <h1 className="text-2xl font-bold leading-tight text-foreground">
+              Músicas
+            </h1>
+          </div>
+          <p className="mt-0.5 text-sm text-muted-foreground">
             {songs.length} no repertório
           </p>
         </div>
@@ -338,7 +362,7 @@ export function SongsPage() {
           )}
           <Button
             size="sm"
-            className="h-9 gap-1.5 rounded-full px-3 sm:rounded-md"
+            className="h-10 gap-1.5 rounded-full px-4 text-base sm:h-9 sm:rounded-md sm:px-3 sm:text-sm"
             onClick={() => setShowCreateModal(true)}
           >
             <Plus className="h-4 w-4" /> Nova
@@ -348,13 +372,13 @@ export function SongsPage() {
 
       {/* ── Filtros ── */}
       <div className="flex flex-wrap gap-2">
-        <div className="relative flex-1 min-w-[180px]">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+        <div className="relative min-w-0 flex-[1_1_220px]">
+          <Search className="absolute left-3.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Buscar por nome ou artista..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-9 rounded-full pl-9 sm:rounded-md"
+            className="h-10 rounded-full border-border bg-background pl-10 text-base sm:h-9 sm:rounded-md sm:text-sm"
           />
           {searchQuery && (
             <button
@@ -372,7 +396,7 @@ export function SongsPage() {
             <Button
               variant="outline"
               size="sm"
-              className="h-9 gap-1.5 rounded-full sm:rounded-md"
+              className="h-10 gap-1.5 rounded-full px-4 text-base sm:h-9 sm:rounded-md sm:px-3 sm:text-sm"
             >
               <SlidersHorizontal className="h-3.5 w-3.5" />
               {filterKey !== "all" ? (
@@ -408,7 +432,7 @@ export function SongsPage() {
             setSortDir(d as SortDir);
           }}
         >
-          <SelectTrigger className="w-32 h-9 rounded-full sm:w-36 sm:rounded-md">
+          <SelectTrigger className="h-10 w-36 rounded-full bg-background text-base sm:h-9 sm:w-36 sm:rounded-md sm:text-sm">
             <ArrowUpDown className="h-3.5 w-3.5 mr-1.5" />
             <SelectValue />
           </SelectTrigger>
@@ -425,7 +449,7 @@ export function SongsPage() {
           <Button
             variant="ghost"
             size="sm"
-            className="h-9 rounded-full sm:rounded-md"
+            className="h-10 rounded-full sm:h-9 sm:rounded-md"
             onClick={() => {
               setSearchQuery("");
               setFilterKey("all");
@@ -449,7 +473,7 @@ export function SongsPage() {
           <Button
             size="sm"
             variant="outline"
-            className="h-7 text-xs gap-1"
+            className="h-7 gap-1 text-xs"
             onClick={() => setShowCreateModal(true)}
           >
             <Plus className="h-3 w-3" /> Nova
@@ -483,161 +507,105 @@ export function SongsPage() {
             }
           />
         ) : (
-          <div className="space-y-1">
-            {filtered.map((song) => (
-              <div
-                key={song.id}
-                className={cn(
-                  "flex items-center gap-3 p-3 rounded-xl border transition-colors",
-                  currentTrackId === song.id
-                    ? "bg-primary/5 border-primary/20"
-                    : "hover:bg-accent border-transparent",
-                )}
-              >
-                {/* Play button */}
-                <button
-                  onClick={() => song.audio_path && handlePlay(song)}
+          <div className="space-y-1 sm:space-y-1">
+            {filtered.map((song) => {
+              const canPrimaryPlay =
+                !!song.audio_path || isYoutubeUrl(song.reference_url);
+
+              return (
+                <div
+                  key={song.id}
                   className={cn(
-                    "w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors",
-                    song.audio_path
-                      ? "bg-primary/10 hover:bg-primary/20 cursor-pointer"
-                      : "bg-muted cursor-default",
+                    "flex flex-wrap items-center gap-3 rounded-2xl border px-2.5 py-2.5 transition-colors sm:flex-nowrap sm:rounded-xl sm:p-3",
+                    currentTrackId === song.id
+                      ? "bg-primary/5 border-primary/20"
+                      : "hover:bg-accent border-transparent",
                   )}
                 >
-                  {loadingAudioId === song.id ? (
-                    <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                  ) : currentTrackId === song.id ? (
-                    <Pause className="h-4 w-4 text-primary" />
-                  ) : (
-                    <Play
-                      className={cn(
-                        "h-4 w-4",
-                        song.audio_path
-                          ? "text-primary"
-                          : "text-muted-foreground",
-                      )}
-                    />
-                  )}
-                </button>
+                  {/* Play button */}
+                  <button
+                    onClick={() => canPrimaryPlay && handlePrimaryPlay(song)}
+                    className={cn(
+                      "flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl transition-colors sm:h-9 sm:w-9 sm:rounded-xl",
+                      canPrimaryPlay
+                        ? "bg-primary/10 hover:bg-primary/20 cursor-pointer"
+                        : "bg-muted cursor-default",
+                    )}
+                    title={
+                      song.audio_path
+                        ? "Reproduzir áudio"
+                        : isYoutubeUrl(song.reference_url)
+                          ? "Abrir no miniplayer"
+                          : "Sem áudio ou referência do YouTube"
+                    }
+                  >
+                    {loadingAudioId === song.id ? (
+                      <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                    ) : currentTrackId === song.id ? (
+                      <Pause className="h-4 w-4 text-primary" />
+                    ) : (
+                      <Play
+                        className={cn(
+                          "h-4 w-4",
+                          canPrimaryPlay
+                            ? "text-primary"
+                            : "text-muted-foreground",
+                        )}
+                      />
+                    )}
+                  </button>
 
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm truncate">{song.name}</p>
-                  {song.artist && (
-                    <p className="text-xs text-muted-foreground truncate">
-                      {song.artist}
+                  {/* Info */}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-base font-semibold leading-tight text-foreground sm:text-sm sm:font-medium">
+                      {song.name}
                     </p>
-                  )}
-                </div>
+                    {song.artist && (
+                      <p className="mt-1 truncate text-sm text-muted-foreground sm:mt-0 sm:text-xs">
+                        {song.artist}
+                      </p>
+                    )}
+                  </div>
 
-                {/* Badges */}
-                <div className="flex items-center gap-1.5 flex-shrink-0">
-                  {song.original_key && (
-                    <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
-                      {song.original_key}
-                    </span>
-                  )}
-                  {song.audio_path && (
-                    <span
-                      title="Possui áudio"
-                      className="flex items-center justify-center w-6 h-6 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                    >
-                      <Headphones className="h-3.5 w-3.5" />
-                    </span>
-                  )}
-                  {song.has_virtual_instruments && (
-                    <span
-                      title="Virtual Sample"
-                      className="flex items-center justify-center w-6 h-6 rounded-lg bg-muted text-muted-foreground"
-                    >
-                      <Laptop className="h-3.5 w-3.5" />
-                    </span>
-                  )}
-                  {song.audio_path && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDownload(song);
-                      }}
-                      disabled={downloadingId === song.id}
-                      className="flex items-center justify-center w-6 h-6 rounded-lg text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors disabled:opacity-50"
-                      title="Baixar áudio"
-                    >
-                      {downloadingId === song.id ? (
-                        <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                      ) : (
-                        <Download className="h-3.5 w-3.5" />
-                      )}
-                    </button>
-                  )}
-                  {song.reference_url &&
-                    (() => {
-                      const url = song.reference_url!;
-                      const isYt =
-                        url.includes("youtube") || url.includes("youtu.be");
-                      return (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (isYt) {
-                              setYoutubePlayerUrl(url);
-                              setYoutubePlayerTitle(song.name);
-                            } else {
-                              window.open(url, "_blank");
-                            }
-                          }}
-                          className={`flex items-center justify-center w-6 h-6 rounded-lg transition-colors ${isYt ? "text-red-500 hover:bg-red-500/10" : "text-muted-foreground hover:text-primary hover:bg-accent"}`}
-                          title={
-                            isYt ? "Abrir no miniplayer" : "Abrir referência"
-                          }
-                        >
-                          {isYt ? (
-                            <Youtube className="h-3.5 w-3.5" />
-                          ) : (
-                            <ExternalLink className="h-3.5 w-3.5" />
-                          )}
-                        </button>
-                      );
-                    })()}
-                </div>
-
-                {/* Menu */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 flex-shrink-0"
-                    >
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => setEditingSong(song)}>
-                      <Pencil className="h-4 w-4 mr-2" /> Editar
-                    </DropdownMenuItem>
-                    {canManage && (
-                      <DropdownMenuItem
-                        onClick={() => {
-                          setYoutubeSong(song);
-                          setShowYoutubeModal(true);
-                        }}
-                        className="text-red-500 focus:text-red-600"
-                      >
-                        <Youtube className="h-4 w-4 mr-2" />
-                        YouTube → MP3
-                      </DropdownMenuItem>
+                  {/* Badges */}
+                  <div className="order-3 ml-14 flex w-[calc(100%-3.5rem)] flex-shrink-0 items-center gap-1.5 sm:order-none sm:ml-0 sm:w-auto">
+                    {song.original_key && (
+                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                        {song.original_key}
+                      </span>
                     )}
                     {song.audio_path && (
-                      <DropdownMenuItem
-                        onClick={() => handleDownload(song)}
-                        disabled={downloadingId === song.id}
+                      <span
+                        title="Possui áudio"
+                        className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 sm:h-6 sm:w-6 sm:rounded-lg"
                       >
-                        <Download className="h-4 w-4 mr-2" />
-                        {downloadingId === song.id
-                          ? "Baixando..."
-                          : "Baixar áudio"}
-                      </DropdownMenuItem>
+                        <Headphones className="h-3.5 w-3.5" />
+                      </span>
+                    )}
+                    {song.has_virtual_instruments && (
+                      <span
+                        title="Virtual Sample"
+                        className="flex h-7 w-7 items-center justify-center rounded-full bg-muted text-muted-foreground sm:h-6 sm:w-6 sm:rounded-lg"
+                      >
+                        <Laptop className="h-3.5 w-3.5" />
+                      </span>
+                    )}
+                    {song.audio_path && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDownload(song);
+                        }}
+                        disabled={downloadingId === song.id}
+                        className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-emerald-500/10 hover:text-emerald-600 disabled:opacity-50 dark:hover:text-emerald-400 sm:h-6 sm:w-6 sm:rounded-lg"
+                        title="Baixar áudio"
+                      >
+                        {downloadingId === song.id ? (
+                          <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <Download className="h-3.5 w-3.5" />
+                        )}
+                      </button>
                     )}
                     {song.reference_url &&
                       (() => {
@@ -645,36 +613,101 @@ export function SongsPage() {
                         const isYt =
                           url.includes("youtube") || url.includes("youtu.be");
                         return (
-                          <DropdownMenuItem
-                            onClick={() => {
-                              if (isYt) {
-                                setYoutubePlayerUrl(url);
-                                setYoutubePlayerTitle(song.name);
-                              } else {
-                                window.open(url, "_blank");
-                              }
-                            }}
+                          <span
+                            className={`flex h-7 w-7 items-center justify-center rounded-full sm:h-6 sm:w-6 sm:rounded-lg ${isYt ? "text-red-500" : "text-muted-foreground"}`}
+                            title={
+                              isYt
+                                ? "Referência do YouTube"
+                                : "Possui referência externa"
+                            }
                           >
                             {isYt ? (
-                              <Youtube className="h-4 w-4 mr-2 text-red-500" />
+                              <Youtube className="h-3.5 w-3.5" />
                             ) : (
-                              <ExternalLink className="h-4 w-4 mr-2" />
+                              <ExternalLink className="h-3.5 w-3.5" />
                             )}
-                            {isYt ? "Abrir no miniplayer" : "Abrir referência"}
-                          </DropdownMenuItem>
+                          </span>
                         );
                       })()}
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      className="text-destructive focus:text-destructive"
-                      onClick={() => setDeletingSong(song)}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" /> Excluir
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            ))}
+                  </div>
+
+                  {/* Menu */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 flex-shrink-0 rounded-full"
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => setEditingSong(song)}>
+                        <Pencil className="h-4 w-4 mr-2" /> Editar
+                      </DropdownMenuItem>
+                      {canManage && (
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setYoutubeSong(song);
+                            setShowYoutubeModal(true);
+                          }}
+                          className="text-red-500 focus:text-red-600"
+                        >
+                          <Youtube className="h-4 w-4 mr-2" />
+                          YouTube → MP3
+                        </DropdownMenuItem>
+                      )}
+                      {song.audio_path && (
+                        <DropdownMenuItem
+                          onClick={() => handleDownload(song)}
+                          disabled={downloadingId === song.id}
+                        >
+                          <Download className="h-4 w-4 mr-2" />
+                          {downloadingId === song.id
+                            ? "Baixando..."
+                            : "Baixar áudio"}
+                        </DropdownMenuItem>
+                      )}
+                      {song.reference_url &&
+                        (() => {
+                          const url = song.reference_url!;
+                          const isYt =
+                            url.includes("youtube") || url.includes("youtu.be");
+                          return (
+                            <DropdownMenuItem
+                              onClick={() => {
+                                if (isYt) {
+                                  setYoutubePlayerUrl(url);
+                                  setYoutubePlayerTitle(song.name);
+                                } else {
+                                  window.open(url, "_blank");
+                                }
+                              }}
+                            >
+                              {isYt ? (
+                                <Youtube className="h-4 w-4 mr-2 text-red-500" />
+                              ) : (
+                                <ExternalLink className="h-4 w-4 mr-2" />
+                              )}
+                              {isYt
+                                ? "Abrir no miniplayer"
+                                : "Abrir referência"}
+                            </DropdownMenuItem>
+                          );
+                        })()}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        className="text-destructive focus:text-destructive"
+                        onClick={() => setDeletingSong(song)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" /> Excluir
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              );
+            })}
           </div>
         )}
       </Section>
