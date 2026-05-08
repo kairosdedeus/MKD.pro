@@ -191,31 +191,47 @@ export function UsersPage() {
     }
     try {
       setResetting(true);
-      const { error } = await (supabase as any).rpc("reset_user_password", {
-        p_email: resetPasswordUser.email,
-        p_new_password: newPassword,
-      });
+
+      const { data, error } = await (supabase as any).rpc(
+        "reset_user_password",
+        {
+          p_user_profile_id: resetPasswordUser.id,
+          p_new_password: newPassword,
+        },
+      );
+
+      // 404 = função não encontrada no PostgREST
+      // Tentar via Admin API como fallback
+      if (error?.status === 404 || error?.code === "PGRST202") {
+        const { error: adminError } = await supabase.auth.admin.updateUserById(
+          resetPasswordUser.auth_user_id ?? "",
+          { password: newPassword },
+        );
+        if (adminError) throw adminError;
+        toast({ title: "✅ Senha redefinida com sucesso!" });
+        setResetPasswordUser(null);
+        setNewPassword("");
+        return;
+      }
+
       if (error) throw error;
+      if (data && data.success === false) {
+        throw new Error(data.error || "A senha não foi redefinida.");
+      }
+
       toast({ title: "✅ Senha redefinida com sucesso!" });
       setResetPasswordUser(null);
       setNewPassword("");
     } catch (error: any) {
-      // Fallback: tentar via SQL direto
-      try {
-        await (supabase as any).rpc("exec_sql", {
-          sql: `UPDATE auth.users SET encrypted_password = crypt('${newPassword}', gen_salt('bf')) WHERE email = '${resetPasswordUser.email}'`,
-        });
-        toast({ title: "✅ Senha redefinida!" });
-        setResetPasswordUser(null);
-        setNewPassword("");
-      } catch {
-        toast({
-          variant: "destructive",
-          title: "Não foi possível redefinir a senha pelo sistema",
-          description:
-            "Use o SQL Editor do Supabase: supabase/utils/resetar-senha.sql",
-        });
-      }
+      toast({
+        variant: "destructive",
+        title: "Não foi possível redefinir a senha",
+        description:
+          error?.message?.includes("not allowed") ||
+          error?.message?.includes("service_role")
+            ? "Execute supabase/utils/corrigir-reset-senha-404.sql no Supabase e aguarde 15 segundos."
+            : error.message || "Erro desconhecido.",
+      });
     } finally {
       setResetting(false);
     }
@@ -544,13 +560,14 @@ export function UsersPage() {
                 <p className="text-xs text-red-500">Mínimo 8 caracteres</p>
               )}
             </div>
-            <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-              <p className="text-xs text-amber-700">
-                ⚠️ Se o botão não funcionar, use o SQL Editor do Supabase:
-                <br />
+            <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
+              <p className="text-xs text-muted-foreground">
+                A senha só será confirmada quando o Supabase retornar sucesso.
+                Caso apareça erro de função ausente, execute a migration{" "}
                 <code className="font-mono">
-                  supabase/utils/resetar-senha.sql
+                  supabase/migrations/006_reset_user_password.sql
                 </code>
+                .
               </p>
             </div>
           </div>

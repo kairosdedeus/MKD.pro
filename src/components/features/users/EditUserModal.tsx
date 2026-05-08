@@ -41,6 +41,10 @@ function isValidPrefix(prefix: string): boolean {
   return /^[a-z0-9][a-z0-9._-]*$/.test(prefix);
 }
 
+function sameIds(a: string[], b: string[]) {
+  return a.length === b.length && a.every((id, index) => id === b[index]);
+}
+
 interface EditUserModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -165,11 +169,12 @@ export function EditUserModal({
     const autoIds = teamGroups
       .filter((g) => g.teams.length === 1)
       .map((g) => g.teams[0].id);
-    setSelectedTeamIds((prev) =>
-      Array.from(
+    setSelectedTeamIds((prev) => {
+      const next = Array.from(
         new Set([...prev.filter((id) => availableIds.has(id)), ...autoIds]),
-      ),
-    );
+      );
+      return sameIds(prev, next) ? prev : next;
+    });
   }, [teamGroups]);
 
   const handleSave = async () => {

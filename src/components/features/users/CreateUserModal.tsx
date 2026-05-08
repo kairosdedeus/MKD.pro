@@ -45,6 +45,10 @@ function sanitizePrefix(value: string): string {
     .replace(/[^a-z0-9._-]/g, ""); // só permite chars válidos
 }
 
+function sameIds(a: string[], b: string[]) {
+  return a.length === b.length && a.every((id, index) => id === b[index]);
+}
+
 interface CreateUserModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -146,11 +150,12 @@ export function CreateUserModal({
     const autoIds = teamGroups
       .filter((g) => g.teams.length === 1)
       .map((g) => g.teams[0].id);
-    setSelectedTeamIds((prev) =>
-      Array.from(
+    setSelectedTeamIds((prev) => {
+      const next = Array.from(
         new Set([...prev.filter((id) => availableIds.has(id)), ...autoIds]),
-      ),
-    );
+      );
+      return sameIds(prev, next) ? prev : next;
+    });
   }, [teamGroups]);
 
   // Reset ao fechar
