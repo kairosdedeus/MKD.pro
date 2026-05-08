@@ -138,45 +138,6 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
           </div>
         )}
 
-        {ministryItems.length > 0 && (
-          <div>
-            <h3
-              className="px-2 text-[10px] font-semibold uppercase tracking-widest mb-1"
-              style={{ color: "hsl(var(--sidebar-text))" }}
-            >
-              Ministerios
-            </h3>
-            <div className="space-y-0.5">
-              {ministryItems.map((item) => (
-                <NavLink
-                  key={item.code}
-                  to={item.href}
-                  onClick={onClose}
-                  className={({ isActive }) =>
-                    cn(
-                      "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-all",
-                      isActive
-                        ? "bg-[hsl(var(--sidebar-active-bg))] text-[hsl(var(--sidebar-active-text))] font-semibold"
-                        : "text-[hsl(var(--sidebar-text))] hover:bg-accent hover:text-foreground",
-                    )
-                  }
-                >
-                  <item.icon className="h-4 w-4 flex-shrink-0" />
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate">{item.name}</span>
-                    <span className="block truncate text-[10px] font-normal opacity-70">
-                      {item.teams.map((team: any) => team.nome).join(", ")}
-                    </span>
-                  </span>
-                  <span className="text-[10px] text-muted-foreground">
-                    {item.teams.length}
-                  </span>
-                </NavLink>
-              ))}
-            </div>
-          </div>
-        )}
-
         {!isManagement && canAccessSongs && (
           <div>
             <h3

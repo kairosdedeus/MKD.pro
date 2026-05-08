@@ -1,4 +1,6 @@
+import * as React from "react";
 import { useEffect, useState } from "react";
+import { NavLink, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/stores/authStore";
 import { Button } from "@/components/ui/button";
 import { LogoCompact } from "@/components/shared/Logo";
@@ -33,6 +35,13 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/lib/supabaseClient";
 import { useToast } from "@/components/ui/use-toast";
+import { useTeams } from "@/hooks/useTeams";
+import {
+  TEAM_TYPE_ROUTES,
+  TEAM_TYPE_LABELS,
+  TEAM_TYPE_ICONS,
+} from "@/lib/team-flow";
+import { cn } from "@/lib/utils";
 
 const EMAIL_SUFFIX = "@mkd.com";
 
@@ -57,7 +66,9 @@ function splitName(fullName?: string | null) {
 }
 
 export function Header() {
-  const { user, logout, setUser } = useAuthStore();
+  const { user, logout, setUser, profiles } = useAuthStore();
+  const { teams } = useTeams();
+  const location = useLocation();
   const { toast } = useToast();
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [firstName, setFirstName] = useState("");
@@ -70,6 +81,39 @@ export function Header() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
+
+  const isManagement = profiles.some(
+    (profile) => profile.codigo === "gerencial",
+  );
+
+  // Calcular dashboards permitidos
+  const allowedDashboards = React.useMemo(() => {
+    const visibleTeams = (teams as any[]).filter((team: any) => {
+      if (!team.team_type?.codigo) return false;
+      if (isManagement) return true;
+      return (team.members || []).some(
+        (member: any) => member.user_id === user?.id,
+      );
+    });
+
+    const byType = new Map<string, any[]>();
+    visibleTeams.forEach((team: any) => {
+      const code = team.team_type.codigo;
+      byType.set(code, [...(byType.get(code) || []), team]);
+    });
+
+    return Array.from(byType.entries()).map(([code, groupedTeams]) => {
+      const Icon = TEAM_TYPE_ICONS[code];
+      return {
+        code,
+        name:
+          TEAM_TYPE_LABELS[code] || groupedTeams[0]?.team_type?.nome || code,
+        href: TEAM_TYPE_ROUTES[code] || `/${code}`,
+        icon: Icon,
+        teams: groupedTeams,
+      };
+    });
+  }, [teams, user?.id, isManagement, profiles]);
 
   const fullEmail = emailPrefix ? `${emailPrefix}${EMAIL_SUFFIX}` : "";
   const emailChanged = emailPrefix !== originalPrefix;
@@ -285,6 +329,32 @@ export function Header() {
               <span className="text-primary">{user?.nome?.split(" ")[0]}</span>
             </h2>
           </div>
+
+          {/* Abas dos Dashboards */}
+          {allowedDashboards.length > 0 && (
+            <div className="hidden md:flex items-center">
+              <nav className="flex items-center gap-1 bg-muted rounded-md p-1">
+                {allowedDashboards.map((dashboard) => {
+                  const isActive = location.pathname === dashboard.href;
+                  return (
+                    <NavLink
+                      key={dashboard.code}
+                      to={dashboard.href}
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-sm transition-all",
+                        isActive
+                          ? "bg-background text-foreground shadow-sm"
+                          : "text-muted-foreground hover:text-foreground hover:bg-accent",
+                      )}
+                    >
+                      <dashboard.icon className="h-4 w-4" />
+                      {dashboard.name}
+                    </NavLink>
+                  );
+                })}
+              </nav>
+            </div>
+          )}
 
           <div className="flex items-center gap-1">
             <ThemeSelector />
