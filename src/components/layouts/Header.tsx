@@ -321,7 +321,7 @@ export function Header() {
   return (
     <>
       <header className="header-bg border-b">
-        <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6">
+        <div className="flex flex-col gap-2 px-4 py-3 sm:px-6 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
           <div className="flex items-center gap-3 min-w-0">
             <LogoCompact className="flex-shrink-0" />
             <h2 className="min-w-0 truncate text-sm font-semibold text-foreground sm:text-base">
@@ -332,8 +332,8 @@ export function Header() {
 
           {/* Abas dos Dashboards */}
           {allowedDashboards.length > 0 && (
-            <div className="hidden md:flex items-center">
-              <nav className="flex items-center gap-1 bg-muted rounded-md p-1">
+            <div className="flex items-center sm:order-none order-3">
+              <nav className="flex items-center gap-1 bg-muted rounded-md p-1 overflow-x-auto max-w-full">
                 {allowedDashboards.map((dashboard) => {
                   const isActive = location.pathname === dashboard.href;
                   return (
@@ -341,13 +341,13 @@ export function Header() {
                       key={dashboard.code}
                       to={dashboard.href}
                       className={cn(
-                        "flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-sm transition-all",
+                        "flex items-center gap-1 sm:gap-2 px-2 py-1.5 text-xs sm:text-sm font-medium rounded-sm transition-all whitespace-nowrap",
                         isActive
                           ? "bg-background text-foreground shadow-sm"
                           : "text-muted-foreground hover:text-foreground hover:bg-accent",
                       )}
                     >
-                      <dashboard.icon className="h-4 w-4" />
+                      <dashboard.icon className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                       {dashboard.name}
                     </NavLink>
                   );
@@ -356,7 +356,7 @@ export function Header() {
             </div>
           )}
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 sm:order-none order-2">
             <ThemeSelector />
             <NotificationCenter />
 
