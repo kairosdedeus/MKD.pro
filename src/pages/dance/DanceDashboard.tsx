@@ -910,7 +910,34 @@ export function DanceDashboard() {
       </div>
 
       {/* ── Bottom Navigation ── */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 flex border-t border-border bg-background/95 backdrop-blur-sm md:left-56">
+      <div className="fixed bottom-4 left-1/2 z-40 flex -translate-x-1/2 rounded-full border border-border bg-background/95 p-1 shadow-lg backdrop-blur-sm md:hidden">
+        <button
+          onClick={() => setTab("inicio")}
+          className={cn(
+            "flex h-9 items-center gap-2 rounded-full px-4 text-xs font-semibold transition-all",
+            tab === "inicio"
+              ? "bg-foreground text-background"
+              : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <Home className="h-4 w-4" />
+          <span>INÍCIO</span>
+        </button>
+        <button
+          onClick={() => setTab("agenda")}
+          className={cn(
+            "flex h-9 items-center gap-2 rounded-full px-4 text-xs font-semibold transition-all",
+            tab === "agenda"
+              ? "bg-foreground text-background"
+              : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <CalendarDays className="h-4 w-4" />
+          <span>ESCALA</span>
+        </button>
+      </div>
+
+      <div className="fixed bottom-0 left-0 right-0 z-40 hidden border-t border-border bg-background/95 backdrop-blur-sm md:left-56 md:flex">
         <button
           onClick={() => setTab("inicio")}
           className={cn(
