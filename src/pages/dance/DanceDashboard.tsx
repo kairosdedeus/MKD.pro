@@ -45,6 +45,7 @@ import { useTeams } from "@/hooks/useTeams";
 import { scheduleService } from "@/services/scheduleService";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { DanceIcon } from "@/components/shared/MinistryIcons";
 import {
   format,
   parseISO,
@@ -399,7 +400,10 @@ export function DanceDashboard() {
       {/* ── Header ── */}
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">💃 Dança</h1>
+          <h1 className="flex items-center gap-2 text-2xl font-bold text-foreground">
+            <DanceIcon className="h-9 w-9" />
+            Dança
+          </h1>
           <p className="text-xs text-muted-foreground">{danceTeam.nome}</p>
         </div>
         {canManage && (

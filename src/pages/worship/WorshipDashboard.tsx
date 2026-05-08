@@ -57,6 +57,7 @@ import {
 import { worshipAutoScheduleService } from "@/services/worshipAutoScheduleService";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { WorshipIcon } from "@/components/shared/MinistryIcons";
 import {
   format,
   parseISO,
@@ -631,7 +632,10 @@ export function WorshipDashboard() {
       {/* ── Header ── */}
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">🎵 Louvor</h1>
+          <h1 className="flex items-center gap-2 text-2xl font-bold text-foreground">
+            <WorshipIcon className="h-9 w-9" />
+            Louvor
+          </h1>
           <p className="text-xs text-muted-foreground">{worshipTeam.nome}</p>
         </div>
         {canManage && (

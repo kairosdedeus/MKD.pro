@@ -411,7 +411,7 @@ export function Header() {
                         : "border-transparent text-muted-foreground hover:bg-accent hover:text-foreground",
                     )}
                   >
-                    <dashboard.icon className="h-4 w-4 flex-shrink-0" />
+                    <dashboard.icon className="h-5 w-5 flex-shrink-0" />
                     {dashboard.name}
                   </NavLink>
                 );

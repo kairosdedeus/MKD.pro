@@ -130,7 +130,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
                     )
                   }
                 >
-                  <item.icon className="h-4 w-4 flex-shrink-0" />
+                  <item.icon className="h-5 w-5 flex-shrink-0" />
                   {item.name}
                 </NavLink>
               ))}
