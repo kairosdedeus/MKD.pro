@@ -188,12 +188,12 @@ export function Sidebar() {
         <SidebarContent />
       </div>
 
-      <div className="md:hidden fixed top-3 left-4 z-50">
+      <div className="fixed left-3 top-2.5 z-50 md:hidden">
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setMobileOpen(true)}
-          className="bg-background shadow-sm border border-border"
+          className="h-10 w-10 rounded-2xl border border-border bg-background/95 shadow-sm backdrop-blur-sm"
         >
           <Menu className="h-5 w-5" />
         </Button>

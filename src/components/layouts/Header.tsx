@@ -321,13 +321,13 @@ export function Header() {
   return (
     <>
       <header className="header-bg border-b">
-        <div className="flex flex-col gap-2 px-4 py-2 sm:px-6">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-3 min-w-0">
-              <LogoCompact className="flex-shrink-0" />
+        <div className="flex flex-col gap-2 px-3 py-2 sm:px-6">
+          <div className="flex items-center justify-between gap-3 pl-14 md:pl-0">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <LogoCompact className="hidden flex-shrink-0 sm:flex" />
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-foreground">
-                  Bem-vindo,{" "}
+                <p className="truncate text-base font-semibold leading-tight text-foreground sm:text-sm">
+                  Olá,{" "}
                   <span className="text-primary">
                     {user?.nome?.split(" ")[0]}
                   </span>
@@ -338,8 +338,8 @@ export function Header() {
               </div>
             </div>
 
-            <div className="flex items-center gap-1">
-              <div className="hidden sm:flex">
+            <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
+              <div className="flex">
                 <ThemeSelector />
               </div>
               <NotificationCenter />
@@ -348,15 +348,15 @@ export function Header() {
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
-                    className="flex items-center gap-2 h-8 px-2"
+                    className="flex h-9 items-center gap-1.5 rounded-full px-1.5 sm:gap-2 sm:px-2"
                   >
-                    <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground shadow-sm">
                       {initials}
                     </div>
                     <span className="text-sm text-muted-foreground hidden sm:block max-w-48 truncate">
                       {user?.email}
                     </span>
-                    <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                    <ChevronDown className="hidden h-3 w-3 text-muted-foreground sm:block" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
@@ -397,7 +397,7 @@ export function Header() {
           </div>
 
           {allowedDashboards.length > 0 && (
-            <nav className="flex gap-2 overflow-x-auto rounded-lg bg-muted px-1 py-1 max-w-full">
+            <nav className="flex max-w-full gap-1.5 overflow-x-auto py-1">
               {allowedDashboards.map((dashboard) => {
                 const isActive = location.pathname === dashboard.href;
                 return (
@@ -405,13 +405,13 @@ export function Header() {
                     key={dashboard.code}
                     to={dashboard.href}
                     className={cn(
-                      "flex items-center gap-1 sm:gap-2 px-2 py-1 text-xs sm:text-sm font-medium rounded-lg transition-all whitespace-nowrap",
+                      "flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium leading-none transition-all whitespace-nowrap",
                       isActive
-                        ? "bg-background text-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground hover:bg-accent",
+                        ? "border-border bg-background text-foreground shadow-sm"
+                        : "border-transparent text-muted-foreground hover:bg-accent hover:text-foreground",
                     )}
                   >
-                    <dashboard.icon className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                    <dashboard.icon className="h-4 w-4 flex-shrink-0" />
                     {dashboard.name}
                   </NavLink>
                 );
