@@ -499,9 +499,11 @@ export function DanceDashboard() {
                       setSelectedDate(day);
                       if (!inMonth) setCurrentMonth(day);
                       if (daySchedules.length > 0) {
-                        setEditingSchedule(daySchedules[0]);
-                        setShowCreateModal(true);
+                        // Tem escala → abre visualização
+                        setSelectedSchedule(daySchedules[0]);
+                        setShowDetailModal(true);
                       } else if (canManage) {
+                        // Sem escala e pode gerenciar → abre criação
                         setEditingSchedule(null);
                         setShowCreateModal(true);
                       }
