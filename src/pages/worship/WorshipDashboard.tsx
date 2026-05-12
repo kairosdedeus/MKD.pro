@@ -1460,22 +1460,23 @@ export function WorshipDashboard() {
 
       {/* Dialog: exportar WhatsApp mensal */}
       <Dialog open={showWhatsApp} onOpenChange={setShowWhatsApp}>
-        <DialogContent className="max-w-2xl sm:h-auto sm:max-h-[90vh] flex flex-col p-0 gap-0">
-          <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b flex-shrink-0">
-            <DialogTitle className="text-base sm:text-lg">
-              📱 Exportar Mês para WhatsApp
+        <DialogContent className="max-w-2xl max-h-[88dvh] flex flex-col p-0 gap-0">
+          <DialogHeader className="px-4 pt-4 pb-3 border-b flex-shrink-0">
+            <DialogTitle className="flex items-center gap-2 text-sm font-semibold">
+              <FileText className="h-4 w-4 text-green-500" />
+              Exportar Mês para WhatsApp
             </DialogTitle>
           </DialogHeader>
 
           <div
             data-dialog-body=""
-            className="space-y-3 px-4 sm:px-6 py-4 overflow-y-auto flex-1"
+            className="flex-1 overflow-y-auto px-4 py-4 space-y-3"
           >
             <Textarea
               value={monthlyWhatsAppText}
               onChange={(e) => setMonthlyWhatsAppText(e.target.value)}
               rows={20}
-              className="font-mono text-xs sm:text-sm resize-y min-h-[400px]"
+              className="font-mono text-xs sm:text-sm resize-y min-h-[300px] bg-muted/50 border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-primary"
               placeholder="O texto da escala aparecerá aqui..."
             />
             <p className="text-xs text-muted-foreground">
@@ -1483,15 +1484,18 @@ export function WorshipDashboard() {
             </p>
           </div>
 
-          <DialogFooter className="px-4 sm:px-6 py-3 sm:py-4 border-t bg-muted/30 gap-2 flex-shrink-0 flex-col-reverse sm:flex-row">
+          <DialogFooter className="flex-row items-center gap-2 px-4 py-3 flex-shrink-0">
             <Button
-              variant="outline"
+              variant="ghost"
+              size="sm"
               onClick={() => setShowWhatsApp(false)}
-              className="w-full sm:w-auto"
+              className="h-9 px-3 text-sm text-muted-foreground hover:text-foreground"
             >
               Fechar
             </Button>
+            <div className="flex-1" />
             <Button
+              size="sm"
               onClick={async () => {
                 try {
                   await navigator.clipboard.writeText(monthlyWhatsAppText);
@@ -1505,9 +1509,9 @@ export function WorshipDashboard() {
                   });
                 }
               }}
-              className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
+              className="h-9 px-4 text-sm gap-2 font-medium"
             >
-              <FileText className="h-4 w-4" />
+              <FileText className="h-3.5 w-3.5" />
               Copiar texto
             </Button>
           </DialogFooter>
@@ -1518,27 +1522,34 @@ export function WorshipDashboard() {
       <Dialog open={showWeekendWhatsApp} onOpenChange={setShowWeekendWhatsApp}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>📱 Exportar Fim de Semana</DialogTitle>
+            <DialogTitle className="flex items-center gap-2 text-sm font-semibold">
+              <FileText className="h-4 w-4 text-green-500" />
+              Exportar Fim de Semana
+            </DialogTitle>
           </DialogHeader>
-          <div data-dialog-body="" className="space-y-3 px-5 py-4">
+          <div data-dialog-body="" className="px-4 py-4 space-y-3">
             <Textarea
               value={weekendWhatsAppText}
               onChange={(e) => setWeekendWhatsAppText(e.target.value)}
               rows={16}
-              className="font-mono text-xs resize-y"
+              className="font-mono text-xs resize-y bg-muted/50 border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-primary"
             />
             <p className="text-xs text-muted-foreground">
               Edite o texto se necessário e clique em Copiar.
             </p>
           </div>
-          <DialogFooter className="gap-2 flex-col-reverse sm:flex-row">
-            <button
+          <DialogFooter className="flex-row items-center gap-2 px-4 py-3">
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setShowWeekendWhatsApp(false)}
-              className="w-full sm:w-auto rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-semibold hover:bg-accent transition-colors"
+              className="h-9 px-3 text-sm text-muted-foreground hover:text-foreground"
             >
               Fechar
-            </button>
-            <button
+            </Button>
+            <div className="flex-1" />
+            <Button
+              size="sm"
               onClick={async () => {
                 try {
                   await navigator.clipboard.writeText(weekendWhatsAppText);
@@ -1551,10 +1562,11 @@ export function WorshipDashboard() {
                   });
                 }
               }}
-              className="w-full sm:w-auto rounded-lg bg-primary text-primary-foreground px-4 py-2.5 text-sm font-semibold hover:bg-primary/90 transition-colors"
+              className="h-9 px-4 text-sm gap-2 font-medium"
             >
+              <FileText className="h-3.5 w-3.5" />
               Copiar texto
-            </button>
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

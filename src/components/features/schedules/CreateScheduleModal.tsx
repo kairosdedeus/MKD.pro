@@ -994,11 +994,12 @@ export function CreateScheduleModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl sm:max-h-[90vh]">
-        {/* Header */}
-        <DialogHeader>
-          <DialogTitle className="text-lg sm:text-xl">
-            {isEditing ? "✏️ Editar Escala" : "🎵 Nova Escala"}
+      <DialogContent className="max-w-3xl max-h-[88dvh] flex flex-col p-0 gap-0 rounded-2xl">
+        {/* Header compacto */}
+        <DialogHeader className="flex-shrink-0 px-4 pt-4 pb-3 border-b">
+          <DialogTitle className="flex items-center gap-2 text-sm font-semibold">
+            <span>{isEditing ? "✏️" : "🎵"}</span>
+            {isEditing ? "Editar Escala" : "Nova Escala"}
           </DialogTitle>
         </DialogHeader>
 
@@ -1727,25 +1728,39 @@ export function CreateScheduleModal({
         )}
 
         {/* Footer */}
-        <DialogFooter>
+        <DialogFooter className="flex-row items-center gap-2 px-4 py-3">
           <Button
             variant="outline"
+            size="sm"
             onClick={() => onOpenChange(false)}
             disabled={loading}
-            className="w-full sm:w-auto"
+            className="h-9 px-4 text-sm"
           >
             Cancelar
           </Button>
+          <div className="flex-1" />
           <Button
+            size="sm"
             onClick={handleSubmit}
             disabled={loading || loadingData || (!isEditing && dateConflict)}
-            className="bg-primary hover:bg-primary/90 w-full sm:w-auto sm:min-w-[140px]"
+            className="h-9 px-5 text-sm gap-2 font-semibold min-w-[110px]"
           >
-            {loading
-              ? "Salvando..."
-              : isEditing
-                ? "💾 Salvar Alterações"
-                : "✅ Criar Escala"}
+            {loading ? (
+              <>
+                <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Salvando...
+              </>
+            ) : isEditing ? (
+              <>
+                <Save className="h-3.5 w-3.5" />
+                Salvar
+              </>
+            ) : (
+              <>
+                <Save className="h-3.5 w-3.5" />
+                Criar Escala
+              </>
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

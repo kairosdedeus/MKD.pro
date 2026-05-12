@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { Schedule } from "@/types";
 import { useToast } from "@/components/ui/use-toast";
+import { Textarea } from "@/components/ui/textarea";
 import { format, parseISO } from "date-fns";
 import { useEffect, useState } from "react";
 import { ptBR } from "date-fns/locale";
@@ -322,85 +323,80 @@ export function ScheduleDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
-            <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
-            <span className="truncate">
-              {schedule.title || "Escala sem título"}
-            </span>
+      <DialogContent className="max-w-2xl max-h-[88dvh] flex flex-col p-0 gap-0 rounded-2xl">
+        {/* Header compacto */}
+        <DialogHeader className="flex-shrink-0 px-4 pt-4 pb-3 border-b">
+          <DialogTitle className="flex items-center gap-2 text-sm font-semibold">
+            <Calendar className="h-4 w-4 text-primary flex-shrink-0" />
+            <span className="truncate">{schedule.title || "Escala"}</span>
+            <Badge
+              variant={status.variant}
+              className="ml-auto text-xs py-0 h-5 flex-shrink-0"
+            >
+              {status.label}
+            </Badge>
           </DialogTitle>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {format(parseISO(schedule.date), "EEE, dd MMM yyyy", {
+              locale: ptBR,
+            })}
+          </p>
         </DialogHeader>
 
-        <div data-dialog-body="" className="space-y-4 sm:space-y-5 px-5 py-4">
-          {/* Info básica */}
-          <div className="flex items-center gap-3 p-3 bg-primary/5 rounded-xl">
-            <div>
-              <p className="text-sm text-muted-foreground">Data</p>
-              <p className="font-semibold text-foreground">
-                {format(
-                  parseISO(schedule.date),
-                  "EEEE, dd 'de' MMMM 'de' yyyy",
-                  { locale: ptBR },
-                )}
-              </p>
-            </div>
-            <div className="ml-auto">
-              <Badge variant={status.variant}>{status.label}</Badge>
-            </div>
-          </div>
+        <div
+          data-dialog-body=""
+          className="flex-1 overflow-y-auto px-4 py-3 space-y-4"
+        >
+          {/* Observações */}
 
           {/* Observações */}
           {schedule.notes && (
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-                <FileText className="h-4 w-4" />
-                Observações
-              </div>
-              <p className="text-sm text-muted-foreground bg-muted rounded-lg p-3">
+            <div className="flex gap-2 p-2.5 bg-muted/50 rounded-lg">
+              <FileText className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-muted-foreground leading-relaxed">
                 {schedule.notes}
               </p>
             </div>
           )}
 
           {/* Membros por Função */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-              <Users className="h-4 w-4 text-primary" />
-              Membros da Escala
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              <Users className="h-3.5 w-3.5" />
+              Membros
             </div>
             {sortedFunctions.length === 0 ? (
-              <p className="text-sm text-muted-foreground italic">
+              <p className="text-xs text-muted-foreground italic py-2">
                 Nenhum membro escalado
               </p>
             ) : (
-              <div className="rounded-xl border border-border overflow-hidden divide-y divide-border">
+              <div className="rounded-xl border overflow-hidden divide-y">
                 {sortedFunctions.map(
                   ({ functionName, members, icon, color }) => (
                     <div
                       key={functionName}
-                      className={`flex flex-col sm:flex-row items-start gap-3 sm:gap-4 px-3 sm:px-4 py-3 ${color.bg}`}
+                      className={`flex items-center gap-2.5 px-3 py-2 ${color.bg}`}
                     >
-                      <div className="flex items-center gap-2 w-full sm:w-32 flex-shrink-0">
-                        <span className="text-base leading-none">{icon}</span>
-                        <span className={`text-sm font-semibold ${color.text}`}>
-                          {functionName}
-                        </span>
-                      </div>
-                      <div className="flex-1 min-w-0 w-full">
-                        <div className="flex flex-wrap items-center gap-2">
-                          {members.map((memberName, idx) => (
-                            <span
-                              key={idx}
-                              className={`inline-flex items-center gap-1.5 pl-2.5 pr-2.5 py-1 rounded-full text-sm font-medium border ${color.pill}`}
-                            >
-                              <span className="w-5 h-5 rounded-full bg-primary-foreground/60 dark:bg-white/20 flex items-center justify-center text-xs font-bold flex-shrink-0">
-                                {memberName.charAt(0).toUpperCase()}
-                              </span>
-                              {memberName}
+                      <span className="text-sm leading-none w-5 text-center flex-shrink-0">
+                        {icon}
+                      </span>
+                      <span
+                        className={`text-xs font-semibold w-20 flex-shrink-0 ${color.text}`}
+                      >
+                        {functionName}
+                      </span>
+                      <div className="flex flex-wrap gap-1.5 flex-1 min-w-0">
+                        {members.map((name, i) => (
+                          <span
+                            key={i}
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${color.pill}`}
+                          >
+                            <span className="w-4 h-4 rounded-full bg-white/30 flex items-center justify-center text-[10px] font-bold flex-shrink-0">
+                              {name.charAt(0).toUpperCase()}
                             </span>
-                          ))}
-                        </div>
+                            {name.split(" ")[0]}
+                          </span>
+                        ))}
                       </div>
                     </div>
                   ),
@@ -411,16 +407,16 @@ export function ScheduleDetailModal({
 
           {/* Músicas */}
           {sortedSongs.length > 0 && (
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-                  <Music className="h-4 w-4 text-primary" />
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  <Music className="h-3.5 w-3.5" />
                   Músicas ({sortedSongs.length})
                 </div>
                 {songsWithAudio.length > 0 && (
                   <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Headphones className="h-3.5 w-3.5" />
-                    {songsWithAudio.length} com áudio
+                    <Headphones className="h-3 w-3" />
+                    {songsWithAudio.length}
                   </span>
                 )}
               </div>
@@ -435,92 +431,57 @@ export function ScheduleDetailModal({
                     <div
                       key={scheduleSong.id}
                       className={cn(
-                        "flex items-center gap-2 sm:gap-3 p-2.5 border rounded-xl transition-colors",
+                        "flex items-center gap-2 px-2.5 py-2 border rounded-lg transition-colors",
                         isPlaying
                           ? "bg-primary/5 border-primary/20"
-                          : "border-border hover:bg-accent/50",
+                          : "border-border hover:bg-accent/40",
                       )}
                     >
-                      {/* Número / Play */}
                       <button
                         onClick={() => hasAudio && handlePlay(scheduleSong.id)}
                         disabled={!hasAudio}
                         className={cn(
-                          "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors",
+                          "w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors",
                           hasAudio
                             ? "bg-primary/10 hover:bg-primary/20 cursor-pointer"
                             : "bg-muted cursor-default",
                         )}
-                        title={hasAudio ? "Reproduzir" : "Sem áudio"}
                       >
                         {isLoading ? (
-                          <div className="w-3.5 h-3.5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                          <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                         ) : isPlaying ? (
-                          <Pause className="h-3.5 w-3.5 text-primary" />
+                          <Pause className="h-3 w-3 text-primary" />
+                        ) : hasAudio ? (
+                          <Play className="h-3 w-3 text-primary" />
                         ) : (
-                          <span
-                            className={cn(
-                              "text-xs font-bold",
-                              hasAudio
-                                ? "text-primary"
-                                : "text-muted-foreground",
-                            )}
-                          >
-                            {hasAudio ? (
-                              <Play className="h-3.5 w-3.5" />
-                            ) : (
-                              index + 1
-                            )}
+                          <span className="text-[10px] font-bold text-muted-foreground">
+                            {index + 1}
                           </span>
                         )}
                       </button>
 
-                      {/* Info */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <p className="text-sm font-medium truncate">
-                            {scheduleSong.song?.name || "Música"}
-                          </p>
-                          {/* Ícone de áudio */}
-                          {hasAudio && (
-                            <span
-                              title="Possui áudio"
-                              className="flex items-center justify-center w-5 h-5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex-shrink-0"
-                            >
-                              <Headphones className="h-3 w-3" />
-                            </span>
-                          )}
-                          {/* Ícone VS */}
-                          {scheduleSong.song?.has_virtual_instruments && (
-                            <span
-                              title="Virtual Sample"
-                              className="flex items-center justify-center w-5 h-5 rounded-md bg-muted text-muted-foreground flex-shrink-0"
-                            >
-                              <Laptop className="h-3 w-3" />
-                            </span>
-                          )}
-                        </div>
+                        <p className="text-xs font-medium truncate">
+                          {scheduleSong.song?.name || "Música"}
+                        </p>
                         {scheduleSong.song?.artist && (
-                          <p className="text-xs text-muted-foreground truncate">
+                          <p className="text-[10px] text-muted-foreground truncate">
                             {scheduleSong.song.artist}
                           </p>
                         )}
                       </div>
 
-                      {/* Tom + Link + Download */}
-                      <div className="flex items-center gap-1.5 flex-shrink-0">
-                        {scheduleSong.song?.original_key && (
-                          <span className="text-xs bg-muted text-muted-foreground px-1.5 py-0.5 rounded-md font-medium">
-                            {scheduleSong.song.original_key}
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        {scheduleSong.execution_key && (
+                          <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium">
+                            {scheduleSong.execution_key}
                           </span>
                         )}
-                        {scheduleSong.execution_key &&
-                          scheduleSong.execution_key !==
-                            scheduleSong.song?.original_key && (
-                            <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded-md font-medium">
-                              {scheduleSong.execution_key}
-                            </span>
-                          )}
+                        {hasAudio && (
+                          <span className="w-5 h-5 flex items-center justify-center rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                            <Headphones className="h-2.5 w-2.5" />
+                          </span>
+                        )}
                         {scheduleSong.song?.reference_url &&
                           (() => {
                             const url = scheduleSong.song.reference_url!;
@@ -536,21 +497,14 @@ export function ScheduleDetailModal({
                                     setYoutubePlayerTitle(
                                       scheduleSong.song?.name,
                                     );
-                                  } else {
-                                    window.open(url, "_blank");
-                                  }
+                                  } else window.open(url, "_blank");
                                 }}
-                                className={`flex items-center justify-center w-6 h-6 rounded transition-colors ${isYt ? "text-red-500 hover:bg-red-500/10" : "text-muted-foreground hover:text-primary hover:bg-accent"}`}
-                                title={
-                                  isYt
-                                    ? "Abrir no miniplayer"
-                                    : "Abrir referência"
-                                }
+                                className={`w-5 h-5 flex items-center justify-center rounded transition-colors ${isYt ? "text-red-500 hover:bg-red-500/10" : "text-muted-foreground hover:text-primary hover:bg-accent"}`}
                               >
                                 {isYt ? (
-                                  <Youtube className="h-3.5 w-3.5" />
+                                  <Youtube className="h-2.5 w-2.5" />
                                 ) : (
-                                  <ExternalLink className="h-3.5 w-3.5" />
+                                  <ExternalLink className="h-2.5 w-2.5" />
                                 )}
                               </button>
                             );
@@ -559,13 +513,12 @@ export function ScheduleDetailModal({
                           <button
                             onClick={() => handleDownload(scheduleSong.id)}
                             disabled={downloadingId === scheduleSong.id}
-                            className="text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors disabled:opacity-50"
-                            title="Baixar áudio"
+                            className="w-5 h-5 flex items-center justify-center text-muted-foreground hover:text-emerald-600 transition-colors disabled:opacity-50"
                           >
                             {downloadingId === scheduleSong.id ? (
-                              <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                              <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
                             ) : (
-                              <Download className="h-3.5 w-3.5" />
+                              <Download className="h-2.5 w-2.5" />
                             )}
                           </button>
                         )}
@@ -575,9 +528,8 @@ export function ScheduleDetailModal({
                 })}
               </div>
 
-              {/* Player embutido na modal */}
               {currentTrackId && playerTracks.length > 0 && (
-                <div className="mt-3 rounded-xl border border-primary/20 overflow-hidden">
+                <div className="mt-2 rounded-xl border border-primary/20 overflow-hidden">
                   <AudioPlayer
                     tracks={playerTracks}
                     currentTrackId={currentTrackId}
@@ -717,17 +669,22 @@ export function ScheduleDetailModal({
           )}
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex-row items-center gap-2 px-4 py-3">
+          {/* Fechar — outline visível */}
           <Button
             variant="outline"
+            size="sm"
             onClick={() => onOpenChange(false)}
-            className="w-full sm:w-auto"
+            className="h-9 px-4 text-sm"
           >
             Fechar
           </Button>
+
+          {/* Exportar — outline com ícone */}
           <Button
             variant="outline"
-            className="gap-2 w-full sm:w-auto"
+            size="sm"
+            className="h-9 px-3 text-sm gap-2"
             onClick={() => {
               const text = buildWeekendWhatsAppText(
                 [schedule],
@@ -737,22 +694,30 @@ export function ScheduleDetailModal({
               setShowWhatsAppPreview(true);
             }}
           >
-            <FileText className="h-4 w-4" />
-            Exportar Dia
+            <FileText className="h-4 w-4 text-green-600 dark:text-green-400" />
+            <span className="hidden sm:inline">Exportar</span>
           </Button>
+
+          <div className="flex-1" />
+
+          {/* Excluir — outline destrutivo */}
           <Button
             variant="outline"
-            className="text-destructive border-destructive/30 hover:bg-destructive/10 w-full sm:w-auto"
+            size="sm"
+            className="h-9 px-3 text-sm gap-2 border-destructive/40 text-destructive hover:bg-destructive hover:text-destructive-foreground hover:border-destructive"
             onClick={onDelete}
           >
-            <Trash2 className="h-4 w-4 mr-2" />
-            Excluir
+            <Trash2 className="h-4 w-4" />
+            <span className="hidden sm:inline">Excluir</span>
           </Button>
+
+          {/* Editar — primário sólido */}
           <Button
-            className="bg-primary hover:bg-primary/90 w-full sm:w-auto"
+            size="sm"
+            className="h-9 px-4 text-sm gap-2 font-semibold"
             onClick={onEdit}
           >
-            <Pencil className="h-4 w-4 mr-2" />
+            <Pencil className="h-3.5 w-3.5" />
             Editar
           </Button>
         </DialogFooter>
@@ -762,11 +727,14 @@ export function ScheduleDetailModal({
       <Dialog open={showWhatsAppPreview} onOpenChange={setShowWhatsAppPreview}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Exportar WhatsApp</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-4 w-4 text-green-500" />
+              Exportar WhatsApp
+            </DialogTitle>
           </DialogHeader>
-          <div data-dialog-body="" className="space-y-3 px-5 py-4">
-            <textarea
-              className="w-full h-64 sm:h-80 p-3 border rounded resize-y font-mono text-xs sm:text-sm"
+          <div data-dialog-body="" className="space-y-3 px-4 py-4">
+            <Textarea
+              className="font-mono text-xs sm:text-sm resize-y min-h-[200px] bg-muted/50 border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-primary"
               value={whatsAppText}
               onChange={(e) => setWhatsAppText(e.target.value)}
             />
@@ -774,19 +742,22 @@ export function ScheduleDetailModal({
               Edite o texto se necessário e clique em Copiar.
             </p>
           </div>
-          <DialogFooter className="gap-2 flex-col-reverse sm:flex-row">
+          <DialogFooter className="flex-row items-center gap-2 px-4 py-3">
             <Button
-              variant="outline"
+              variant="ghost"
+              size="sm"
               onClick={() => setShowWhatsAppPreview(false)}
-              className="w-full sm:w-auto"
+              className="h-9 px-3 text-sm text-muted-foreground hover:text-foreground"
             >
               Fechar
             </Button>
+            <div className="flex-1" />
             <Button
-              className="gap-2 w-full sm:w-auto"
+              size="sm"
+              className="h-9 px-4 text-sm gap-2 font-medium"
               onClick={handleCopyFromPreview}
             >
-              <FileText className="h-4 w-4" />
+              <FileText className="h-3.5 w-3.5" />
               Copiar
             </Button>
           </DialogFooter>

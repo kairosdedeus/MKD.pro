@@ -1094,18 +1094,34 @@ export function DanceDashboard() {
       <Dialog open={showWhatsApp} onOpenChange={setShowWhatsApp}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>📱 Exportar Mês para WhatsApp</DialogTitle>
+            <DialogTitle className="flex items-center gap-2 text-sm font-semibold">
+              <FileText className="h-4 w-4 text-green-500" />
+              Exportar Mês para WhatsApp
+            </DialogTitle>
           </DialogHeader>
-          <div data-dialog-body="" className="px-4 py-4 sm:px-5">
+          <div data-dialog-body="" className="px-4 py-4 space-y-3">
             <Textarea
               value={whatsAppText}
               readOnly
               rows={12}
-              className="font-mono text-xs resize-none"
+              className="font-mono text-xs resize-none bg-muted/50 border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-primary"
             />
+            <p className="text-xs text-muted-foreground">
+              Clique em Copiar para enviar no WhatsApp.
+            </p>
           </div>
-          <DialogFooter>
-            <button
+          <DialogFooter className="flex-row items-center gap-2 px-4 py-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowWhatsApp(false)}
+              className="h-9 px-3 text-sm text-muted-foreground hover:text-foreground"
+            >
+              Fechar
+            </Button>
+            <div className="flex-1" />
+            <Button
+              size="sm"
               onClick={async () => {
                 try {
                   await navigator.clipboard.writeText(whatsAppText);
@@ -1117,10 +1133,11 @@ export function DanceDashboard() {
                   });
                 }
               }}
-              className="w-full rounded-lg bg-primary text-primary-foreground py-2.5 text-sm font-semibold hover:bg-primary/90 transition-colors"
+              className="h-9 px-4 text-sm gap-2 font-medium"
             >
+              <FileText className="h-3.5 w-3.5" />
               Copiar texto
-            </button>
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
