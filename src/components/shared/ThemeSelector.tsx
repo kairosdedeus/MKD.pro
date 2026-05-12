@@ -1,15 +1,23 @@
-import { useTheme, PALETTES, ModeId, PaletteId } from "@/hooks/useTheme";
+import {
+  useTheme,
+  PALETTES,
+  FONT_SIZES,
+  ModeId,
+  PaletteId,
+  FontSizeId,
+} from "@/hooks/useTheme";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Palette, Sun, Moon, Check } from "lucide-react";
+import { Palette, Sun, Moon, Check, ALargeSmall } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function ThemeSelector() {
-  const { mode, palette, setMode, setPalette } = useTheme();
+  const { mode, palette, fontSize, setMode, setPalette, setFontSize } =
+    useTheme();
 
   return (
     <Popover>
@@ -53,7 +61,49 @@ export function ThemeSelector() {
           </div>
         </div>
 
-        {/* Divisor */}
+        <div className="h-px bg-border mb-4" />
+
+        {/* ── Tamanho de Fonte ────────────────────────────── */}
+        <div className="mb-4">
+          <div className="flex items-center gap-2 mb-2.5">
+            <ALargeSmall className="h-3.5 w-3.5 text-muted-foreground" />
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">
+              Tamanho da Fonte
+            </p>
+          </div>
+          <div className="grid grid-cols-4 gap-1.5">
+            {FONT_SIZES.map((f) => (
+              <button
+                key={f.id}
+                onClick={() => setFontSize(f.id as FontSizeId)}
+                title={f.description}
+                className={cn(
+                  "flex flex-col items-center justify-center gap-1 py-2.5 rounded-lg border text-center transition-all",
+                  fontSize === f.id
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border bg-background text-muted-foreground hover:bg-accent hover:text-foreground",
+                )}
+              >
+                <span
+                  className="font-bold leading-none"
+                  style={{ fontSize: `${f.scale * 14}px` }}
+                >
+                  A
+                </span>
+                <span className="text-[10px] font-medium leading-none">
+                  {f.label}
+                </span>
+              </button>
+            ))}
+          </div>
+          <p className="text-[10px] text-muted-foreground mt-2">
+            {FONT_SIZES.find((f) => f.id === fontSize)?.description} —{" "}
+            {FONT_SIZES.find((f) => f.id === fontSize)?.scale === 1
+              ? "padrão"
+              : `${Math.round((FONT_SIZES.find((f) => f.id === fontSize)?.scale ?? 1) * 100)}% do tamanho base`}
+          </p>
+        </div>
+
         <div className="h-px bg-border mb-4" />
 
         {/* ── Paleta de Cor ───────────────────────────────── */}
@@ -65,7 +115,7 @@ export function ThemeSelector() {
             {PALETTES.map((p) => (
               <button
                 key={p.id}
-                onClick={() => setPalette(p.id)}
+                onClick={() => setPalette(p.id as PaletteId)}
                 title={p.name}
                 className={cn(
                   "relative w-9 h-9 rounded-full transition-all",
@@ -74,10 +124,7 @@ export function ThemeSelector() {
                     ? "ring-2 ring-offset-2 ring-offset-background scale-110"
                     : "ring-1 ring-black/10 dark:ring-white/10",
                 )}
-                style={{
-                  backgroundColor: p.color,
-                  ringColor: p.color,
-                }}
+                style={{ backgroundColor: p.color }}
               >
                 {palette === p.id && (
                   <Check
@@ -88,8 +135,6 @@ export function ThemeSelector() {
               </button>
             ))}
           </div>
-
-          {/* Nome da paleta ativa */}
           <p className="text-xs text-muted-foreground mt-2.5">
             {PALETTES.find((p) => p.id === palette)?.name}
           </p>
