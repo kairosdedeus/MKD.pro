@@ -104,6 +104,24 @@ const FUNCTION_COLORS: Record<
     border: "border-rose-500/20",
     pill: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30",
   },
+  Fotos: {
+    bg: "bg-sky-500/5",
+    text: "text-sky-600 dark:text-sky-400",
+    border: "border-sky-500/20",
+    pill: "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/30",
+  },
+  Videomaker: {
+    bg: "bg-indigo-500/5",
+    text: "text-indigo-600 dark:text-indigo-400",
+    border: "border-indigo-500/20",
+    pill: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/30",
+  },
+  Storymaker: {
+    bg: "bg-fuchsia-500/5",
+    text: "text-fuchsia-600 dark:text-fuchsia-400",
+    border: "border-fuchsia-500/20",
+    pill: "bg-fuchsia-500/10 text-fuchsia-600 dark:text-fuchsia-400 border-fuchsia-500/30",
+  },
 };
 
 const FUNCTION_ICONS: Record<string, string> = {
@@ -116,6 +134,9 @@ const FUNCTION_ICONS: Record<string, string> = {
   Projeção: "📽️",
   Som: "🔊",
   Transmissão: "📡",
+  Fotos: "📷",
+  Videomaker: "🎥",
+  Storymaker: "📱",
   Ministerial: "💃",
   Ballet: "🩰",
 };
@@ -131,8 +152,11 @@ const FUNCTION_ORDER: Record<string, number> = {
   "Projecao": 7,
   Som: 8,
   "Transmissao": 9,
-  Ministerial: 10,
-  Ballet: 11,
+  Fotos: 10,
+  Videomaker: 11,
+  Storymaker: 12,
+  Ministerial: 20,
+  Ballet: 21,
 };
 
 function getFunctionStyle(nome: string) {

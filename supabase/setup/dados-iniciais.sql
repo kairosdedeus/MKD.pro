@@ -42,7 +42,7 @@ ON CONFLICT DO NOTHING;
 
 -- 5. Funções de Mídia
 INSERT INTO team_functions (nome, team_type_id)
-SELECT unnest(ARRAY['Projeção','Som','Transmissão']), id
+SELECT unnest(ARRAY['Proje��o','Som','Transmiss�o','Fotos','Videomaker','Storymaker']), id
 FROM team_types WHERE codigo = 'midia'
 ON CONFLICT DO NOTHING;
 

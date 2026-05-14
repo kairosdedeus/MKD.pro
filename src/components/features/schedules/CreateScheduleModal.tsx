@@ -168,6 +168,24 @@ const FUNCTION_COLORS: Record<
     border: "border-rose-500/20",
     pill: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30",
   },
+  Fotos: {
+    bg: "bg-sky-500/5",
+    text: "text-sky-600 dark:text-sky-400",
+    border: "border-sky-500/20",
+    pill: "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/30",
+  },
+  Videomaker: {
+    bg: "bg-indigo-500/5",
+    text: "text-indigo-600 dark:text-indigo-400",
+    border: "border-indigo-500/20",
+    pill: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/30",
+  },
+  Storymaker: {
+    bg: "bg-fuchsia-500/5",
+    text: "text-fuchsia-600 dark:text-fuchsia-400",
+    border: "border-fuchsia-500/20",
+    pill: "bg-fuchsia-500/10 text-fuchsia-600 dark:text-fuchsia-400 border-fuchsia-500/30",
+  },
 };
 
 const FUNCTION_ICONS: Record<string, string> = {
@@ -180,6 +198,9 @@ const FUNCTION_ICONS: Record<string, string> = {
   Projeção: "📽️",
   Som: "🔊",
   Transmissão: "📡",
+  Fotos: "📷",
+  Videomaker: "🎥",
+  Storymaker: "📱",
   Ministerial: "💃",
   Ballet: "🩰",
 };
@@ -1139,11 +1160,29 @@ export function CreateScheduleModal({
                   {teamFunctions
                     .slice()
                     .sort((a, b) => {
-                      // Ordem: Vocal (0), BackVocal (1), demais (2+)
                       const getPriority = (nome: string) => {
-                        if (nome === "Vocal") return 0;
-                        if (nome === "BackVocal") return 1;
-                        return 2;
+                        const normalized = nome
+                          .normalize("NFD")
+                          .replace(/[\u0300-\u036f]/g, "")
+                          .toLowerCase();
+                        const order: Record<string, number> = {
+                          vocal: 0,
+                          backvocal: 1,
+                          baixo: 2,
+                          bateria: 3,
+                          guitarra: 4,
+                          teclado: 5,
+                          teclado2: 6,
+                          projecao: 10,
+                          som: 11,
+                          transmissao: 12,
+                          fotos: 13,
+                          videomaker: 14,
+                          storymaker: 15,
+                          ministerial: 20,
+                          ballet: 21,
+                        };
+                        return order[normalized] ?? 99;
                       };
                       const priorityA = getPriority(a.nome);
                       const priorityB = getPriority(b.nome);
@@ -1562,7 +1601,7 @@ export function CreateScheduleModal({
                       🎵 Músicas do Louvor
                     </Label>
                     <p className="text-xs text-amber-600/70 dark:text-amber-500/70 mt-0.5">
-                      Referência para a coreografia
+                      Referência para o ministério
                     </p>
                   </div>
                   <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">
@@ -1767,3 +1806,4 @@ export function CreateScheduleModal({
     </Dialog>
   );
 }
+
