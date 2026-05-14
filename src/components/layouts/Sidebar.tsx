@@ -47,6 +47,10 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
   );
   const canAccessSongs =
     isManagement || (isWorshipProfile && hasWorshipMembership);
+  const visibleManagementItems =
+    !isManagement && canAccessSongs
+      ? managementItems.filter((item) => item.href !== "/gerencial/musicas")
+      : managementItems;
 
   return (
     <div className="flex flex-col h-full sidebar-bg border-r">
@@ -82,7 +86,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
               Gerencial
             </h3>
             <div className="space-y-0.5">
-              {managementItems.map((item) => (
+              {visibleManagementItems.map((item) => (
                 <NavLink
                   key={item.name}
                   to={item.href}
