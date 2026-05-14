@@ -120,6 +120,21 @@ const FUNCTION_ICONS: Record<string, string> = {
   Ballet: "🩰",
 };
 
+const FUNCTION_ORDER: Record<string, number> = {
+  Vocal: 0,
+  BackVocal: 1,
+  Baixo: 2,
+  Bateria: 3,
+  Guitarra: 4,
+  Teclado: 5,
+  Teclado2: 6,
+  "Projecao": 7,
+  Som: 8,
+  "Transmissao": 9,
+  Ministerial: 10,
+  Ballet: 11,
+};
+
 function getFunctionStyle(nome: string) {
   return (
     FUNCTION_COLORS[nome] || {
@@ -300,6 +315,12 @@ export function WorshipFixedTeamModal({
       sensitivity: "base",
     }),
   );
+  const sortedFunctions = [...functions].sort((a, b) => {
+    const orderA = FUNCTION_ORDER[a.nome] ?? 999;
+    const orderB = FUNCTION_ORDER[b.nome] ?? 999;
+    if (orderA !== orderB) return orderA - orderB;
+    return a.nome.localeCompare(b.nome, "pt-BR", { sensitivity: "base" });
+  });
 
   useEffect(() => {
     if (!open) return;
@@ -444,14 +465,14 @@ export function WorshipFixedTeamModal({
                 Adicione membros na equipe de Louvor antes de criar uma equipe
                 padrão.
               </div>
-            ) : functions.length === 0 ? (
+            ) : sortedFunctions.length === 0 ? (
               <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
                 <Music className="h-8 w-8 mx-auto mb-2 opacity-40" />
                 Nenhuma função cadastrada para este tipo de equipe.
               </div>
             ) : (
               <div className="space-y-3">
-                {functions.map((fn) => {
+                {sortedFunctions.map((fn) => {
                   const style = getFunctionStyle(fn.nome);
                   const icon = FUNCTION_ICONS[fn.nome] || "🎵";
                   const assignedIds = assignments.get(fn.id) || [];
