@@ -9,18 +9,21 @@ const heroImage = `${assetBase}images/church-home-hero.png`;
 
 const pillars = [
   {
-    title: "Adoracao viva",
-    description: "Um ambiente para encontrar Deus com simplicidade, entrega e alegria.",
+    title: "Adoração viva",
+    description:
+      "Um ambiente para encontrar Deus com simplicidade, entrega e alegria.",
     icon: Music2,
   },
   {
     title: "Comunidade",
-    description: "Pessoas caminhando juntas, cuidando umas das outras e servindo com amor.",
+    description:
+      "Pessoas caminhando juntas, cuidando umas das outras e servindo com amor.",
     icon: UsersRound,
   },
   {
-    title: "Proposito",
-    description: "Ministerios, escalas e cuidado pastoral preparados para crescer com ordem.",
+    title: "Propósito",
+    description:
+      "Ministérios, escalas e cuidado pastoral preparados para crescer com ordem.",
     icon: Church,
   },
 ];
@@ -103,9 +106,9 @@ export function HomePage() {
             </h2>
           </div>
           <p className="text-base leading-7 text-white/68">
-            Por enquanto, esta pagina marca o inicio da expansao do sistema:
-            uma landing page publica para acolher visitantes, apresentar a
-            igreja e manter o acesso rapido para quem ja serve nos ministerios.
+            Por enquanto, esta pagina marca o inicio da expansao do sistema: uma
+            landing page publica para acolher visitantes, apresentar a igreja e
+            manter o acesso rapido para quem ja serve nos ministerios.
           </p>
         </div>
       </section>
