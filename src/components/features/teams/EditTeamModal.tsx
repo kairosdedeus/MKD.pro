@@ -162,25 +162,44 @@ export function EditTeamModal({
       // 2. Buscar membros atuais no banco
       const { data: currentTMs } = await (supabase as any)
         .from("team_members")
-        .select("id, user_id")
+        .select("id, user_id, ativo")
         .eq("team_id", team.id);
 
-      const currentUserIds = (currentTMs || []).map((tm: any) => tm.user_id);
+      const currentMembers = (currentTMs || []) as Array<{
+        id: string;
+        user_id: string;
+        ativo: boolean;
+      }>;
+      const currentUserIds = currentMembers.map((tm) => tm.user_id);
       const newUserIds = members.map((m) => m.userId);
 
       // 3. Remover membros que saíram
-      const toRemove = currentUserIds.filter(
-        (id: string) => !newUserIds.includes(id),
+      const toDeactivate = currentMembers.filter(
+        (tm) => !newUserIds.includes(tm.user_id) && tm.ativo,
       );
-      for (const userId of toRemove) {
-        const tm = currentTMs?.find((t: any) => t.user_id === userId);
-        if (tm) {
-          await (supabase as any)
-            .from("team_member_functions")
-            .delete()
-            .eq("team_member_id", tm.id);
-          await (supabase as any).from("team_members").delete().eq("id", tm.id);
-        }
+      if (toDeactivate.length > 0) {
+        const { error } = await (supabase as any)
+          .from("team_members")
+          .update({ ativo: false })
+          .in(
+            "id",
+            toDeactivate.map((tm) => tm.id),
+          );
+        if (error) throw error;
+      }
+
+      const toActivate = currentMembers.filter(
+        (tm) => newUserIds.includes(tm.user_id) && !tm.ativo,
+      );
+      if (toActivate.length > 0) {
+        const { error } = await (supabase as any)
+          .from("team_members")
+          .update({ ativo: true })
+          .in(
+            "id",
+            toActivate.map((tm) => tm.id),
+          );
+        if (error) throw error;
       }
 
       // 4. Adicionar novos membros
@@ -188,10 +207,7 @@ export function EditTeamModal({
       for (const userId of toAdd) {
         await (supabase as any)
           .from("team_members")
-          .upsert(
-            { team_id: team.id, user_id: userId, ativo: true },
-            { onConflict: "team_id,user_id", ignoreDuplicates: true },
-          );
+          .insert({ team_id: team.id, user_id: userId, ativo: true });
       }
 
       // 5. Atualizar funções de todos os membros

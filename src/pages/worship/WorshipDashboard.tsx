@@ -54,7 +54,7 @@ import {
   worshipFixedTeamService,
   WorshipFixedTeam,
 } from "@/services/worshipFixedTeamService";
-import { worshipAutoScheduleService } from "@/services/worshipAutoScheduleService";
+import { worshipAutoScheduleServiceV2 } from "@/services/worshipAutoScheduleServiceV2";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { WorshipIcon } from "@/components/shared/MinistryIcons";
@@ -592,7 +592,7 @@ export function WorshipDashboard() {
     if (!worshipTeam) return;
     try {
       setGenerating(true);
-      const result = await worshipAutoScheduleService.generateMonthly(
+      const result = await worshipAutoScheduleServiceV2.generateMonthly(
         worshipTeam.id,
         currentMonth,
       );

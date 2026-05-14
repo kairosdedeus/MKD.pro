@@ -67,6 +67,23 @@ export interface WorshipAutoScheduleResult {
   weekends: number;
 }
 
+function normalizeText(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+function getPresetCode(preset: WorshipFixedTeam) {
+  if (preset.codigo) return preset.codigo;
+
+  const normalized = normalizeText(preset.nome);
+  if (normalized === FIRST_WEEKEND_TEAM_CODE) return FIRST_WEEKEND_TEAM_CODE;
+  return TEAM_SEQUENCE.find((code) => normalized === code);
+}
+
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
@@ -184,10 +201,10 @@ function buildPresetMap(
 ): Map<string, WorshipFixedTeam> {
   return new Map(
     presets
-      .filter((preset): preset is WorshipFixedTeam & { codigo: string } =>
-        Boolean(preset.codigo),
-      )
-      .map((preset) => [preset.codigo, preset] as const),
+      .map((preset) => [getPresetCode(preset), preset] as const)
+      .filter((entry): entry is [string, WorshipFixedTeam] =>
+        Boolean(entry[0]),
+      ),
   );
 }
 

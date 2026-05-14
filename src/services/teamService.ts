@@ -42,7 +42,8 @@ export const teamService = {
         )
       `,
       )
-      .in("team_id", teamIds);
+      .in("team_id", teamIds)
+      .eq("ativo", true);
 
     if (membersError) console.error("Erro ao buscar membros:", membersError);
 
@@ -97,6 +98,7 @@ export const teamService = {
       `,
       )
       .eq("team_id", id)
+      .eq("ativo", true)
       .order("created_at");
 
     return {
@@ -168,10 +170,14 @@ export const teamService = {
   async addMember(teamId: string, userId: string) {
     const { data, error } = await supabase
       .from("team_members")
-      .insert({
-        team_id: teamId,
-        user_id: userId,
-      })
+      .upsert(
+        {
+          team_id: teamId,
+          user_id: userId,
+          ativo: true,
+        },
+        { onConflict: "team_id,user_id" },
+      )
       .select()
       .single();
 
@@ -182,7 +188,7 @@ export const teamService = {
   async removeMember(memberId: string) {
     const { error } = await supabase
       .from("team_members")
-      .delete()
+      .update({ ativo: false })
       .eq("id", memberId);
 
     if (error) throw error;

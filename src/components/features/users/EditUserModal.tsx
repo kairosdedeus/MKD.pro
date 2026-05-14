@@ -288,20 +288,70 @@ export function EditUserModal({
         })),
       );
 
-      // 4. Atualizar equipes
-      await (supabase as any)
+      // 4. Atualizar equipes preservando team_members.id.
+      // As escalas apontam para team_members.id; apagar e recriar esse vínculo
+      // quebra o histórico de escalas quando nome/email do usuário muda.
+      const { data: currentTeamMemberships, error: membershipsError } = await (
+        supabase as any
+      )
         .from("team_members")
-        .delete()
+        .select("id, team_id, ativo")
         .eq("user_id", user.id);
-      if (selectedTeamIds.length > 0) {
-        await (supabase as any).from("team_members").upsert(
-          selectedTeamIds.map((teamId) => ({
+
+      if (membershipsError) throw membershipsError;
+
+      const currentMemberships = (currentTeamMemberships || []) as Array<{
+        id: string;
+        team_id: string;
+        ativo: boolean;
+      }>;
+      const selectedTeamIdSet = new Set(selectedTeamIds);
+      const currentTeamIdSet = new Set(
+        currentMemberships.map((membership) => membership.team_id),
+      );
+
+      const membershipsToActivate = currentMemberships.filter(
+        (membership) =>
+          selectedTeamIdSet.has(membership.team_id) && !membership.ativo,
+      );
+      const membershipsToDeactivate = currentMemberships.filter(
+        (membership) => !selectedTeamIdSet.has(membership.team_id),
+      );
+      const teamsToAdd = selectedTeamIds.filter(
+        (teamId) => !currentTeamIdSet.has(teamId),
+      );
+
+      if (membershipsToActivate.length > 0) {
+        const { error } = await (supabase as any)
+          .from("team_members")
+          .update({ ativo: true })
+          .in(
+            "id",
+            membershipsToActivate.map((membership) => membership.id),
+          );
+        if (error) throw error;
+      }
+
+      if (membershipsToDeactivate.length > 0) {
+        const { error } = await (supabase as any)
+          .from("team_members")
+          .update({ ativo: false })
+          .in(
+            "id",
+            membershipsToDeactivate.map((membership) => membership.id),
+          );
+        if (error) throw error;
+      }
+
+      if (teamsToAdd.length > 0) {
+        const { error } = await (supabase as any).from("team_members").insert(
+          teamsToAdd.map((teamId) => ({
             team_id: teamId,
             user_id: user.id,
             ativo: true,
           })),
-          { onConflict: "team_id,user_id", ignoreDuplicates: true },
         );
+        if (error) throw error;
       }
 
       toast({
