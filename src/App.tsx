@@ -231,6 +231,7 @@ function App() {
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
         </Suspense>
+        <GlobalYoutubeMiniplayer />
         <Toaster />
       </>
     );
@@ -359,6 +360,7 @@ function App() {
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      <GlobalYoutubeMiniplayer />
       <Toaster />
     </>
   );

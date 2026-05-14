@@ -85,7 +85,7 @@ async function testBasicConnection() {
   console.log('\n🔌 2. Testando conexão básica...')
   
   try {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('profiles')
       .select('count')
       .limit(1)
@@ -326,7 +326,7 @@ async function testRLS() {
     const tables = ['users_profile', 'teams', 'schedules', 'songs']
     
     for (const table of tables) {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from(table)
         .select('count')
         .limit(1)

@@ -184,8 +184,10 @@ function buildPresetMap(
 ): Map<string, WorshipFixedTeam> {
   return new Map(
     presets
-      .map((preset) => [preset.codigo, preset] as const)
-      .filter(([codigo]) => Boolean(codigo)),
+      .filter((preset): preset is WorshipFixedTeam & { codigo: string } =>
+        Boolean(preset.codigo),
+      )
+      .map((preset) => [preset.codigo, preset] as const),
   );
 }
 
@@ -214,7 +216,7 @@ function getMemberById(members: TeamMember[], id: string): TeamMember {
  * Busca IDs dos membros com funções fixas
  * Usa tabela de mapeamento em vez de emails
  */
-async function getFixedFunctionAssignments(teamId: string): Promise<{
+async function getFixedFunctionAssignments(_teamId: string): Promise<{
   tecladoMemberId: string;
   guitarraMemberId: string;
 }> {
@@ -606,10 +608,6 @@ export const worshipAutoScheduleServiceV2 = {
           skipped += 1;
           continue;
         }
-
-        // Buscar nomes para as notas (apenas para exibição)
-        const drummerMember = getMemberById(members, drummerRule.teamMemberId);
-        const bassistMember = getMemberById(members, bassistRule.teamMemberId);
 
         await scheduleService.createSchedule({
           team_id: teamId,

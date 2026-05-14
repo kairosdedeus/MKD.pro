@@ -334,7 +334,6 @@ export const worshipAutoScheduleService = {
     const monthStart = startOfMonth(monthDate);
     const monthEnd = endOfMonth(monthDate);
     const monthStartText = format(monthStart, "yyyy-MM-dd");
-    const monthEndText = format(monthEnd, "yyyy-MM-dd");
     const weekendBlocks = buildWeekendBlocks(monthDate);
     const continuity = await loadContinuityState(
       teamId,

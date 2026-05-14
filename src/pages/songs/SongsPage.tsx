@@ -71,28 +71,6 @@ import { cn } from "@/lib/utils";
 type SortField = "name" | "artist" | "original_key";
 type SortDir = "asc" | "desc";
 
-const KEYS = [
-  "C",
-  "C#",
-  "D",
-  "D#",
-  "E",
-  "F",
-  "F#",
-  "G",
-  "G#",
-  "A",
-  "A#",
-  "B",
-  "Cm",
-  "Dm",
-  "Em",
-  "Fm",
-  "Gm",
-  "Am",
-  "Bm",
-];
-
 // ── Seção colapsável (mesma proposta do Louvor) ───────────────
 function Section({
   icon: Icon,

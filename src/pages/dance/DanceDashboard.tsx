@@ -16,9 +16,6 @@ import {
   Home,
   PersonStanding,
   Music2,
-  Headphones,
-  Laptop,
-  ExternalLink,
 } from "lucide-react";
 import { CreateScheduleModal } from "@/components/features/schedules/CreateScheduleModal";
 import { ScheduleDetailModal } from "@/components/features/schedules/ScheduleDetailModal";
@@ -58,7 +55,7 @@ import {
   getDay,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Schedule } from "@/types";
+import { Schedule, ScheduleMember } from "@/types";
 import { useToast } from "@/components/ui/use-toast";
 import { isGerencial, isLeader } from "@/lib/permissions";
 import { useAuthStore } from "@/stores/authStore";
@@ -126,7 +123,7 @@ function buildWhatsAppText(
     // Listar dançarinos de cada escala
     ss.forEach((s) => {
       const members = (s.members || [])
-        .map((m) => m.team_member?.user?.nome?.split(" ")[0])
+        .map((m: ScheduleMember) => m.team_member?.user?.nome?.split(" ")[0])
         .filter(Boolean);
       if (members.length > 0) {
         lines.push(`💃 ${members.join(", ")}`);
@@ -482,7 +479,7 @@ export function DanceDashboard() {
                   !!user &&
                   daySchedules.some((s) =>
                     (s.members || []).some(
-                      (m) =>
+                      (m: ScheduleMember) =>
                         m.team_member?.user?.id === user.id ||
                         (m.team_member as any)?.user_id === user.id,
                     ),

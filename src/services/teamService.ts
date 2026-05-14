@@ -1,19 +1,6 @@
 import { supabase } from "@/lib/supabaseClient";
 import { TeamFormData, Team, TeamType, TeamFunction } from "@/types";
 
-// Normaliza os membros para que functions seja um array plano
-function normalizeTeam(team: any): Team {
-  return {
-    ...team,
-    members: (team.members || []).map((m: any) => ({
-      ...m,
-      functions: (m.functions || [])
-        .map((f: any) => f.function)
-        .filter(Boolean),
-    })),
-  };
-}
-
 export const teamService = {
   async getTeamTypes() {
     const { data, error } = await supabase

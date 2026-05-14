@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabaseClient";
-import { Schedule, ScheduleFormData } from "@/types";
+import { ScheduleFormData } from "@/types";
 import { startOfMonth, endOfMonth } from "date-fns";
 import { notificationService } from "@/services/notificationService";
 
@@ -258,7 +258,7 @@ export const scheduleService = {
    */
   async _insertScheduleSongs(
     scheduleId: string,
-    songs: ScheduleFormData["songs"],
+    songs: NonNullable<ScheduleFormData["songs"]>,
   ) {
     const songsData = songs.map((song) => ({
       schedule_id: scheduleId,
@@ -537,7 +537,7 @@ export const scheduleService = {
 
     if (error) throw error;
 
-    return (data || []) as Array<{
+    return (data || []) as unknown as Array<{
       id: string;
       date: string;
       title: string | null;
