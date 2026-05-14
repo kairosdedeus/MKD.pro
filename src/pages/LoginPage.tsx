@@ -1,5 +1,5 @@
 ﻿import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/stores/authStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +23,7 @@ export function LoginPage() {
     setLoading(true);
     try {
       await login(email, password);
-      navigate("/");
+      navigate("/app");
     } catch (err: any) {
       toast({
         variant: "destructive",
@@ -38,7 +38,13 @@ export function LoginPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Barra superior com seletor de tema */}
-      <div className="flex justify-end p-4">
+      <div className="flex items-center justify-between p-4">
+        <Link
+          to="/"
+          className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+        >
+          Home
+        </Link>
         <ThemeSelector />
       </div>
 
