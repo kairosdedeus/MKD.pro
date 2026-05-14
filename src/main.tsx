@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { Navigate, Route, Routes } from 'react-router-dom'
 import './index.css'
 
 const routerBaseName = ['/', './'].includes(import.meta.env.BASE_URL)
@@ -42,7 +43,18 @@ function render(element: React.ReactNode) {
 
 async function bootstrap() {
   if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
-    render(<MissingEnvironment />)
+    const { HomePage } = await import('./pages/HomePage')
+
+    render(
+      <BrowserRouter basename={routerBaseName}>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<MissingEnvironment />} />
+          <Route path="/app" element={<MissingEnvironment />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>,
+    )
     return
   }
 

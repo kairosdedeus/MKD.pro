@@ -21,6 +21,9 @@ function GlobalYoutubeMiniplayer() {
 const LoginPage = lazy(() =>
   import("./pages/LoginPage").then((m) => ({ default: m.LoginPage })),
 );
+const HomePage = lazy(() =>
+  import("./pages/HomePage").then((m) => ({ default: m.HomePage })),
+);
 const TestConnectionPage = lazy(() =>
   import("./pages/TestConnectionPage").then((m) => ({
     default: m.TestConnectionPage,
@@ -222,11 +225,13 @@ function App() {
       <>
         <Suspense fallback={<PageLoader />}>
           <Routes>
+            <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/test-connection" element={<TestConnectionPage />} />
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
         </Suspense>
+        <GlobalYoutubeMiniplayer />
         <Toaster />
       </>
     );
@@ -235,8 +240,17 @@ function App() {
   return (
     <>
       <Routes>
+        <Route
+          path="/"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <HomePage />
+            </Suspense>
+          }
+        />
+        <Route path="/login" element={<Navigate to="/app" replace />} />
         <Route path="/" element={<DashboardLayout />}>
-          <Route index element={<DefaultRedirect />} />
+          <Route path="app" element={<DefaultRedirect />} />
           <Route
             path="gerencial"
             element={
@@ -346,6 +360,7 @@ function App() {
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      <GlobalYoutubeMiniplayer />
       <Toaster />
     </>
   );

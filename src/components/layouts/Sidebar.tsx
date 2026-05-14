@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -12,11 +12,6 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/stores/authStore";
 import { useTeams } from "@/hooks/useTeams";
-import {
-  TEAM_TYPE_ICONS,
-  TEAM_TYPE_LABELS,
-  TEAM_TYPE_ROUTES,
-} from "@/lib/team-flow";
 
 const managementItems = [
   { name: "Dashboard", href: "/gerencial", icon: LayoutDashboard },
@@ -52,34 +47,6 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
   );
   const canAccessSongs =
     isManagement || (isWorshipProfile && hasWorshipMembership);
-
-  const ministryItems = useMemo(() => {
-    const visibleTeams = (teams as any[]).filter((team: any) => {
-      if (!team.team_type?.codigo) return false;
-      if (isManagement) return true;
-      return (team.members || []).some(
-        (member: any) => member.user_id === user?.id,
-      );
-    });
-
-    const byType = new Map<string, any[]>();
-    visibleTeams.forEach((team: any) => {
-      const code = team.team_type.codigo;
-      byType.set(code, [...(byType.get(code) || []), team]);
-    });
-
-    return Array.from(byType.entries()).map(([code, groupedTeams]) => {
-      const Icon = TEAM_TYPE_ICONS[code] || UsersRound;
-      return {
-        code,
-        name:
-          TEAM_TYPE_LABELS[code] || groupedTeams[0]?.team_type?.nome || code,
-        href: TEAM_TYPE_ROUTES[code] || `/${code}`,
-        icon: Icon,
-        teams: groupedTeams,
-      };
-    });
-  }, [teams, user?.id, isManagement]);
 
   return (
     <div className="flex flex-col h-full sidebar-bg border-r">

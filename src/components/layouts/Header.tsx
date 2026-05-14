@@ -1,11 +1,12 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/stores/authStore";
 import { Button } from "@/components/ui/button";
 import { LogoCompact } from "@/components/shared/Logo";
 import {
   LogOut,
+  Home,
   User,
   KeyRound,
   ChevronDown,
@@ -339,6 +340,16 @@ export function Header() {
             </div>
 
             <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
+              <Button
+                asChild
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 rounded-full"
+              >
+                <Link to="/" aria-label="Ir para Home">
+                  <Home className="h-4 w-4" />
+                </Link>
+              </Button>
               <div className="flex">
                 <ThemeSelector />
               </div>

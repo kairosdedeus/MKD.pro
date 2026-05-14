@@ -25,7 +25,6 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import {
   generateEmailPrefix,
-  getAvailableGeneratedEmail,
   isDuplicateGeneratedEmailError,
 } from "@/lib/user-email";
 import { CheckCircle2, XCircle, Loader2 } from "lucide-react";

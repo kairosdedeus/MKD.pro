@@ -478,7 +478,7 @@ export function WorshipDashboard() {
   const [deletingSchedule, setDeletingSchedule] = useState<Schedule | null>(
     null,
   );
-  const [selectedFixedTeamId, setSelectedFixedTeamId] = useState<string | null>(
+  const [, setSelectedFixedTeamId] = useState<string | null>(
     null,
   );
   const [fixedTeams, setFixedTeams] = useState<WorshipFixedTeam[]>([]);

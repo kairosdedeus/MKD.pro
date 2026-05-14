@@ -3,7 +3,6 @@ import {
   Plus,
   Users as UsersIcon,
   Pencil,
-  Trash2,
   MoreVertical,
   PowerOff,
 } from "lucide-react";

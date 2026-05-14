@@ -35,7 +35,7 @@ export function formatPhone(value: string): string {
 }
 
 export function usePhoneMask(
-  value: string,
+  _value: string,
   onChange: (value: string) => void
 ) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

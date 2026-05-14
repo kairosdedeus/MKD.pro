@@ -17,6 +17,7 @@ export interface WorshipFixedTeam {
   id: string
   team_id: string
   nome: string
+  codigo?: string | null
   ativo: boolean
   members: WorshipFixedTeamMember[]
 }

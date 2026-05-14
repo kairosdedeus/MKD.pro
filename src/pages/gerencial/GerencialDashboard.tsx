@@ -54,7 +54,7 @@ export function GerencialDashboard() {
 
   const topMembers = useMemo(() => {
     const map: Record<string, { nome: string; count: number }> = {}
-    schedules.forEach(s => s.members?.forEach(m => {
+    schedules.forEach(s => s.members?.forEach((m: typeof s.members[number]) => {
       const nome = m.team_member?.user?.nome || 'Desconhecido'
       const id = m.team_member_id
       if (!map[id]) map[id] = { nome, count: 0 }
