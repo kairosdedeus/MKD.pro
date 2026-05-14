@@ -71,6 +71,18 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   completed: { label: "Concluída", color: "bg-primary/15 text-primary" },
 };
 
+function getScheduleMemberUserId(member: ScheduleMember) {
+  return member.team_member?.user_id || member.team_member?.user?.id;
+}
+
+function getScheduleMemberName(member: ScheduleMember) {
+  return member.team_member?.user?.nome || "Membro removido";
+}
+
+function isScheduleMemberUser(member: ScheduleMember, userId?: string) {
+  return !!userId && getScheduleMemberUserId(member) === userId;
+}
+
 function groupSchedulesByWeekend(schedules: Schedule[]) {
   const groups = new Map<string, Schedule[]>();
   schedules.forEach((s) => {
@@ -123,7 +135,7 @@ function buildWhatsAppText(
     // Listar dançarinos de cada escala
     ss.forEach((s) => {
       const members = (s.members || [])
-        .map((m: ScheduleMember) => m.team_member?.user?.nome?.split(" ")[0])
+        .map((m: ScheduleMember) => getScheduleMemberName(m).split(" ")[0])
         .filter(Boolean);
       if (members.length > 0) {
         lines.push(`💃 ${members.join(", ")}`);
@@ -256,7 +268,7 @@ function ScheduleCard({
             >
               <PersonStanding className="h-3 w-3 text-primary flex-shrink-0" />
               <span className="text-xs font-medium">
-                {(m.team_member?.user?.nome || "").split(" ")[0]}
+                {getScheduleMemberName(m).split(" ")[0]}
               </span>
             </div>
           ))}
@@ -479,9 +491,7 @@ export function DanceDashboard() {
                   !!user &&
                   daySchedules.some((s) =>
                     (s.members || []).some(
-                      (m: ScheduleMember) =>
-                        m.team_member?.user?.id === user.id ||
-                        (m.team_member as any)?.user_id === user.id,
+                      (m: ScheduleMember) => isScheduleMemberUser(m, user.id),
                     ),
                   );
 
@@ -641,24 +651,61 @@ export function DanceDashboard() {
                 )}
               </CollapsibleSection>
 
-              {/* Indicador de músicas do Louvor — detalhes na modal da escala */}
+              {/* Musicas do Louvor no dia selecionado */}
               {selectedDayWorship.schedules.length > 0 && (
-                <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-3 flex items-center gap-2.5">
-                  <Music2 className="h-4 w-4 text-amber-500 flex-shrink-0" />
-                  <p className="text-sm text-amber-700 dark:text-amber-400">
-                    {selectedDayWorship.songs.length > 0 ? (
-                      <>
-                        O Louvor tem{" "}
-                        <strong>
-                          {selectedDayWorship.songs.length} música
-                          {selectedDayWorship.songs.length !== 1 ? "s" : ""}
-                        </strong>{" "}
-                        neste dia. Abra a escala para ver.
-                      </>
-                    ) : (
-                      "O Louvor tem escala neste dia mas ainda não adicionou músicas."
-                    )}
-                  </p>
+                <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-3">
+                  <div className="mb-2 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5">
+                      <Music2 className="h-4 w-4 text-amber-500 flex-shrink-0" />
+                      <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">
+                        Musicas do Louvor
+                      </p>
+                    </div>
+                    <span className="text-xs font-medium text-amber-600 dark:text-amber-400">
+                      {selectedDayWorship.songs.length} musica
+                      {selectedDayWorship.songs.length !== 1 ? "s" : ""}
+                    </span>
+                  </div>
+
+                  {selectedDayWorship.songs.length > 0 ? (
+                    <div className="space-y-1.5">
+                      {selectedDayWorship.songs.map((ss, index) => {
+                        const song = ss.song;
+                        const songKey = ss.execution_key || song.original_key;
+
+                        return (
+                          <div
+                            key={`${song.id}-${index}`}
+                            className="flex items-center gap-2 rounded-lg border border-amber-500/10 bg-card/80 px-2.5 py-2"
+                          >
+                            <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md bg-amber-500/10 text-xs font-bold text-amber-600 dark:text-amber-400">
+                              {index + 1}
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-medium text-foreground">
+                                {song.name}
+                              </p>
+                              {song.artist && (
+                                <p className="truncate text-xs text-muted-foreground">
+                                  {song.artist}
+                                </p>
+                              )}
+                            </div>
+                            {songKey && (
+                              <span className="rounded-md bg-amber-500/10 px-2 py-0.5 text-xs font-semibold text-amber-600 dark:text-amber-400">
+                                {songKey}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-amber-700 dark:text-amber-400">
+                      O Louvor tem escala neste dia mas ainda nao adicionou
+                      musicas.
+                    </p>
+                  )}
                 </div>
               )}
             </div>
@@ -688,9 +735,7 @@ export function DanceDashboard() {
                       !!user &&
                       ss.some((s) =>
                         (s.members || []).some(
-                          (m) =>
-                            m.team_member?.user?.id === user.id ||
-                            (m.team_member as any)?.user_id === user.id,
+                          (m) => isScheduleMemberUser(m, user.id),
                         ),
                       );
 
@@ -815,9 +860,7 @@ export function DanceDashboard() {
                             const isUserInSchedule =
                               !!user &&
                               (s.members || []).some(
-                                (m) =>
-                                  m.team_member?.user?.id === user.id ||
-                                  (m.team_member as any)?.user_id === user.id,
+                                (m) => isScheduleMemberUser(m, user.id),
                               );
                             return (
                               <div
