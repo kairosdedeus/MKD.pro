@@ -1,6 +1,15 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Church, Heart, Music2, UsersRound } from "lucide-react";
+import {
+  ArrowRight,
+  Church,
+  Heart,
+  LayoutDashboard,
+  Music2,
+  UserCircle,
+  UsersRound,
+} from "lucide-react";
 import { Logo } from "@/components/shared/Logo";
+import { UserProfile } from "@/types";
 
 const assetBase = import.meta.env.BASE_URL.endsWith("/")
   ? import.meta.env.BASE_URL
@@ -28,7 +37,14 @@ const pillars = [
   },
 ];
 
-export function HomePage() {
+interface HomePageProps {
+  user?: UserProfile | null;
+}
+
+export function HomePage({ user = null }: HomePageProps) {
+  const firstName = user?.nome?.trim().split(/\s+/)[0];
+  const accessPath = user ? "/app" : "/login";
+
   return (
     <main className="min-h-screen bg-[#050505] text-white">
       <section className="relative min-h-[92svh] overflow-hidden">
@@ -50,11 +66,23 @@ export function HomePage() {
             </Link>
 
             <Link
-              to="/login"
+              to={accessPath}
               className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-white px-4 text-sm font-semibold text-black transition hover:bg-[#29ABD4] hover:text-white focus:outline-none focus:ring-2 focus:ring-[#29ABD4] focus:ring-offset-2 focus:ring-offset-black"
             >
-              Entrar
-              <ArrowRight className="h-4 w-4" />
+              {user ? (
+                <>
+                  <UserCircle className="h-4 w-4" />
+                  <span className="hidden sm:inline">
+                    {firstName ? `Ola, ${firstName}` : "Area do membro"}
+                  </span>
+                  <span className="sm:hidden">Membro</span>
+                </>
+              ) : (
+                <>
+                  Entrar
+                  <ArrowRight className="h-4 w-4" />
+                </>
+              )}
             </Link>
           </header>
 
@@ -74,11 +102,20 @@ export function HomePage() {
               </p>
               <div className="mt-7 flex flex-col gap-3 sm:flex-row">
                 <Link
-                  to="/login"
+                  to={accessPath}
                   className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-[#29ABD4] px-5 text-sm font-bold text-white shadow-[0_16px_44px_rgba(41,171,212,0.24)] transition hover:bg-[#238fb2] focus:outline-none focus:ring-2 focus:ring-[#29ABD4] focus:ring-offset-2 focus:ring-offset-black"
                 >
-                  Acessar sistema
-                  <ArrowRight className="h-4 w-4" />
+                  {user ? (
+                    <>
+                      Meu dashboard
+                      <LayoutDashboard className="h-4 w-4" />
+                    </>
+                  ) : (
+                    <>
+                      Acessar sistema
+                      <ArrowRight className="h-4 w-4" />
+                    </>
+                  )}
                 </Link>
                 <a
                   href="#construcao"

@@ -225,7 +225,7 @@ function App() {
       <>
         <Suspense fallback={<PageLoader />}>
           <Routes>
-            <Route path="/" element={<HomePage />} />
+            <Route path="/" element={<HomePage user={user} />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/test-connection" element={<TestConnectionPage />} />
             <Route path="*" element={<Navigate to="/login" replace />} />
@@ -244,7 +244,7 @@ function App() {
           path="/"
           element={
             <Suspense fallback={<PageLoader />}>
-              <HomePage />
+              <HomePage user={user} />
             </Suspense>
           }
         />
