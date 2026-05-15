@@ -4,7 +4,12 @@ import { Header } from "./Header";
 import { Breadcrumbs } from "@/components/shared/Breadcrumbs";
 
 // Rotas que não mostram breadcrumb (têm UI própria)
-const NO_BREADCRUMB = ["/louvor", "/gerencial/musicas"];
+const NO_BREADCRUMB = [
+  "/louvor",
+  "/gerencial/musicas",
+  "/gerencial/equipes",
+  "/gerencial/usuarios",
+];
 
 export function DashboardLayout() {
   const { pathname } = useLocation();
