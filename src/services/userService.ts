@@ -7,7 +7,6 @@ export const userService = {
     const { data, error } = await supabase
       .from('users_profile')
       .select('*')
-      .eq('ativo', true)
       .order('nome')
 
     if (error) throw error

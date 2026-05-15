@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Plus,
   User,
@@ -9,6 +9,8 @@ import {
   Power,
   KeyRound,
   History,
+  Search,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,6 +49,13 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Pagination, usePagination } from "@/components/shared/Pagination";
@@ -77,13 +86,42 @@ export function UsersPage() {
   const [newPassword, setNewPassword] = useState("");
   const [resetting, setResetting] = useState(false);
   const [processing, setProcessing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<
+    "todos" | "ativos" | "inativos"
+  >("todos");
+
+  const filteredUsers = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+
+    return (users || []).filter((user) => {
+      const matchesStatus =
+        statusFilter === "todos" ||
+        (statusFilter === "ativos" && user.ativo) ||
+        (statusFilter === "inativos" && !user.ativo);
+
+      if (!matchesStatus) return false;
+      if (!query) return true;
+
+      return [user.nome, user.email, user.telefone || ""].some((value) =>
+        value.toLowerCase().includes(query),
+      );
+    });
+  }, [searchQuery, statusFilter, users]);
 
   const {
     currentPage,
     totalPages,
     paginatedItems: pagedUsers,
     goToPage,
-  } = usePagination(users || [], 10);
+    reset,
+  } = usePagination(filteredUsers, 10);
+
+  useEffect(() => {
+    reset();
+  }, [searchQuery, statusFilter]);
+
+  const hasActiveFilter = !!searchQuery.trim() || statusFilter !== "todos";
 
   // ── Excluir ──────────────────────────────────────────────────────────────
   const handleDelete = async () => {
@@ -300,126 +338,186 @@ export function UsersPage() {
           <CardTitle className="flex items-center justify-between gap-3">
             <span>Todos os Usuários</span>
             <span className="text-sm font-normal text-muted-foreground">
-              {users?.length || 0} usuário(s)
+              {filteredUsers.length} de {users?.length || 0} usuario(s)
             </span>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {users && users.length > 0 ? (
-            <div className="table-responsive">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead className="hide-mobile">Email / Login</TableHead>
-                    <TableHead className="hide-mobile">Telefone</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="w-12" />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {pagedUsers.map((user) => (
-                    <TableRow
-                      key={user.id}
-                      className={!user.ativo ? "opacity-50" : ""}
-                    >
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <div
-                            className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0 ${
-                              user.ativo
-                                ? "bg-primary/15 text-primary"
-                                : "bg-muted text-muted-foreground"
-                            }`}
-                          >
-                            {user.nome.charAt(0).toUpperCase()}
-                          </div>
-                          <div className="min-w-0">
-                            <span className="font-medium block truncate">
-                              {user.nome}
-                            </span>
-                            <span className="text-xs text-muted-foreground sm:hidden truncate block">
-                              {user.email}
-                            </span>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-sm hide-mobile">
-                        {user.email}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-sm hide-mobile">
-                        {user.telefone || "—"}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={user.ativo ? "default" : "secondary"}>
-                          {user.ativo ? "Ativo" : "Inativo"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                            >
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48">
-                            <DropdownMenuLabel className="text-xs text-muted-foreground">
-                              Ações
-                            </DropdownMenuLabel>
-                            <DropdownMenuItem
-                              onClick={() => setEditingUser(user)}
-                            >
-                              <Pencil className="h-4 w-4 mr-2" /> Editar
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleViewHistory(user)}
-                            >
-                              <History className="h-4 w-4 mr-2" /> Histórico de
-                              Escalas
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setResetPasswordUser(user);
-                                setNewPassword("");
-                              }}
-                            >
-                              <KeyRound className="h-4 w-4 mr-2 text-amber-600" />{" "}
-                              Redefinir Senha
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() => setDeactivatingUser(user)}
-                            >
-                              {user.ativo ? (
-                                <>
-                                  <PowerOff className="h-4 w-4 mr-2 text-orange-500" />{" "}
-                                  Desativar
-                                </>
-                              ) : (
-                                <>
-                                  <Power className="h-4 w-4 mr-2 text-green-600" />{" "}
-                                  Reativar
-                                </>
-                              )}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="text-red-600 focus:text-red-600"
-                              onClick={() => setDeletingUser(user)}
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" /> Excluir
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Buscar por nome, email/login ou telefone"
+                className="h-9 pl-9 pr-9"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-2 top-2 rounded-md p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
             </div>
+            <Select
+              value={statusFilter}
+              onValueChange={(value) =>
+                setStatusFilter(value as "todos" | "ativos" | "inativos")
+              }
+            >
+              <SelectTrigger className="h-9 w-full sm:w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos</SelectItem>
+                <SelectItem value="ativos">Ativos</SelectItem>
+                <SelectItem value="inativos">Inativos</SelectItem>
+              </SelectContent>
+            </Select>
+            {hasActiveFilter && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-9 gap-1.5 px-3"
+                onClick={() => {
+                  setSearchQuery("");
+                  setStatusFilter("todos");
+                }}
+              >
+                <X className="h-3.5 w-3.5" />
+                Limpar
+              </Button>
+            )}
+          </div>
+          {users && users.length > 0 ? (
+            filteredUsers.length === 0 ? (
+              <EmptyState
+                icon={Search}
+                title="Nenhum usuario encontrado"
+                description="Ajuste os filtros para ver mais resultados."
+              />
+            ) : (
+              <div className="table-responsive">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead className="hide-mobile">
+                        Email / Login
+                      </TableHead>
+                      <TableHead className="hide-mobile">Telefone</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="w-12" />
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {pagedUsers.map((user) => (
+                      <TableRow
+                        key={user.id}
+                        className={!user.ativo ? "opacity-50" : ""}
+                      >
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <div
+                              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0 ${
+                                user.ativo
+                                  ? "bg-primary/15 text-primary"
+                                  : "bg-muted text-muted-foreground"
+                              }`}
+                            >
+                              {user.nome.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="min-w-0">
+                              <span className="font-medium block truncate">
+                                {user.nome}
+                              </span>
+                              <span className="text-xs text-muted-foreground sm:hidden truncate block">
+                                {user.email}
+                              </span>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-sm hide-mobile">
+                          {user.email}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-sm hide-mobile">
+                          {user.telefone || "—"}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={user.ativo ? "default" : "secondary"}>
+                            {user.ativo ? "Ativo" : "Inativo"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                              >
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48">
+                              <DropdownMenuLabel className="text-xs text-muted-foreground">
+                                Ações
+                              </DropdownMenuLabel>
+                              <DropdownMenuItem
+                                onClick={() => setEditingUser(user)}
+                              >
+                                <Pencil className="h-4 w-4 mr-2" /> Editar
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleViewHistory(user)}
+                              >
+                                <History className="h-4 w-4 mr-2" /> Histórico
+                                de Escalas
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setResetPasswordUser(user);
+                                  setNewPassword("");
+                                }}
+                              >
+                                <KeyRound className="h-4 w-4 mr-2 text-amber-600" />{" "}
+                                Redefinir Senha
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => setDeactivatingUser(user)}
+                              >
+                                {user.ativo ? (
+                                  <>
+                                    <PowerOff className="h-4 w-4 mr-2 text-orange-500" />{" "}
+                                    Desativar
+                                  </>
+                                ) : (
+                                  <>
+                                    <Power className="h-4 w-4 mr-2 text-green-600" />{" "}
+                                    Reativar
+                                  </>
+                                )}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-red-600 focus:text-red-600"
+                                onClick={() => setDeletingUser(user)}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" /> Excluir
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )
           ) : (
             <EmptyState
               icon={User}
@@ -434,7 +532,7 @@ export function UsersPage() {
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
-            totalItems={users?.length || 0}
+            totalItems={filteredUsers.length}
             pageSize={10}
             onPageChange={goToPage}
           />
