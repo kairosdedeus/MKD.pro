@@ -14,6 +14,7 @@ import {
   Eye,
   FileText,
   Home,
+  Paintbrush,
   MonitorPlay,
   Music2,
 } from "lucide-react";
@@ -42,6 +43,7 @@ import { useTeams } from "@/hooks/useTeams";
 import { scheduleService } from "@/services/scheduleService";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { HomeContentEditor } from "@/components/features/home/HomeContentEditor";
 import { MediaIcon } from "@/components/shared/MinistryIcons";
 import {
   format,
@@ -290,6 +292,7 @@ export function MediaDashboard() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showWhatsApp, setShowWhatsApp] = useState(false);
+  const [showHomeEditor, setShowHomeEditor] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(
     null,
   );
@@ -417,6 +420,16 @@ export function MediaDashboard() {
         </div>
         {canManage && (
           <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 gap-1.5 rounded-full px-2.5 text-xs sm:rounded-md sm:px-3"
+              onClick={() => setShowHomeEditor(true)}
+            >
+              <Paintbrush className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Editar Home</span>
+              <span className="sm:hidden">Home</span>
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -1179,6 +1192,20 @@ export function MediaDashboard() {
               Copiar texto
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showHomeEditor} onOpenChange={setShowHomeEditor}>
+        <DialogContent className="max-h-[88svh] max-w-5xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-sm font-semibold">
+              <Paintbrush className="h-4 w-4 text-primary" />
+              Editar Home
+            </DialogTitle>
+          </DialogHeader>
+          <div data-dialog-body="" className="px-4 py-4">
+            <HomeContentEditor onSaved={() => setShowHomeEditor(false)} />
+          </div>
         </DialogContent>
       </Dialog>
     </div>
