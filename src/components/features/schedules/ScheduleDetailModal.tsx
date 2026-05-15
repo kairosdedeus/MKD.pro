@@ -262,24 +262,79 @@ export function ScheduleDetailModal({
   };
 
   // ── WhatsApp ──────────────────────────────────────────────────
+  function getMemberRowsByFunction(targetSchedule: Schedule) {
+    const groups = new Map<string, string[]>();
+
+    (targetSchedule.members || []).forEach((member) => {
+      const memberName = member.team_member?.user?.nome || "Sem nome";
+      const functions = member.functions?.length
+        ? member.functions.map((fn) => fn.nome)
+        : ["Sem funcao"];
+
+      functions.forEach((functionName) => {
+        groups.set(functionName, [
+          ...(groups.get(functionName) || []),
+          memberName.split(" ")[0],
+        ]);
+      });
+    });
+
+    return Array.from(groups.entries()).sort(([a], [b]) =>
+      a.localeCompare(b, "pt-BR", { sensitivity: "base" }),
+    );
+  }
+
+  function appendSongRows(
+    lines: string[],
+    title: string,
+    songs: Array<{
+      order_index: number;
+      execution_key: string | null;
+      song?: { name?: string | null; original_key?: string | null } | null;
+    }>,
+  ) {
+    const orderedSongs = [...songs].sort(
+      (a, b) => a.order_index - b.order_index,
+    );
+    if (orderedSongs.length === 0) return;
+
+    lines.push(title);
+    orderedSongs.forEach((scheduleSong, index) => {
+      const key =
+        scheduleSong.execution_key || scheduleSong.song?.original_key || "";
+      lines.push(
+        String(index + 1) +
+          " - " +
+          (scheduleSong.song?.name || "Musica") +
+          (key ? " - " + key : ""),
+      );
+    });
+  }
+
   function buildWeekendWhatsAppText(schedules: Schedule[], teamName: string) {
     const lines: string[] = [];
     lines.push(
-      `📍 *${teamName.toUpperCase()}* ${schedule.title ? `🎤 *${schedule.title}*` : ""}`,
+      "*" +
+        teamName.toUpperCase() +
+        "*" +
+        (schedule.title ? " *" + schedule.title + "*" : ""),
     );
     lines.push("");
     const ordered = [...schedules].sort((a, b) => a.date.localeCompare(b.date));
     ordered.forEach((s) => {
-      lines.push(`🗓 ${format(parseISO(s.date), "EEEE dd", { locale: ptBR })}`);
-      const songs = (s.songs || []).sort(
-        (a, b) => a.order_index - b.order_index,
-      );
-      songs.forEach((ss, idx) => {
-        const key = ss.execution_key || ss.song?.original_key || "";
-        lines.push(
-          `${idx + 1} - ${ss.song?.name || "Música"}${key ? " - " + key : ""}`,
-        );
-      });
+      lines.push(format(parseISO(s.date), "EEEE dd", { locale: ptBR }));
+
+      appendSongRows(lines, "Musicas do Louvor:", worshipSongs || []);
+      appendSongRows(lines, "Musicas da escala:", s.songs || []);
+
+      const memberRows = getMemberRowsByFunction(s);
+      if (memberRows.length > 0) {
+        lines.push("Funcoes:");
+        memberRows.forEach(([functionName, members]) => {
+          lines.push(functionName + ": " + members.join(", "));
+        });
+      }
+
       lines.push("");
     });
     return lines.join("\n").trim();

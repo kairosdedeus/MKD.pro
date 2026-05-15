@@ -61,6 +61,7 @@ interface CreateScheduleModalProps {
   initialFixedTeamId?: string | null;
   schedule?: Schedule | null;
   onSuccess?: () => void;
+  showSongs?: boolean;
   /** Músicas do Louvor para o mesmo dia — exibidas como referência (Dança) */
   worshipSongs?: Array<{
     order_index: number;
@@ -403,6 +404,7 @@ export function CreateScheduleModal({
   initialFixedTeamId,
   schedule,
   onSuccess,
+  showSongs = true,
   worshipSongs,
 }: CreateScheduleModalProps) {
   const { toast } = useToast();
@@ -984,11 +986,13 @@ export function CreateScheduleModal({
         notes: notes.trim() || null,
         status: "published",
         members,
-        songs: selectedSongs.map((s) => ({
-          song_id: s.song_id,
-          execution_key: s.execution_key,
-          order_index: s.order_index,
-        })),
+        songs: showSongs
+          ? selectedSongs.map((s) => ({
+              song_id: s.song_id,
+              execution_key: s.execution_key,
+              order_index: s.order_index,
+            }))
+          : [],
       };
 
       if (isEditing && schedule) {
@@ -1238,7 +1242,8 @@ export function CreateScheduleModal({
             </div>
 
             {/* ── Músicas ── */}
-            <div className="space-y-3">
+            {showSongs && (
+              <div className="space-y-3">
               <Label className="text-sm sm:text-base font-semibold">
                 🎵 Músicas
               </Label>
@@ -1590,7 +1595,8 @@ export function CreateScheduleModal({
                   <p className="text-sm">Busque e adicione músicas acima</p>
                 </div>
               )}
-            </div>
+              </div>
+            )}
 
             {/* ── Músicas do Louvor (referência para a Dança) ── */}
             {worshipSongs && worshipSongs.length > 0 && (
@@ -1806,4 +1812,3 @@ export function CreateScheduleModal({
     </Dialog>
   );
 }
-

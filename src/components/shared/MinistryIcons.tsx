@@ -112,3 +112,26 @@ export function MediaIcon(props: MinistryIconProps) {
     </MinimalLogoMark>
   );
 }
+
+export function UshersIcon(props: MinistryIconProps) {
+  return (
+    <MinimalLogoMark {...props}>
+      <path
+        d="M59 39C62 35 68 35 71 39C74 35 80 35 83 39C86 43 84 49 80 53L71 62L62 53C58 49 56 43 59 39Z"
+        fill={cyan}
+      />
+      <path
+        d="M59 66H82"
+        stroke={darkGrey}
+        strokeWidth="5.5"
+        strokeLinecap="round"
+      />
+      <path
+        d="M62 72H79"
+        stroke={cyan}
+        strokeWidth="5.5"
+        strokeLinecap="round"
+      />
+    </MinimalLogoMark>
+  );
+}

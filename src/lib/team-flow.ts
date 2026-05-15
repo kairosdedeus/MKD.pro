@@ -1,8 +1,9 @@
 import type { ComponentType, SVGProps } from "react";
-import { HandHeart, Home } from "lucide-react";
+import { Home } from "lucide-react";
 import {
   DanceIcon,
   MediaIcon,
+  UshersIcon,
   WorshipIcon,
 } from "@/components/shared/MinistryIcons";
 
@@ -42,7 +43,7 @@ export const TEAM_TYPE_ICONS: Record<string, TeamTypeIcon> = {
   louvor: WorshipIcon,
   danca: DanceIcon,
   midia: MediaIcon,
-  obreiros: HandHeart,
+  obreiros: UshersIcon,
   celula: Home,
 };
 

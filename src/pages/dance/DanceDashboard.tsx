@@ -99,10 +99,72 @@ function groupSchedulesByWeekend(schedules: Schedule[]) {
     .sort((a, b) => a.key.localeCompare(b.key));
 }
 
+function getMembersByFunction(schedule: Schedule) {
+  const groups = new Map<string, string[]>();
+
+  (schedule.members || []).forEach((member) => {
+    const name = getScheduleMemberName(member).split(" ")[0];
+    const functions = member.functions?.length
+      ? member.functions.map((fn) => fn.nome)
+      : ["Sem funcao"];
+
+    functions.forEach((functionName) => {
+      groups.set(functionName, [...(groups.get(functionName) || []), name]);
+    });
+  });
+
+  return Array.from(groups.entries()).sort(([a], [b]) =>
+    a.localeCompare(b, "pt-BR", { sensitivity: "base" }),
+  );
+}
+
+function getDanceSongRows(schedule: Schedule) {
+  return [...(schedule.songs || [])]
+    .sort((a, b) => a.order_index - b.order_index)
+    .map((item) => ({
+      name: item.song?.name || "Musica sem nome",
+      key: item.execution_key || item.song?.original_key || "",
+    }));
+}
+
+function getWorshipSongRows(
+  worshipSchedules: Awaited<
+    ReturnType<typeof scheduleService.getSchedulesByTeamType>
+  >,
+  date: string,
+) {
+  return worshipSchedules
+    .filter((schedule) => schedule.date === date)
+    .flatMap((schedule) => schedule.songs || [])
+    .sort((a, b) => a.order_index - b.order_index)
+    .map((item) => ({
+      name: item.song?.name || "Musica sem nome",
+      key: item.execution_key || item.song?.original_key || "",
+    }));
+}
+
+function appendSongBlock(
+  lines: string[],
+  title: string,
+  songs: Array<{ name: string; key: string }>,
+) {
+  if (songs.length === 0) return;
+
+  lines.push(title);
+  songs.forEach((song, index) => {
+    lines.push(
+      String(index + 1) + ". " + song.name + (song.key ? " - " + song.key : ""),
+    );
+  });
+}
+
 function buildWhatsAppText(
   schedules: Schedule[],
   month: Date,
   teamName: string,
+  worshipSchedules: Awaited<
+    ReturnType<typeof scheduleService.getSchedulesByTeamType>
+  >,
 ) {
   const mo = format(month, "MMMM", { locale: ptBR }).toUpperCase();
   const yr = format(month, "yyyy");
@@ -111,9 +173,9 @@ function buildWhatsAppText(
   );
 
   const lines = [
-    `💃 ESCALA DANÇA – ${mo} / ${yr}`,
+    "ESCALA DANCA - " + mo + " / " + yr,
     "",
-    `📍 ${teamName.toUpperCase()}`,
+    teamName.toUpperCase(),
     "",
   ];
 
@@ -124,21 +186,42 @@ function buildWhatsAppText(
 
     if (ss.length === 1) {
       lines.push(
-        `🗓 *${format(first, "EEEE", { locale: ptBR }).toUpperCase()}* - ${format(first, "dd")}`,
+        format(first, "EEEE", { locale: ptBR }).toUpperCase() +
+          " - " +
+          format(first, "dd"),
       );
     } else {
       lines.push(
-        `🗓 *${format(first, "EEEE", { locale: ptBR }).toUpperCase()}* ${format(first, "dd")} e *${format(last, "EEEE", { locale: ptBR }).toUpperCase()}* ${format(last, "dd")}`,
+        format(first, "EEEE", { locale: ptBR }).toUpperCase() +
+          " " +
+          format(first, "dd") +
+          " e " +
+          format(last, "EEEE", { locale: ptBR }).toUpperCase() +
+          " " +
+          format(last, "dd"),
       );
     }
 
-    // Listar dançarinos de cada escala
-    ss.forEach((s) => {
-      const members = (s.members || [])
-        .map((m: ScheduleMember) => getScheduleMemberName(m).split(" ")[0])
-        .filter(Boolean);
-      if (members.length > 0) {
-        lines.push(`💃 ${members.join(", ")}`);
+    ss.forEach((schedule) => {
+      if (ss.length > 1) {
+        lines.push(
+          format(parseISO(schedule.date), "EEEE dd/MM", { locale: ptBR }),
+        );
+      }
+
+      appendSongBlock(
+        lines,
+        "Musicas do Louvor:",
+        getWorshipSongRows(worshipSchedules, schedule.date),
+      );
+      appendSongBlock(lines, "Musicas da Danca:", getDanceSongRows(schedule));
+
+      const rows = getMembersByFunction(schedule);
+      if (rows.length > 0) {
+        lines.push("Funcoes:");
+        rows.forEach(([functionName, names]) => {
+          lines.push(functionName + ": " + names.join(", "));
+        });
       }
     });
 
@@ -148,7 +231,6 @@ function buildWhatsAppText(
   return lines.join("\n").trim();
 }
 
-// ── Componente: Seção colapsável ─────────────────────────────
 interface CollapsibleSectionProps {
   icon: React.ElementType;
   title: string;
@@ -375,6 +457,7 @@ export function DanceDashboard() {
     schedules,
     currentMonth,
     danceTeam?.nome || "Dança",
+    worshipSchedules,
   );
 
   const handleDelete = async (schedule: Schedule) => {
@@ -490,8 +573,8 @@ export function DanceDashboard() {
                 const isUserScheduled =
                   !!user &&
                   daySchedules.some((s) =>
-                    (s.members || []).some(
-                      (m: ScheduleMember) => isScheduleMemberUser(m, user.id),
+                    (s.members || []).some((m: ScheduleMember) =>
+                      isScheduleMemberUser(m, user.id),
                     ),
                   );
 
@@ -734,8 +817,8 @@ export function DanceDashboard() {
                     const isUserInGroup =
                       !!user &&
                       ss.some((s) =>
-                        (s.members || []).some(
-                          (m) => isScheduleMemberUser(m, user.id),
+                        (s.members || []).some((m) =>
+                          isScheduleMemberUser(m, user.id),
                         ),
                       );
 
@@ -859,8 +942,8 @@ export function DanceDashboard() {
                               STATUS_LABELS[s.status] || STATUS_LABELS.draft;
                             const isUserInSchedule =
                               !!user &&
-                              (s.members || []).some(
-                                (m) => isScheduleMemberUser(m, user.id),
+                              (s.members || []).some((m) =>
+                                isScheduleMemberUser(m, user.id),
                               );
                             return (
                               <div
