@@ -313,7 +313,7 @@ export const scheduleService = {
     await safelyNotify(() =>
       notificationService.notifyScheduleUpdated(
         scheduleId,
-        previousSchedule?.status,
+        previousSchedule,
       ),
     );
 

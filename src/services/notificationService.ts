@@ -53,6 +53,11 @@ interface ScheduleSnapshot {
       user?: { nome?: string | null } | null;
     } | null;
   }>;
+  songs?: Array<{
+    song_id?: string | null;
+    execution_key?: string | null;
+    song?: { name?: string | null } | null;
+  }>;
 }
 
 function isMissingNotificationsTable(error: any) {
@@ -147,21 +152,6 @@ async function getCurrentUserProfileId() {
   return (data as any)?.id || null;
 }
 
-async function getManagementUserIds() {
-  const { data, error } = await supabase
-    .from("user_profiles")
-    .select(
-      `
-      user_id,
-      profile:profiles!inner (codigo)
-    `,
-    )
-    .eq("profile.codigo", "gerencial");
-
-  if (error) return [];
-  return unique((data || []).map((row: any) => row.user_id));
-}
-
 async function getScheduleSnapshot(scheduleId: string) {
   const { data, error } = await supabase
     .from("schedules")
@@ -182,6 +172,11 @@ async function getScheduleSnapshot(scheduleId: string) {
           user_id,
           user:users_profile (nome)
         )
+      ),
+      songs:schedule_songs (
+        song_id,
+        execution_key,
+        song:songs (name)
       )
     `,
     )
@@ -192,13 +187,75 @@ async function getScheduleSnapshot(scheduleId: string) {
   return data as ScheduleSnapshot | null;
 }
 
-async function getScheduleRecipients(schedule: ScheduleSnapshot) {
-  const managementIds = await getManagementUserIds();
-  const memberIds = (schedule.members || []).map(
-    (member) => member.team_member?.user_id,
+function getScheduleMemberUserIds(schedule?: ScheduleSnapshot | null) {
+  return unique(
+    (schedule?.members || []).map(
+      (member) => member.team_member?.user_id,
+    ),
   );
+}
 
-  return unique([...memberIds, schedule.team?.leader_id, ...managementIds]);
+function getScheduleSongKeys(schedule?: ScheduleSnapshot | null) {
+  return unique(
+    (schedule?.songs || []).map((song) =>
+      song.song_id ? `${song.song_id}:${song.execution_key || ""}` : null,
+    ),
+  );
+}
+
+function getAddedSongNames(
+  previousSchedule: ScheduleSnapshot | null | undefined,
+  schedule: ScheduleSnapshot,
+) {
+  const previousKeys = new Set(getScheduleSongKeys(previousSchedule));
+  return (schedule.songs || [])
+    .filter((song) => {
+      const key = song.song_id ? `${song.song_id}:${song.execution_key || ""}` : "";
+      return key && !previousKeys.has(key);
+    })
+    .map((song) => song.song?.name)
+    .filter(Boolean) as string[];
+}
+
+function createBaseMetadata(schedule: ScheduleSnapshot, teamName: string) {
+  return {
+    date: schedule.date,
+    teamName,
+    status: schedule.status,
+    teamType: schedule.team?.team_type?.codigo,
+  };
+}
+
+function getScheduleRecipients(schedule: ScheduleSnapshot) {
+  return getScheduleMemberUserIds(schedule);
+}
+
+function getPreviousAndCurrentRecipients(
+  previousSchedule: ScheduleSnapshot | null | undefined,
+  schedule: ScheduleSnapshot,
+) {
+  return unique([
+    ...getScheduleMemberUserIds(previousSchedule),
+    ...getScheduleMemberUserIds(schedule),
+  ]);
+}
+
+function getAddedMemberUserIds(
+  previousSchedule: ScheduleSnapshot | null | undefined,
+  schedule: ScheduleSnapshot,
+) {
+  const previousIds = new Set(getScheduleMemberUserIds(previousSchedule));
+  return getScheduleMemberUserIds(schedule).filter((id) => !previousIds.has(id));
+}
+
+function getRemovedMemberUserIds(
+  previousSchedule: ScheduleSnapshot | null | undefined,
+  schedule: ScheduleSnapshot,
+) {
+  const currentIds = new Set(getScheduleMemberUserIds(schedule));
+  return getScheduleMemberUserIds(previousSchedule).filter(
+    (id) => !currentIds.has(id),
+  );
 }
 
 async function createNotification(input: CreateNotificationInput) {
@@ -245,54 +302,109 @@ async function createNotification(input: CreateNotificationInput) {
 async function notifyScheduleEvent(
   scheduleId: string,
   event: "created" | "updated",
-  previousStatus?: string | null,
+  previousSchedule?: ScheduleSnapshot | null,
 ) {
   const schedule = await getScheduleSnapshot(scheduleId);
   if (!schedule) return;
 
   const actorUserId = await getCurrentUserProfileId();
-  const recipients = await getScheduleRecipients(schedule);
   const date = formatScheduleDate(schedule.date);
   const teamName = schedule.team?.nome || "Equipe";
   const titleBase = schedule.title || `Escala de ${date}`;
   const isPublishedNow =
-    schedule.status === "published" && previousStatus !== "published";
-  const type: AppNotificationType = isPublishedNow
-    ? "schedule_published"
-    : event === "created"
-      ? "schedule_created"
-      : "schedule_updated";
+    schedule.status === "published" && previousSchedule?.status !== "published";
+  const metadata = createBaseMetadata(schedule, teamName);
+  const link = scheduleTargetLink(schedule);
+  const createFor = (input: {
+    type: AppNotificationType;
+    title: string;
+    message: string;
+    recipientUserIds: string[];
+    extraMetadata?: Record<string, unknown>;
+  }) =>
+    createNotification({
+      type: input.type,
+      title: input.title,
+      message: input.message,
+      link,
+      scheduleId: schedule.id,
+      teamId: schedule.team_id,
+      actorUserId,
+      recipientUserIds: input.recipientUserIds,
+      metadata: { ...metadata, ...(input.extraMetadata || {}) },
+    });
 
-  const title =
-    type === "schedule_published"
-      ? "Escala publicada"
-      : type === "schedule_created"
-        ? "Nova escala criada"
-        : "Escala atualizada";
+  if (event === "created") {
+    await createFor({
+      type: "schedule_assigned",
+      title: "Você foi escalado",
+      message: `Você foi escalado(a) para ${date} em ${teamName}.`,
+      recipientUserIds: getScheduleRecipients(schedule),
+    });
+    return;
+  }
 
-  const message =
-    type === "schedule_published"
-      ? `${teamName}: ${titleBase} foi publicada.`
-      : type === "schedule_created"
-        ? `${teamName}: ${titleBase} em ${date}.`
-        : `${teamName}: ${titleBase} foi atualizada.`;
+  const addedMemberIds = getAddedMemberUserIds(previousSchedule, schedule);
+  if (addedMemberIds.length > 0) {
+    await createFor({
+      type: "schedule_assigned",
+      title: "Você foi escalado",
+      message: `Você foi escalado(a) para ${date} em ${teamName}.`,
+      recipientUserIds: addedMemberIds,
+    });
+  }
 
-  await createNotification({
-    type,
-    title,
-    message,
-    link: scheduleTargetLink(schedule),
-    scheduleId: schedule.id,
-    teamId: schedule.team_id,
-    actorUserId,
-    recipientUserIds: recipients,
-    metadata: {
-      date: schedule.date,
-      teamName,
-      status: schedule.status,
-      teamType: schedule.team?.team_type?.codigo,
-    },
-  });
+  const removedMemberIds = getRemovedMemberUserIds(previousSchedule, schedule);
+  if (removedMemberIds.length > 0) {
+    await createFor({
+      type: "schedule_updated",
+      title: "Você foi removido da escala",
+      message: `Você foi removido(a) da escala de ${date} em ${teamName}.`,
+      recipientUserIds: removedMemberIds,
+    });
+  }
+
+  const addedSongs = getAddedSongNames(previousSchedule, schedule);
+  if (addedSongs.length > 0) {
+    const songList =
+      addedSongs.length <= 3
+        ? addedSongs.join(", ")
+        : `${addedSongs.slice(0, 3).join(", ")} e mais ${addedSongs.length - 3}`;
+    await createFor({
+      type: "schedule_updated",
+      title: "Novas músicas na escala",
+      message: `Foram adicionadas novas músicas na escala ${titleBase}: ${songList}.`,
+      recipientUserIds: getScheduleMemberUserIds(schedule),
+      extraMetadata: { addedSongs },
+    });
+  }
+
+  if (isPublishedNow) {
+    await createFor({
+      type: "schedule_published",
+      title: "Escala publicada",
+      message: `Sua escala de ${date} em ${teamName} foi publicada.`,
+      recipientUserIds: getScheduleMemberUserIds(schedule),
+    });
+  }
+
+  const previousDate = previousSchedule?.date;
+  const previousTitle = previousSchedule?.title;
+  const changedBasicInfo =
+    !!previousSchedule &&
+    (previousDate !== schedule.date || previousTitle !== schedule.title);
+
+  if (changedBasicInfo) {
+    await createFor({
+      type: "schedule_updated",
+      title: "Sua escala foi atualizada",
+      message: `A escala ${titleBase} agora está marcada para ${date} em ${teamName}.`,
+      recipientUserIds: getPreviousAndCurrentRecipients(
+        previousSchedule,
+        schedule,
+      ),
+    });
+  }
 }
 
 export const notificationService = {
@@ -393,9 +505,9 @@ export const notificationService = {
 
   async notifyScheduleUpdated(
     scheduleId: string,
-    previousStatus?: string | null,
+    previousSchedule?: ScheduleSnapshot | null,
   ) {
-    await notifyScheduleEvent(scheduleId, "updated", previousStatus);
+    await notifyScheduleEvent(scheduleId, "updated", previousSchedule);
   },
 
   async notifyScheduleDeleted(schedule: ScheduleSnapshot) {
@@ -408,7 +520,7 @@ export const notificationService = {
     await createNotification({
       type: "schedule_deleted",
       title: "Escala removida",
-      message: `${teamName}: ${titleBase} foi removida.`,
+      message: `A escala ${titleBase} de ${date} em ${teamName} foi removida.`,
       link: scheduleTargetLink(schedule, { includeScheduleId: false }),
       scheduleId: null,
       teamId: schedule.team_id,
@@ -416,10 +528,7 @@ export const notificationService = {
       recipientUserIds: recipients,
       metadata: {
         scheduleId: schedule.id,
-        date: schedule.date,
-        teamName,
-        status: schedule.status,
-        teamType: schedule.team?.team_type?.codigo,
+        ...createBaseMetadata(schedule, teamName),
       },
     });
   },
