@@ -6,6 +6,7 @@ import { Breadcrumbs } from "@/components/shared/Breadcrumbs";
 // Rotas que não mostram breadcrumb (têm UI própria)
 const NO_BREADCRUMB = [
   "/louvor",
+  "/musicas",
   "/gerencial/musicas",
   "/gerencial/equipes",
   "/gerencial/usuarios",

@@ -32,34 +32,6 @@ Deno.serve(async (req: Request) => {
 
     if (authError || !user) return json({ error: "Token inválido" }, 401);
 
-    const { data: internalUser, error: userProfileError } = await supabase
-      .from("users_profile")
-      .select("id")
-      .eq("auth_user_id", user.id)
-      .maybeSingle();
-
-    if (userProfileError || !internalUser) {
-      return json(
-        { error: "Cadastro interno do usuário não encontrado" },
-        403,
-      );
-    }
-
-    const { data: managementProfile, error: permissionError } = await supabase
-      .from("user_profiles")
-      .select("profile:profiles!inner(codigo)")
-      .eq("user_id", internalUser.id)
-      .eq("profiles.codigo", "gerencial")
-      .limit(1)
-      .maybeSingle();
-
-    if (permissionError || !managementProfile) {
-      return json(
-        { error: "Apenas usuários do perfil gerencial podem converter áudios" },
-        403,
-      );
-    }
-
     const body = await req.json();
     const { youtube_url, song_id, ping_only } = body as {
       youtube_url?: string;
@@ -68,6 +40,13 @@ Deno.serve(async (req: Request) => {
     };
 
     const serviceUrl = Deno.env.get("YTDLP_SERVICE_URL")?.replace(/\/$/, "");
+
+    if (song_id && !(await isManagementUser(supabase, user.id))) {
+      return json(
+        { error: "Apenas usuários gerenciais podem vincular áudio a músicas" },
+        403,
+      );
+    }
 
     if (ping_only) {
       if (!serviceUrl) {
@@ -251,4 +230,27 @@ function sanitizeFileName(value: string): string {
       .replace(/\s+/g, "-")
       .slice(0, 100) || "audio"
   );
+}
+
+async function isManagementUser(
+  supabase: ReturnType<typeof createClient>,
+  authUserId: string,
+): Promise<boolean> {
+  const { data: internalUser } = await supabase
+    .from("users_profile")
+    .select("id")
+    .eq("auth_user_id", authUserId)
+    .maybeSingle();
+
+  if (!internalUser) return false;
+
+  const { data: profile } = await supabase
+    .from("user_profiles")
+    .select("profiles!inner(codigo)")
+    .eq("user_id", internalUser.id)
+    .eq("profiles.codigo", "gerencial")
+    .limit(1)
+    .maybeSingle();
+
+  return !!profile;
 }

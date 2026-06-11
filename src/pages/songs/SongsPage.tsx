@@ -312,6 +312,21 @@ export function SongsPage() {
           </p>
         </div>
         <div className="flex items-center gap-1.5 sm:gap-2">
+          {!canManage && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-9 gap-1.5 rounded-full border-red-500/30 px-2.5 text-red-500 hover:bg-red-500/10 hover:text-red-600 sm:rounded-md sm:px-3"
+              onClick={() => {
+                setYoutubeSong(null);
+                setShowYoutubeModal(true);
+              }}
+              title="Converter YouTube para MP3"
+            >
+              <Youtube className="h-4 w-4" />
+              <span className="hidden sm:inline">YouTube para MP3</span>
+            </Button>
+          )}
           {canManage && (
             <>
               <Button
@@ -338,13 +353,15 @@ export function SongsPage() {
               </Button>
             </>
           )}
-          <Button
-            size="sm"
-            className="h-10 gap-1.5 rounded-full px-4 text-base sm:h-9 sm:rounded-md sm:px-3 sm:text-sm"
-            onClick={() => setShowCreateModal(true)}
-          >
-            <Plus className="h-4 w-4" /> Nova
-          </Button>
+          {canManage && (
+            <Button
+              size="sm"
+              className="h-10 gap-1.5 rounded-full px-4 text-base sm:h-9 sm:rounded-md sm:px-3 sm:text-sm"
+              onClick={() => setShowCreateModal(true)}
+            >
+              <Plus className="h-4 w-4" /> Nova
+            </Button>
+          )}
         </div>
       </div>
 
@@ -621,7 +638,10 @@ export function SongsPage() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => setEditingSong(song)}>
+                      <DropdownMenuItem
+                        onClick={() => setEditingSong(song)}
+                        className={canManage ? "" : "hidden"}
+                      >
                         <Pencil className="h-4 w-4 mr-2" /> Editar
                       </DropdownMenuItem>
                       {canManage && (
@@ -674,9 +694,13 @@ export function SongsPage() {
                             </DropdownMenuItem>
                           );
                         })()}
-                      <DropdownMenuSeparator />
+                      {canManage && <DropdownMenuSeparator />}
                       <DropdownMenuItem
-                        className="text-destructive focus:text-destructive"
+                        className={
+                          canManage
+                            ? "text-destructive focus:text-destructive"
+                            : "hidden"
+                        }
                         onClick={() => setDeletingSong(song)}
                       >
                         <Trash2 className="h-4 w-4 mr-2" /> Excluir

@@ -292,6 +292,14 @@ function App() {
             }
           />
           <Route
+            path="musicas"
+            element={
+              <Suspense fallback={<PageLoader />}>
+                <SongsPage />
+              </Suspense>
+            }
+          />
+          <Route
             path="louvor"
             element={
               <ProtectedMinistryRoute teamType="louvor">

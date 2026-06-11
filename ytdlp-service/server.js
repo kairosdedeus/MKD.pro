@@ -52,7 +52,7 @@ const server = createServer(async (req, res) => {
       JSON.stringify({
         ok: true,
         cookies: !!cookiesPath,
-        auth: "supabase-management-rpc",
+        auth: "supabase-authenticated-user",
       }),
     );
     return;
@@ -64,14 +64,10 @@ const server = createServer(async (req, res) => {
     return;
   }
 
-  const user = await getManagementUser(req.headers.authorization);
+  const user = await getAuthenticatedUser(req.headers.authorization);
   if (!user) {
-    res.writeHead(403, { "Content-Type": "application/json" });
-    res.end(
-      JSON.stringify({
-        error: "Apenas usuários do perfil gerencial podem converter áudios",
-      }),
-    );
+    res.writeHead(401, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "Usuário não autenticado" }));
     return;
   }
 
@@ -102,7 +98,6 @@ const server = createServer(async (req, res) => {
 
   try {
     console.log(`Baixando áudio para o usuário ${user.id}`);
-
     const args = [
       "--no-playlist",
       "--extract-audio",
@@ -163,7 +158,7 @@ server.listen(PORT, () => {
   console.log(`yt-dlp service rodando na porta ${PORT}`);
 });
 
-async function getManagementUser(authorization) {
+async function getAuthenticatedUser(authorization) {
   if (!authorization?.startsWith("Bearer ")) return null;
 
   try {
@@ -175,49 +170,7 @@ async function getManagementUser(authorization) {
       signal: AbortSignal.timeout(10_000),
     });
 
-    if (!userResponse.ok) return null;
-    const user = await userResponse.json();
-    const userParams = new URLSearchParams({
-      select: "id",
-      auth_user_id: `eq.${user.id}`,
-      limit: "1",
-    });
-    const internalUserResponse = await fetch(
-      `${SUPABASE_URL}/rest/v1/users_profile?${userParams}`,
-      {
-        headers: {
-          apikey: SUPABASE_ANON_KEY,
-          Authorization: authorization,
-        },
-        signal: AbortSignal.timeout(10_000),
-      },
-    );
-
-    if (!internalUserResponse.ok) return null;
-    const internalUsers = await internalUserResponse.json();
-    const internalUser = internalUsers[0];
-    if (!internalUser) return null;
-
-    const profileParams = new URLSearchParams({
-      select: "profiles!inner(codigo)",
-      user_id: `eq.${internalUser.id}`,
-      "profiles.codigo": "eq.gerencial",
-      limit: "1",
-    });
-    const profileResponse = await fetch(
-      `${SUPABASE_URL}/rest/v1/user_profiles?${profileParams}`,
-      {
-        headers: {
-          apikey: SUPABASE_ANON_KEY,
-          Authorization: authorization,
-        },
-        signal: AbortSignal.timeout(10_000),
-      },
-    );
-
-    if (!profileResponse.ok) return null;
-    const profiles = await profileResponse.json();
-    return profiles.length > 0 ? user : null;
+    return userResponse.ok ? await userResponse.json() : null;
   } catch {
     return null;
   }

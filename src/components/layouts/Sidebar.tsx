@@ -109,7 +109,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
           </div>
         )}
 
-        {!isManagement && canAccessSongs && (
+        {!isManagement && (
           <div>
             <h3
               className="px-2 text-[10px] font-semibold uppercase tracking-widest mb-1"
@@ -119,7 +119,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
             </h3>
             <div className="space-y-0.5">
               <NavLink
-                to="/gerencial/musicas"
+                to="/musicas"
                 onClick={onClose}
                 className={({ isActive }) =>
                   cn(
