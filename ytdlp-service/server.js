@@ -112,6 +112,10 @@ const server = createServer(async (req, res) => {
       "128K",
       "--no-warnings",
       "--quiet",
+      "--js-runtimes",
+      "deno",
+      "--remote-components",
+      "ejs:github",
       "--print",
       "after_move:%(title)s",
     ];
@@ -144,8 +148,14 @@ const server = createServer(async (req, res) => {
       userError = "Este vídeo requer login no YouTube.";
     } else if (message.includes("Private video")) {
       userError = "Vídeo privado: não é possível baixar.";
-    } else if (message.includes("not available")) {
+    } else if (
+      /not available in (your|this) (country|region)|geo.?restrict/i.test(
+        message,
+      )
+    ) {
       userError = "Vídeo não disponível nesta região.";
+    } else if (/requested format.*not available/i.test(message)) {
+      userError = "O YouTube não disponibilizou um formato de áudio compatível.";
     } else if (message.includes("timed out")) {
       userError = "Timeout: vídeo muito longo ou conexão lenta.";
     }
