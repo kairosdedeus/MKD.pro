@@ -33,10 +33,10 @@ Deno.serve(async (req: Request) => {
     if (authError || !user) return json({ error: "Token inválido" }, 401);
 
     const { data: managementProfile, error: permissionError } = await supabase
-      .from("user_profiles")
-      .select("profiles!inner(codigo)")
-      .eq("user_id", user.id)
-      .eq("profiles.codigo", "gerencial")
+      .from("users_profile")
+      .select("id, user_profiles!inner(profiles!inner(codigo))")
+      .eq("auth_user_id", user.id)
+      .eq("user_profiles.profiles.codigo", "gerencial")
       .maybeSingle();
 
     if (permissionError || !managementProfile) {
