@@ -171,27 +171,23 @@ async function getManagementUser(authorization) {
 
     if (!userResponse.ok) return null;
     const user = await userResponse.json();
-    const params = new URLSearchParams({
-      select: "profiles!inner(codigo)",
-      user_id: `eq.${user.id}`,
-      "profiles.codigo": "eq.gerencial",
-      limit: "1",
-    });
-
     const profileResponse = await fetch(
-      `${SUPABASE_URL}/rest/v1/user_profiles?${params}`,
+      `${SUPABASE_URL}/rest/v1/rpc/is_gerencial`,
       {
+        method: "POST",
         headers: {
           apikey: SUPABASE_ANON_KEY,
           Authorization: authorization,
+          "Content-Type": "application/json",
         },
+        body: "{}",
         signal: AbortSignal.timeout(10_000),
       },
     );
 
     if (!profileResponse.ok) return null;
-    const profiles = await profileResponse.json();
-    return profiles.length > 0 ? user : null;
+    const isManagement = await profileResponse.json();
+    return isManagement === true ? user : null;
   } catch {
     return null;
   }
