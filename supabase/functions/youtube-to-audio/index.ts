@@ -54,7 +54,6 @@ Deno.serve(async (req: Request) => {
     };
 
     const serviceUrl = Deno.env.get("YTDLP_SERVICE_URL")?.replace(/\/$/, "");
-    const apiKey = Deno.env.get("YTDLP_API_KEY");
 
     if (ping_only) {
       if (!serviceUrl) {
@@ -126,7 +125,7 @@ Deno.serve(async (req: Request) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": apiKey || "",
+        Authorization: authHeader,
       },
       body: JSON.stringify({ youtube_url }),
       signal: AbortSignal.timeout(150_000),
