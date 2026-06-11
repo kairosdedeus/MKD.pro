@@ -10,6 +10,7 @@ const execFileAsync = promisify(execFile);
 const PORT = process.env.PORT || 3000;
 const SUPABASE_URL = process.env.SUPABASE_URL?.replace(/\/$/, "");
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+const YTDLP_API_KEY = process.env.YTDLP_API_KEY;
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   console.error("Defina SUPABASE_URL e SUPABASE_ANON_KEY.");
@@ -64,7 +65,11 @@ const server = createServer(async (req, res) => {
     return;
   }
 
-  const user = await getAuthenticatedUser(req.headers.authorization);
+  const hasValidApiKey =
+    YTDLP_API_KEY && req.headers["x-api-key"] === YTDLP_API_KEY;
+  const user = hasValidApiKey
+    ? { id: "supabase-edge-function" }
+    : await getAuthenticatedUser(req.headers.authorization);
   if (!user) {
     res.writeHead(401, { "Content-Type": "application/json" });
     res.end(JSON.stringify({ error: "Usuário não autenticado" }));

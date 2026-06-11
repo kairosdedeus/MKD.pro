@@ -14,3 +14,5 @@ services:
         value: https://ewuvrindvhjislkrohwh.supabase.co
       - key: SUPABASE_ANON_KEY
         value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYXNlIiwicmVmIjoiZXd1dnJpbmR2aGppc2xrcm9od2giLCJyb2xlIjoiYW5vbiIsImlhdCI6MTc3NzQ5NjUzOSwiZXhwIjoyMDkzMDcyNTM5fQ.uVJYeFluasgxlJvSTmKef_YkLEPQNKY3ix5aKJb0jtU
+      - key: YTDLP_API_KEY
+        sync: false

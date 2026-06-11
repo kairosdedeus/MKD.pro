@@ -40,6 +40,7 @@ Deno.serve(async (req: Request) => {
     };
 
     const serviceUrl = Deno.env.get("YTDLP_SERVICE_URL")?.replace(/\/$/, "");
+    const serviceApiKey = Deno.env.get("YTDLP_API_KEY");
 
     if (song_id && !(await isManagementUser(supabase, user.id))) {
       return json(
@@ -118,7 +119,7 @@ Deno.serve(async (req: Request) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: authHeader,
+        "x-api-key": serviceApiKey || "",
       },
       body: JSON.stringify({ youtube_url }),
       signal: AbortSignal.timeout(150_000),
