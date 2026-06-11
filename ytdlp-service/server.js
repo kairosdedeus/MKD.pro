@@ -177,23 +177,47 @@ async function getManagementUser(authorization) {
 
     if (!userResponse.ok) return null;
     const user = await userResponse.json();
-    const profileResponse = await fetch(
-      `${SUPABASE_URL}/rest/v1/rpc/is_gerencial`,
+    const userParams = new URLSearchParams({
+      select: "id",
+      auth_user_id: `eq.${user.id}`,
+      limit: "1",
+    });
+    const internalUserResponse = await fetch(
+      `${SUPABASE_URL}/rest/v1/users_profile?${userParams}`,
       {
-        method: "POST",
         headers: {
           apikey: SUPABASE_ANON_KEY,
           Authorization: authorization,
-          "Content-Type": "application/json",
         },
-        body: "{}",
+        signal: AbortSignal.timeout(10_000),
+      },
+    );
+
+    if (!internalUserResponse.ok) return null;
+    const internalUsers = await internalUserResponse.json();
+    const internalUser = internalUsers[0];
+    if (!internalUser) return null;
+
+    const profileParams = new URLSearchParams({
+      select: "profiles!inner(codigo)",
+      user_id: `eq.${internalUser.id}`,
+      "profiles.codigo": "eq.gerencial",
+      limit: "1",
+    });
+    const profileResponse = await fetch(
+      `${SUPABASE_URL}/rest/v1/user_profiles?${profileParams}`,
+      {
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: authorization,
+        },
         signal: AbortSignal.timeout(10_000),
       },
     );
 
     if (!profileResponse.ok) return null;
-    const isManagement = await profileResponse.json();
-    return isManagement === true ? user : null;
+    const profiles = await profileResponse.json();
+    return profiles.length > 0 ? user : null;
   } catch {
     return null;
   }
