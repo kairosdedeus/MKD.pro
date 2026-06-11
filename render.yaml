@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: mkd-ytdlp
+    runtime: docker
+    plan: free
+    region: oregon
+    rootDir: ytdlp-service
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    envVars:
+      - key: API_KEY
+        generateValue: true

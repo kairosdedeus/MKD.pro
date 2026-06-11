@@ -4,6 +4,7 @@ export interface YoutubeConversionResult {
   audio_path: string;
   file_name: string;
   size_bytes: number;
+  download_url?: string;
   cobalt_filename?: string;
 }
 

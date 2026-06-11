@@ -1,16 +1,3 @@
-/**
- * Edge Function: youtube-to-audio
- *
- * Chama o microserviço yt-dlp (ytdlp-service/) para converter YouTube → MP3.
- * O microserviço usa yt-dlp com cookies do YouTube Premium opcionalmente.
- *
- * Variáveis de ambiente (Supabase Dashboard → Edge Functions → Secrets):
- *   YTDLP_SERVICE_URL  — URL do microserviço (ex: https://seu-app.up.railway.app)
- *   YTDLP_API_KEY      — API key configurada no microserviço
- *   SUPABASE_URL       — injetado automaticamente
- *   SUPABASE_SERVICE_ROLE_KEY — injetado automaticamente
- */
-
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const BUCKET = "audio-musicas";
@@ -29,7 +16,6 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    // ── Auth ──────────────────────────────────────────────────────
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) return json({ error: "Não autorizado" }, 401);
 
@@ -43,9 +29,23 @@ Deno.serve(async (req: Request) => {
       data: { user },
       error: authError,
     } = await supabase.auth.getUser(token);
+
     if (authError || !user) return json({ error: "Token inválido" }, 401);
 
-    // ── Params ────────────────────────────────────────────────────
+    const { data: managementProfile, error: permissionError } = await supabase
+      .from("user_profiles")
+      .select("profiles!inner(codigo)")
+      .eq("user_id", user.id)
+      .eq("profiles.codigo", "gerencial")
+      .maybeSingle();
+
+    if (permissionError || !managementProfile) {
+      return json(
+        { error: "Apenas usuários do perfil gerencial podem converter áudios" },
+        403,
+      );
+    }
+
     const body = await req.json();
     const { youtube_url, song_id, ping_only } = body as {
       youtube_url?: string;
@@ -56,7 +56,6 @@ Deno.serve(async (req: Request) => {
     const serviceUrl = Deno.env.get("YTDLP_SERVICE_URL")?.replace(/\/$/, "");
     const apiKey = Deno.env.get("YTDLP_API_KEY");
 
-    // ── Ping ──────────────────────────────────────────────────────
     if (ping_only) {
       if (!serviceUrl) {
         return json(
@@ -72,7 +71,7 @@ Deno.serve(async (req: Request) => {
       try {
         const start = Date.now();
         const res = await fetch(`${serviceUrl}/health`, {
-          signal: AbortSignal.timeout(8000),
+          signal: AbortSignal.timeout(90_000),
         });
         const latency = Date.now() - start;
 
@@ -90,19 +89,22 @@ Deno.serve(async (req: Request) => {
           cookies_configured: info.cookies,
           service_url: serviceUrl,
         });
-      } catch (e) {
+      } catch (error) {
         return json(
           {
             ok: false,
-            error: `Serviço inacessível: ${e instanceof Error ? e.message : "timeout"}`,
+            error: `Serviço inacessível: ${
+              error instanceof Error ? error.message : "timeout"
+            }`,
           },
           502,
         );
       }
     }
 
-    // ── Validar URL ───────────────────────────────────────────────
-    if (!youtube_url) return json({ error: "youtube_url é obrigatório" }, 400);
+    if (!youtube_url) {
+      return json({ error: "youtube_url é obrigatório" }, 400);
+    }
 
     const ytPattern =
       /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?v=|shorts\/)|youtu\.be\/)[\w-]+/;
@@ -120,7 +122,6 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // ── Chamar microserviço ───────────────────────────────────────
     const serviceRes = await fetch(`${serviceUrl}/convert`, {
       method: "POST",
       headers: {
@@ -128,11 +129,10 @@ Deno.serve(async (req: Request) => {
         "x-api-key": apiKey || "",
       },
       body: JSON.stringify({ youtube_url }),
-      signal: AbortSignal.timeout(150_000), // 2.5 min
+      signal: AbortSignal.timeout(150_000),
     });
 
     const serviceData = await serviceRes.json();
-
     if (!serviceRes.ok) {
       return json(
         { error: serviceData.error || `Serviço retornou ${serviceRes.status}` },
@@ -140,13 +140,11 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // ── Decodificar base64 e fazer upload ─────────────────────────
     const audioBase64: string = serviceData.audio_base64;
     if (!audioBase64) {
       return json({ error: "Serviço não retornou áudio" }, 502);
     }
 
-    // Converter base64 → Uint8Array
     const binaryStr = atob(audioBase64);
     const audioBuffer = new Uint8Array(binaryStr.length);
     for (let i = 0; i < binaryStr.length; i++) {
@@ -157,10 +155,7 @@ Deno.serve(async (req: Request) => {
       return json({ error: "Arquivo muito grande (máximo 50MB)" }, 413);
     }
 
-    // ── Upload para Storage ───────────────────────────────────────
-    const timestamp = Date.now();
-    const random = Math.random().toString(36).substring(7);
-    const fileName = `${timestamp}-${random}.mp3`;
+    const fileName = `${Date.now()}-${crypto.randomUUID().slice(0, 8)}.mp3`;
     const filePath = `${user.id}/${fileName}`;
 
     const { error: uploadError } = await supabase.storage
@@ -174,28 +169,55 @@ Deno.serve(async (req: Request) => {
       return json({ error: `Upload falhou: ${uploadError.message}` }, 500);
     }
 
-    // ── Atualizar song ────────────────────────────────────────────
     if (song_id) {
-      await supabase
+      const { data: song, error: songError } = await supabase
+        .from("songs")
+        .select("id")
+        .eq("id", song_id)
+        .maybeSingle();
+
+      if (songError || !song) {
+        await supabase.storage.from(BUCKET).remove([filePath]);
+        return json({ error: "Música não encontrada" }, 404);
+      }
+
+      const { error: updateError } = await supabase
         .from("songs")
         .update({ audio_path: filePath })
         .eq("id", song_id);
+
+      if (updateError) {
+        await supabase.storage.from(BUCKET).remove([filePath]);
+        return json(
+          { error: `Não foi possível vincular o áudio: ${updateError.message}` },
+          500,
+        );
+      }
     }
+
+    const { data: signedUrlData } = await supabase.storage
+      .from(BUCKET)
+      .createSignedUrl(filePath, 10 * 60, {
+        download: serviceData.title
+          ? `${sanitizeFileName(serviceData.title)}.mp3`
+          : fileName,
+      });
 
     return json({
       audio_path: filePath,
       file_name: fileName,
       size_bytes: audioBuffer.byteLength,
+      download_url: signedUrlData?.signedUrl,
     });
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    if (msg.includes("timed out") || msg.includes("AbortError")) {
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.includes("timed out") || message.includes("AbortError")) {
       return json(
-        { error: "Timeout — vídeo muito longo ou serviço lento" },
+        { error: "Timeout: vídeo muito longo ou serviço lento" },
         504,
       );
     }
-    return json({ error: `Erro interno: ${msg}` }, 500);
+    return json({ error: `Erro interno: ${message}` }, 500);
   }
 });
 
@@ -204,4 +226,16 @@ function json(data: unknown, status = 200): Response {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
+}
+
+function sanitizeFileName(value: string): string {
+  return (
+    value
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^\w\s-]/g, "")
+      .trim()
+      .replace(/\s+/g, "-")
+      .slice(0, 100) || "audio"
+  );
 }

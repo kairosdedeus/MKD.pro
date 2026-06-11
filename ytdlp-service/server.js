@@ -13,14 +13,14 @@
  */
 
 import { createServer } from "http";
-import { exec } from "child_process";
+import { execFile } from "child_process";
 import { promisify } from "util";
 import { writeFile, unlink, readFile } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
 import { randomBytes } from "crypto";
 
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 const PORT = process.env.PORT || 3000;
 const API_KEY = process.env.API_KEY;
 
@@ -45,7 +45,7 @@ if (process.env.COOKIES_B64) {
 
 // Verificar se yt-dlp está instalado
 try {
-  await execAsync("yt-dlp --version");
+  await execFileAsync("yt-dlp", ["--version"]);
   console.log("✅ yt-dlp disponível");
 } catch {
   console.error("❌ yt-dlp não encontrado. Instale com: pip install yt-dlp");
@@ -120,24 +120,24 @@ const server = createServer(async (req, res) => {
   try {
     console.log(`⬇️  Baixando: ${youtube_url}`);
 
-    // Montar comando yt-dlp
-    const cookiesArg = cookiesPath ? `--cookies "${cookiesPath}"` : "";
-    const cmd = [
-      "yt-dlp",
+    const args = [
       "--no-playlist",
       "--extract-audio",
       "--audio-format mp3",
       "--audio-quality 128K",
       "--no-warnings",
       "--quiet",
-      cookiesArg,
-      `-o "${outputPath}"`,
-      `"${youtube_url}"`,
-    ]
-      .filter(Boolean)
-      .join(" ");
+      "--print",
+      "after_move:%(title)s",
+    ];
 
-    await execAsync(cmd, { timeout: 120_000 });
+    if (cookiesPath) args.push("--cookies", cookiesPath);
+    args.push("-o", outputPath, youtube_url);
+
+    const { stdout } = await execFileAsync("yt-dlp", args, {
+      timeout: 120_000,
+      maxBuffer: 1024 * 1024,
+    });
 
     // Ler arquivo gerado
     const audioBuffer = await readFile(outputPath);
@@ -153,6 +153,7 @@ const server = createServer(async (req, res) => {
         size_bytes: sizeBytes,
         format: "mp3",
         bitrate: "128k",
+        title: stdout.trim().split(/\r?\n/).at(-1) || undefined,
       }),
     );
   } catch (err) {
