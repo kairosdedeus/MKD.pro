@@ -166,6 +166,8 @@ interface CollapsibleSectionProps {
   action?: React.ReactNode;
   children: React.ReactNode;
   defaultOpen?: boolean;
+  className?: string;
+  contentClassName?: string;
 }
 
 function CollapsibleSection({
@@ -175,11 +177,18 @@ function CollapsibleSection({
   action,
   children,
   defaultOpen = false,
+  className,
+  contentClassName,
 }: CollapsibleSectionProps) {
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card">
+    <div
+      className={cn(
+        "overflow-hidden rounded-2xl border border-border bg-card",
+        className,
+      )}
+    >
       <div className="flex w-full items-center gap-3 px-4 py-4">
         <button
           type="button"
@@ -203,7 +212,14 @@ function CollapsibleSection({
         {action && <div className="flex-shrink-0">{action}</div>}
       </div>
       {open && (
-        <div className="border-t border-border px-4 pb-4 pt-3">{children}</div>
+        <div
+          className={cn(
+            "border-t border-border px-4 pb-4 pt-3",
+            contentClassName,
+          )}
+        >
+          {children}
+        </div>
       )}
     </div>
   );
@@ -418,140 +434,144 @@ export function UshersDashboard() {
 
       <div className="space-y-3 lg:grid lg:grid-cols-[1fr_240px] lg:items-start lg:gap-4 lg:space-y-0">
         <div className="space-y-3">
-          <div className="rounded-2xl border border-border bg-card p-3 sm:p-4">
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <div>
-                <p className="text-base font-bold capitalize sm:text-lg">
-                  {format(currentMonth, "MMMM yyyy", { locale: ptBR })}
-                </p>
-                <p className="text-[11px] text-muted-foreground sm:text-xs">
-                  Selecione a data desejada
-                </p>
-              </div>
-              <div className="flex gap-1">
-                <button
-                  onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-                  className="rounded-lg p-1.5 transition-colors hover:bg-accent"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-                  className="rounded-lg p-1.5 transition-colors hover:bg-accent"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-
-            <div className="mb-1 grid grid-cols-7">
-              {["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SAB"].map((day) => (
-                <div
-                  key={day}
-                  className="py-1 text-center text-[10px] font-bold text-muted-foreground"
-                >
-                  {day}
+          <div className="space-y-3 xl:grid xl:grid-cols-[minmax(360px,520px)_minmax(360px,520px)] xl:items-start xl:gap-3 xl:space-y-0">
+            <div className="rounded-2xl border border-border bg-card p-3 sm:p-4 xl:aspect-square xl:flex xl:w-full xl:max-w-[520px] xl:flex-col">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-base font-bold capitalize sm:text-lg">
+                    {format(currentMonth, "MMMM yyyy", { locale: ptBR })}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground sm:text-xs">
+                    Selecione a data desejada
+                  </p>
                 </div>
-              ))}
-            </div>
-
-            <div className="grid grid-cols-7 gap-0.5">
-              {calendarDays.map((day) => {
-                const daySchedules = getDaySchedules(day);
-                const isSelected = isSameDay(day, selectedDate);
-                const isToday = isSameDay(day, new Date());
-                const inMonth = isSameMonth(day, currentMonth);
-                const hasSchedule = daySchedules.length > 0;
-                const isUserScheduled =
-                  !!user &&
-                  daySchedules.some((schedule) =>
-                    (schedule.members || []).some((member) =>
-                      isScheduleMemberUser(member, user.id),
-                    ),
-                  );
-
-                return (
+                <div className="flex gap-1">
                   <button
-                    key={day.toISOString()}
-                    onClick={() => {
-                      setSelectedDate(day);
-                      if (!inMonth) setCurrentMonth(day);
-                    }}
-                    onDoubleClick={() => {
-                      setSelectedDate(day);
-                      if (!inMonth) setCurrentMonth(day);
-                      if (daySchedules.length > 0) {
-                        setSelectedSchedule(daySchedules[0]);
-                        setShowDetailModal(true);
-                      } else if (canManage) {
-                        setEditingSchedule(null);
-                        setShowCreateModal(true);
-                      }
-                    }}
-                    className={cn(
-                      "relative flex h-9 flex-col items-center justify-center rounded-xl text-sm font-semibold transition-all sm:h-10",
-                      isSelected &&
-                        "bg-primary text-primary-foreground shadow-md",
-                      !isSelected &&
-                        hasSchedule &&
-                        "border border-primary/60 text-foreground hover:bg-primary/10",
-                      !isSelected &&
-                        !hasSchedule &&
-                        inMonth &&
-                        "text-foreground hover:bg-accent",
-                      !isSelected && !inMonth && "text-muted-foreground/30",
-                      isToday && !isSelected && "ring-2 ring-primary/30",
-                    )}
+                    onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+                    className="rounded-lg p-1.5 transition-colors hover:bg-accent"
                   >
-                    <span>{format(day, "d")}</span>
-                    {(hasSchedule || isUserScheduled) && (
-                      <div className="absolute bottom-1 flex items-center gap-0.5">
-                        {hasSchedule && (
-                          <span
-                            className={cn(
-                              "h-1.5 w-1.5 rounded-full",
-                              isSelected
-                                ? "bg-primary-foreground"
-                                : "bg-primary",
-                            )}
-                          />
-                        )}
-                        {isUserScheduled && (
-                          <span
-                            className={cn(
-                              "h-1.5 w-1.5 rounded-full",
-                              isSelected ? "bg-emerald-200" : "bg-emerald-500",
-                            )}
-                          />
-                        )}
-                      </div>
-                    )}
+                    <ChevronLeft className="h-4 w-4" />
                   </button>
-                );
-              })}
+                  <button
+                    onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+                    className="rounded-lg p-1.5 transition-colors hover:bg-accent"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="mb-1 grid grid-cols-7">
+                {["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SAB"].map(
+                  (day) => (
+                    <div
+                      key={day}
+                      className="py-1 text-center text-[10px] font-bold text-muted-foreground"
+                    >
+                      {day}
+                    </div>
+                  ),
+                )}
+              </div>
+
+              <div className="grid grid-cols-7 gap-0.5 xl:flex-1 xl:auto-rows-fr">
+                {calendarDays.map((day) => {
+                  const daySchedules = getDaySchedules(day);
+                  const isSelected = isSameDay(day, selectedDate);
+                  const isToday = isSameDay(day, new Date());
+                  const inMonth = isSameMonth(day, currentMonth);
+                  const hasSchedule = daySchedules.length > 0;
+                  const isUserScheduled =
+                    !!user &&
+                    daySchedules.some((schedule) =>
+                      (schedule.members || []).some((member) =>
+                        isScheduleMemberUser(member, user.id),
+                      ),
+                    );
+
+                  return (
+                    <button
+                      key={day.toISOString()}
+                      onClick={() => {
+                        setSelectedDate(day);
+                        if (!inMonth) setCurrentMonth(day);
+                      }}
+                      onDoubleClick={() => {
+                        setSelectedDate(day);
+                        if (!inMonth) setCurrentMonth(day);
+                        if (daySchedules.length > 0) {
+                          setSelectedSchedule(daySchedules[0]);
+                          setShowDetailModal(true);
+                        } else if (canManage) {
+                          setEditingSchedule(null);
+                          setShowCreateModal(true);
+                        }
+                      }}
+                      className={cn(
+                        "relative flex h-9 flex-col items-center justify-center rounded-xl text-sm font-semibold transition-all sm:h-10 xl:h-auto xl:min-h-0",
+                        isSelected &&
+                          "bg-primary text-primary-foreground shadow-md",
+                        !isSelected &&
+                          hasSchedule &&
+                          "border border-primary/60 text-foreground hover:bg-primary/10",
+                        !isSelected &&
+                          !hasSchedule &&
+                          inMonth &&
+                          "text-foreground hover:bg-accent",
+                        !isSelected && !inMonth && "text-muted-foreground/30",
+                        isToday && !isSelected && "ring-2 ring-primary/30",
+                      )}
+                    >
+                      <span>{format(day, "d")}</span>
+                      {(hasSchedule || isUserScheduled) && (
+                        <div className="absolute bottom-1 flex items-center gap-0.5">
+                          {hasSchedule && (
+                            <span
+                              className={cn(
+                                "h-1.5 w-1.5 rounded-full",
+                                isSelected
+                                  ? "bg-primary-foreground"
+                                  : "bg-primary",
+                              )}
+                            />
+                          )}
+                          {isUserScheduled && (
+                            <span
+                              className={cn(
+                                "h-1.5 w-1.5 rounded-full",
+                                isSelected
+                                  ? "bg-emerald-200"
+                                  : "bg-emerald-500",
+                              )}
+                            />
+                          )}
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-border pt-3">
+                <div className="flex items-center gap-1.5">
+                  <span className="h-2 w-2 flex-shrink-0 rounded-full bg-primary" />
+                  <span className="text-xs text-muted-foreground">
+                    Tem escala
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="h-2 w-2 flex-shrink-0 rounded-full bg-emerald-500" />
+                  <span className="text-xs text-muted-foreground">
+                    Voce escalado(a)
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="h-3 w-3 flex-shrink-0 rounded-full ring-2 ring-primary/30" />
+                  <span className="text-xs text-muted-foreground">Hoje</span>
+                </div>
+              </div>
             </div>
 
-            <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-border pt-3">
-              <div className="flex items-center gap-1.5">
-                <span className="h-2 w-2 flex-shrink-0 rounded-full bg-primary" />
-                <span className="text-xs text-muted-foreground">
-                  Tem escala
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="h-2 w-2 flex-shrink-0 rounded-full bg-emerald-500" />
-                <span className="text-xs text-muted-foreground">
-                  Voce escalado(a)
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="h-3 w-3 flex-shrink-0 rounded-full ring-2 ring-primary/30" />
-                <span className="text-xs text-muted-foreground">Hoje</span>
-              </div>
-            </div>
-          </div>
-
-          {tab === "inicio" && (
             <CollapsibleSection
               icon={Calendar}
               title={`Escala de ${format(selectedDate, "dd 'de' MMMM", { locale: ptBR })}`}
@@ -561,6 +581,8 @@ export function UshersDashboard() {
                   : undefined
               }
               defaultOpen
+              className="xl:aspect-square xl:flex xl:flex-col"
+              contentClassName="xl:flex-1 xl:overflow-y-auto"
               action={
                 canManage ? (
                   <Button
@@ -606,161 +628,166 @@ export function UshersDashboard() {
                 </div>
               )}
             </CollapsibleSection>
-          )}
 
-          {tab === "agenda" && (
-            <CollapsibleSection
-              icon={CalendarDays}
-              title={`Todas as Escalas - ${format(currentMonth, "MMMM yyyy", { locale: ptBR })}`}
-              badge={schedules.length}
-              defaultOpen
-            >
-              {loadingSchedules ? (
-                <div className="flex justify-center py-4">
-                  <LoadingSpinner />
-                </div>
-              ) : schedules.length === 0 ? (
-                <p className="py-4 text-center text-sm text-muted-foreground">
-                  Nenhuma escala este mes
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {groupSchedulesByWeekend(schedules).map((group) => {
-                    const isUserInGroup =
-                      !!user &&
-                      group.schedules.some((schedule) =>
-                        (schedule.members || []).some((member) =>
-                          isScheduleMemberUser(member, user.id),
-                        ),
+            {tab === "agenda" && (
+              <CollapsibleSection
+                icon={CalendarDays}
+                title={`Todas as Escalas - ${format(currentMonth, "MMMM yyyy", { locale: ptBR })}`}
+                badge={schedules.length}
+                defaultOpen
+                className="xl:col-span-2"
+              >
+                {loadingSchedules ? (
+                  <div className="flex justify-center py-4">
+                    <LoadingSpinner />
+                  </div>
+                ) : schedules.length === 0 ? (
+                  <p className="py-4 text-center text-sm text-muted-foreground">
+                    Nenhuma escala este mes
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {groupSchedulesByWeekend(schedules).map((group) => {
+                      const isUserInGroup =
+                        !!user &&
+                        group.schedules.some((schedule) =>
+                          (schedule.members || []).some((member) =>
+                            isScheduleMemberUser(member, user.id),
+                          ),
+                        );
+                      const firstDate = parseISO(group.schedules[0].date);
+                      const lastDate = parseISO(
+                        group.schedules[group.schedules.length - 1].date,
                       );
-                    const firstDate = parseISO(group.schedules[0].date);
-                    const lastDate = parseISO(
-                      group.schedules[group.schedules.length - 1].date,
-                    );
-                    const rangeLabel =
-                      group.schedules.length === 1
-                        ? format(firstDate, "dd 'de' MMMM", { locale: ptBR })
-                        : `${format(firstDate, "dd")} - ${format(lastDate, "dd 'de' MMMM", { locale: ptBR })}`;
+                      const rangeLabel =
+                        group.schedules.length === 1
+                          ? format(firstDate, "dd 'de' MMMM", { locale: ptBR })
+                          : `${format(firstDate, "dd")} - ${format(lastDate, "dd 'de' MMMM", { locale: ptBR })}`;
 
-                    return (
-                      <div
-                        key={group.key}
-                        className={cn(
-                          "overflow-hidden rounded-xl border",
-                          isUserInGroup
-                            ? "border-emerald-500/40"
-                            : "border-border",
-                        )}
-                      >
+                      return (
                         <div
+                          key={group.key}
                           className={cn(
-                            "flex items-center justify-between gap-2 px-3 py-2",
-                            isUserInGroup ? "bg-emerald-500/10" : "bg-muted/50",
+                            "overflow-hidden rounded-xl border",
+                            isUserInGroup
+                              ? "border-emerald-500/40"
+                              : "border-border",
                           )}
                         >
-                          <span className="truncate text-xs font-bold uppercase tracking-wide text-foreground">
-                            {rangeLabel}
-                          </span>
-                          <span className="flex-shrink-0 text-xs text-muted-foreground">
-                            {group.schedules.length} escala
-                            {group.schedules.length !== 1 ? "s" : ""}
-                          </span>
-                        </div>
-                        <div className="divide-y divide-border">
-                          {group.schedules.map((schedule) => {
-                            const status =
-                              STATUS_LABELS[schedule.status] ||
-                              STATUS_LABELS.draft;
-                            const isUserInSchedule =
-                              !!user &&
-                              (schedule.members || []).some((member) =>
-                                isScheduleMemberUser(member, user.id),
-                              );
+                          <div
+                            className={cn(
+                              "flex items-center justify-between gap-2 px-3 py-2",
+                              isUserInGroup
+                                ? "bg-emerald-500/10"
+                                : "bg-muted/50",
+                            )}
+                          >
+                            <span className="truncate text-xs font-bold uppercase tracking-wide text-foreground">
+                              {rangeLabel}
+                            </span>
+                            <span className="flex-shrink-0 text-xs text-muted-foreground">
+                              {group.schedules.length} escala
+                              {group.schedules.length !== 1 ? "s" : ""}
+                            </span>
+                          </div>
+                          <div className="divide-y divide-border">
+                            {group.schedules.map((schedule) => {
+                              const status =
+                                STATUS_LABELS[schedule.status] ||
+                                STATUS_LABELS.draft;
+                              const isUserInSchedule =
+                                !!user &&
+                                (schedule.members || []).some((member) =>
+                                  isScheduleMemberUser(member, user.id),
+                                );
 
-                            return (
-                              <div
-                                key={schedule.id}
-                                className="flex cursor-pointer items-center gap-3 px-3 py-2.5 transition-colors hover:bg-accent"
-                                onClick={() => {
-                                  setSelectedSchedule(schedule);
-                                  setShowDetailModal(true);
-                                }}
-                              >
-                                <div className="min-w-[36px] text-center">
-                                  <p className="text-[10px] uppercase leading-none text-muted-foreground">
-                                    {format(parseISO(schedule.date), "EEE", {
-                                      locale: ptBR,
-                                    })}
-                                  </p>
-                                  <p className="text-base font-bold leading-tight text-primary">
-                                    {format(parseISO(schedule.date), "dd")}
-                                  </p>
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                  <div className="flex items-center gap-1.5">
-                                    <p className="truncate text-sm font-medium">
-                                      {schedule.title ||
-                                        format(
-                                          parseISO(schedule.date),
-                                          "EEEE",
-                                          {
-                                            locale: ptBR,
-                                          },
-                                        )}
+                              return (
+                                <div
+                                  key={schedule.id}
+                                  className="flex cursor-pointer items-center gap-3 px-3 py-2.5 transition-colors hover:bg-accent"
+                                  onClick={() => {
+                                    setSelectedSchedule(schedule);
+                                    setShowDetailModal(true);
+                                  }}
+                                >
+                                  <div className="min-w-[36px] text-center">
+                                    <p className="text-[10px] uppercase leading-none text-muted-foreground">
+                                      {format(parseISO(schedule.date), "EEE", {
+                                        locale: ptBR,
+                                      })}
                                     </p>
-                                    {isUserInSchedule && (
-                                      <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-emerald-500" />
-                                    )}
+                                    <p className="text-base font-bold leading-tight text-primary">
+                                      {format(parseISO(schedule.date), "dd")}
+                                    </p>
                                   </div>
-                                  <div className="mt-0.5 flex items-center gap-2">
-                                    <span
-                                      className={cn(
-                                        "rounded-full px-1.5 py-0.5 text-xs",
-                                        status.color,
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex items-center gap-1.5">
+                                      <p className="truncate text-sm font-medium">
+                                        {schedule.title ||
+                                          format(
+                                            parseISO(schedule.date),
+                                            "EEEE",
+                                            {
+                                              locale: ptBR,
+                                            },
+                                          )}
+                                      </p>
+                                      {isUserInSchedule && (
+                                        <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-emerald-500" />
                                       )}
-                                    >
-                                      {status.label}
-                                    </span>
-                                    <span className="text-xs text-muted-foreground">
-                                      {schedule.members?.length || 0} obreiros
-                                    </span>
+                                    </div>
+                                    <div className="mt-0.5 flex items-center gap-2">
+                                      <span
+                                        className={cn(
+                                          "rounded-full px-1.5 py-0.5 text-xs",
+                                          status.color,
+                                        )}
+                                      >
+                                        {status.label}
+                                      </span>
+                                      <span className="text-xs text-muted-foreground">
+                                        {schedule.members?.length || 0} obreiros
+                                      </span>
+                                    </div>
                                   </div>
-                                </div>
-                                {canManage && (
-                                  <div
-                                    className="flex gap-1"
-                                    onClick={(event) => event.stopPropagation()}
-                                  >
-                                    <button
-                                      onClick={() => {
-                                        setEditingSchedule(schedule);
-                                        setShowCreateModal(true);
-                                      }}
-                                      className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                                    >
-                                      <Pencil className="h-3.5 w-3.5" />
-                                    </button>
-                                    <button
-                                      onClick={() =>
-                                        setDeletingSchedule(schedule)
+                                  {canManage && (
+                                    <div
+                                      className="flex gap-1"
+                                      onClick={(event) =>
+                                        event.stopPropagation()
                                       }
-                                      className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
                                     >
-                                      <Trash2 className="h-3.5 w-3.5" />
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
+                                      <button
+                                        onClick={() => {
+                                          setEditingSchedule(schedule);
+                                          setShowCreateModal(true);
+                                        }}
+                                        className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                                      >
+                                        <Pencil className="h-3.5 w-3.5" />
+                                      </button>
+                                      <button
+                                        onClick={() =>
+                                          setDeletingSchedule(schedule)
+                                        }
+                                        className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                                      >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </CollapsibleSection>
-          )}
+                      );
+                    })}
+                  </div>
+                )}
+              </CollapsibleSection>
+            )}
+          </div>
         </div>
 
         <div className="overflow-hidden rounded-2xl border border-border bg-card lg:sticky lg:top-4">
