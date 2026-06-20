@@ -1,5 +1,5 @@
 ﻿import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/stores/authStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,13 +38,7 @@ export function LoginPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Barra superior com seletor de tema */}
-      <div className="flex items-center justify-between p-4">
-        <Link
-          to="/"
-          className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-        >
-          Home
-        </Link>
+      <div className="flex items-center justify-end p-4">
         <ThemeSelector />
       </div>
 
