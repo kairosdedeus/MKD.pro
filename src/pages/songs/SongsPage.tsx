@@ -49,15 +49,13 @@ import {
   Download,
   Headphones,
   Youtube,
-  Settings,
 } from "lucide-react";
 import { useSongs } from "@/hooks/useSongs";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { CreateSongModal } from "@/components/features/songs/CreateSongModal";
 import { EditSongModal } from "@/components/features/songs/EditSongModal";
-import { YoutubeToAudioModal } from "@/components/features/songs/YoutubeToAudioModal";
-import { YoutubeSettingsModal } from "@/components/features/songs/YoutubeSettingsModal";
+import { YouMp3TubeDownloadModal } from "@/components/features/songs/YouMp3TubeDownloadModal";
 import { AudioPlayer, AudioTrack } from "@/components/shared/AudioPlayer";
 import { YoutubeMiniplayer } from "@/components/shared/YoutubeMiniplayer";
 import { songService } from "@/services/songService";
@@ -136,9 +134,7 @@ export function SongsPage() {
   const [editingSong, setEditingSong] = useState<Song | null>(null);
   const [deletingSong, setDeletingSong] = useState<Song | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [showYoutubeModal, setShowYoutubeModal] = useState(false);
-  const [showSettingsModal, setShowSettingsModal] = useState(false);
-  const [youtubeSong, setYoutubeSong] = useState<Song | null>(null);
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
 
   // Player
   const [playerTracks, setPlayerTracks] = useState<AudioTrack[]>([]);
@@ -317,41 +313,24 @@ export function SongsPage() {
               size="sm"
               variant="outline"
               className="h-9 gap-1.5 rounded-full border-red-500/30 px-2.5 text-red-500 hover:bg-red-500/10 hover:text-red-600 sm:rounded-md sm:px-3"
-              onClick={() => {
-                setYoutubeSong(null);
-                setShowYoutubeModal(true);
-              }}
-              title="Converter YouTube para MP3"
+              onClick={() => setShowDownloadModal(true)}
+              title="Baixe a ferramenta para Android ou desktop"
             >
-              <Youtube className="h-4 w-4" />
-              <span className="hidden sm:inline">YouTube para MP3</span>
+              <Download className="h-4 w-4" />
+              <span className="hidden sm:inline">Baixe a ferramenta</span>
             </Button>
           )}
           {canManage && (
-            <>
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-9 gap-1.5 rounded-full px-2.5 text-red-500 border-red-500/30 hover:bg-red-500/10 hover:text-red-600 sm:rounded-md sm:px-3"
-                onClick={() => {
-                  setYoutubeSong(null);
-                  setShowYoutubeModal(true);
-                }}
-                title="Converter YouTube para MP3"
-              >
-                <Youtube className="h-4 w-4" />
-                <span className="hidden sm:inline">YouTube → MP3</span>
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-9 w-9 rounded-full p-0 text-muted-foreground sm:rounded-md"
-                onClick={() => setShowSettingsModal(true)}
-                title="Configurações YouTube"
-              >
-                <Settings className="h-4 w-4" />
-              </Button>
-            </>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-9 gap-1.5 rounded-full px-2.5 text-red-500 border-red-500/30 hover:bg-red-500/10 hover:text-red-600 sm:rounded-md sm:px-3"
+              onClick={() => setShowDownloadModal(true)}
+              title="Baixe a ferramenta para Android ou desktop"
+            >
+              <Download className="h-4 w-4" />
+              <span className="hidden sm:inline">Baixe a ferramenta</span>
+            </Button>
           )}
           {canManage && (
             <Button
@@ -646,14 +625,11 @@ export function SongsPage() {
                       </DropdownMenuItem>
                       {canManage && (
                         <DropdownMenuItem
-                          onClick={() => {
-                            setYoutubeSong(song);
-                            setShowYoutubeModal(true);
-                          }}
+                          onClick={() => setShowDownloadModal(true)}
                           className="text-red-500 focus:text-red-600"
                         >
-                          <Youtube className="h-4 w-4 mr-2" />
-                          YouTube → MP3
+                          <Download className="h-4 w-4 mr-2" />
+                          Baixe a ferramenta
                         </DropdownMenuItem>
                       )}
                       {song.audio_path && (
@@ -755,19 +731,10 @@ export function SongsPage() {
         song={editingSong}
         onSuccess={refetch}
       />
-      <YoutubeToAudioModal
-        open={showYoutubeModal}
-        onOpenChange={setShowYoutubeModal}
-        songId={youtubeSong?.id}
-        songName={youtubeSong?.name}
-        defaultUrl={youtubeSong?.reference_url || ""}
-        onSuccess={() => refetch()}
+      <YouMp3TubeDownloadModal
+        open={showDownloadModal}
+        onOpenChange={setShowDownloadModal}
       />
-      <YoutubeSettingsModal
-        open={showSettingsModal}
-        onOpenChange={setShowSettingsModal}
-      />
-
       <AlertDialog
         open={!!deletingSong}
         onOpenChange={(o) => !o && setDeletingSong(null)}

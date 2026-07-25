@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">YouMp3Tube</string>
+    <string name="app_subtitle">Conversor simples de áudio</string>
+    <string name="converter_title">Converter para MP3</string>
+    <string name="converter_description">Cole um link autorizado do YouTube. O áudio será salvo na pasta Downloads/YouMp3Tube.</string>
+    <string name="link_label">Link do vídeo</string>
+    <string name="link_hint">https://www.youtube.com/watch?v=...</string>
+    <string name="convert_action">Converter para MP3</string>
+    <string name="converting">Convertendo o áudio…</string>
+    <string name="ready">MP3 salvo em:\n%1$s</string>
+    <string name="invalid_link">Informe um link válido do YouTube.</string>
+    <string name="initialization_error">Não foi possível preparar o conversor.</string>
+    <string name="conversion_error">Não foi possível converter este vídeo. Verifique o link e tente novamente.</string>
+    <string name="legal_notice">Use somente conteúdo próprio, licenciado ou autorizado pelo titular.</string>
+</resources>

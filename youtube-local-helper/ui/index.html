@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>YouMp3Tube</title>
+    <link rel="stylesheet" href="/app.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <div class="brand">
+        <div class="brand-mark">♪</div>
+        <div>
+          <p class="eyebrow">CONVERSOR DE ÁUDIO</p>
+          <h1>YouMp3Tube</h1>
+        </div>
+      </div>
+
+      <section class="card">
+        <span class="status"><i></i> Ferramenta ativa neste dispositivo</span>
+        <h2>Converter para MP3</h2>
+        <p class="description">
+          Cole um link autorizado do YouTube. O MP3 será preparado neste
+          computador, sem enviar seus cookies para outro servidor.
+        </p>
+
+        <form id="conversion-form">
+          <label for="media-url">Link do vídeo</label>
+          <input
+            id="media-url"
+            name="url"
+            type="url"
+            autocomplete="url"
+            placeholder="https://www.youtube.com/watch?v=..."
+            required
+          />
+          <button id="convert-button" type="submit">Converter para MP3</button>
+        </form>
+
+        <div id="progress" class="progress hidden" role="status">
+          <span class="spinner"></span>
+          <div>
+            <strong>Convertendo o áudio...</strong>
+            <small>Isso pode levar alguns minutos.</small>
+          </div>
+        </div>
+
+        <div id="result" class="result hidden">
+          <div>
+            <strong>MP3 pronto</strong>
+            <small>Clique abaixo para salvar o arquivo.</small>
+          </div>
+          <a id="download-link" download>Salvar MP3</a>
+        </div>
+
+        <p id="error" class="error hidden" role="alert"></p>
+      </section>
+
+      <p class="legal">
+        Use somente conteúdo próprio, licenciado ou autorizado pelo titular.
+      </p>
+    </main>
+    <script src="/app.js" defer></script>
+  </body>
+</html>

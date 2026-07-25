@@ -1,0 +1,93 @@
+{
+  "name": "yoump3tube-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Aplicativo local para converter links autorizados em MP3",
+  "main": "desktop-main.js",
+  "scripts": {
+    "start": "node server.js",
+    "desktop": "electron .",
+    "prepare:binary": "node scripts/download-ytdlp.mjs",
+    "dist:mac": "npm run prepare:binary && electron-builder --mac dmg zip",
+    "dist:win": "npm run prepare:binary && electron-builder --win nsis",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "ffmpeg-static": "^5.3.0"
+  },
+  "devDependencies": {
+    "electron": "^37.2.3",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "app.yoump3tube.desktop",
+    "productName": "YouMp3Tube",
+    "artifactName": "YouMp3Tube-${os}-${arch}.${ext}",
+    "asar": true,
+    "asarUnpack": [
+      "node_modules/ffmpeg-static/**"
+    ],
+    "files": [
+      "desktop-main.js",
+      "server.js",
+      "ui/**",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/bin",
+        "to": "bin"
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.utilities",
+      "identity": "-",
+      "icon": "build/icon.icns",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "extendInfo": {
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLName": "YouMp3Tube",
+            "CFBundleURLSchemes": [
+              "yoump3tube"
+            ]
+          }
+        ]
+      }
+    },
+    "dmg": {
+      "title": "YouMp3Tube ${version}"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "protocols": [
+        {
+          "name": "YouMp3Tube",
+          "schemes": [
+            "yoump3tube"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
