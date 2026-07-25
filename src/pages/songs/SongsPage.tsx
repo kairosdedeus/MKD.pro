@@ -55,7 +55,8 @@ import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { CreateSongModal } from "@/components/features/songs/CreateSongModal";
 import { EditSongModal } from "@/components/features/songs/EditSongModal";
-import { YouMp3TubeDownloadModal } from "@/components/features/songs/YouMp3TubeDownloadModal";
+import { YouMp3TubeDownloadButton } from "@/components/features/yoump3tube/YouMp3TubeDownloadButton";
+import { YouMp3TubeDownloadModal } from "@/components/features/yoump3tube/YouMp3TubeDownloadModal";
 import { AudioPlayer, AudioTrack } from "@/components/shared/AudioPlayer";
 import { YoutubeMiniplayer } from "@/components/shared/YoutubeMiniplayer";
 import { songService } from "@/services/songService";
@@ -308,30 +309,9 @@ export function SongsPage() {
           </p>
         </div>
         <div className="flex items-center gap-1.5 sm:gap-2">
-          {!canManage && (
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-9 gap-1.5 rounded-full border-red-500/30 px-2.5 text-red-500 hover:bg-red-500/10 hover:text-red-600 sm:rounded-md sm:px-3"
-              onClick={() => setShowDownloadModal(true)}
-              title="Baixe a ferramenta para Android ou desktop"
-            >
-              <Download className="h-4 w-4" />
-              <span className="hidden sm:inline">Baixe a ferramenta</span>
-            </Button>
-          )}
-          {canManage && (
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-9 gap-1.5 rounded-full px-2.5 text-red-500 border-red-500/30 hover:bg-red-500/10 hover:text-red-600 sm:rounded-md sm:px-3"
-              onClick={() => setShowDownloadModal(true)}
-              title="Baixe a ferramenta para Android ou desktop"
-            >
-              <Download className="h-4 w-4" />
-              <span className="hidden sm:inline">Baixe a ferramenta</span>
-            </Button>
-          )}
+          <YouMp3TubeDownloadButton
+            onClick={() => setShowDownloadModal(true)}
+          />
           {canManage && (
             <Button
               size="sm"
