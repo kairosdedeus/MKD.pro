@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { CreateScheduleModal } from "@/components/features/schedules/CreateScheduleModal";
 import { ScheduleDetailModal } from "@/components/features/schedules/ScheduleDetailModal";
+import { WorshipSongsPreview } from "@/components/features/schedules/WorshipSongsPreview";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -701,38 +702,7 @@ export function MediaDashboard() {
                   </div>
 
                   {selectedDayWorship.songs.length > 0 ? (
-                    <div className="space-y-1.5">
-                      {selectedDayWorship.songs.map((ss, index) => {
-                        const song = ss.song;
-                        const songKey = ss.execution_key || song.original_key;
-
-                        return (
-                          <div
-                            key={`${song.id}-${index}`}
-                            className="flex items-center gap-2 rounded-lg border border-amber-500/10 bg-card/80 px-2.5 py-2"
-                          >
-                            <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md bg-amber-500/10 text-xs font-bold text-amber-600 dark:text-amber-400">
-                              {index + 1}
-                            </span>
-                            <div className="min-w-0 flex-1">
-                              <p className="truncate text-sm font-medium text-foreground">
-                                {song.name}
-                              </p>
-                              {song.artist && (
-                                <p className="truncate text-xs text-muted-foreground">
-                                  {song.artist}
-                                </p>
-                              )}
-                            </div>
-                            {songKey && (
-                              <span className="rounded-md bg-amber-500/10 px-2 py-0.5 text-xs font-semibold text-amber-600 dark:text-amber-400">
-                                {songKey}
-                              </span>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
+                    <WorshipSongsPreview songs={selectedDayWorship.songs} />
                   ) : (
                     <p className="text-sm text-amber-700 dark:text-amber-400">
                       O Louvor tem escala neste dia mas ainda nao adicionou
