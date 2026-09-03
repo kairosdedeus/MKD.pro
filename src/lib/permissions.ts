@@ -27,6 +27,10 @@ export const isGerencial = (profiles: Profile[]): boolean => {
   return profiles.some((p) => p.codigo === PROFILE_CODES.GERENCIAL);
 };
 
+export const isAnyLeader = (profiles: Profile[]): boolean => {
+  return isLeader(profiles);
+};
+
 export const isLeader = (
   profiles: Profile[],
   teamType?: TeamTypeCode,

@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/stores/authStore";
 import { useTeams } from "@/hooks/useTeams";
+import { isAnyLeader, isGerencial } from "@/lib/permissions";
 
 const managementItems = [
   { name: "Dashboard", href: "/gerencial", icon: LayoutDashboard },
@@ -24,19 +25,8 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
   const { user, profiles } = useAuthStore();
   const { teams } = useTeams();
 
-  const isManagement = profiles.some(
-    (profile) => profile.codigo === "gerencial",
-  );
-  const isAnyLeader = profiles.some((profile) =>
-    [
-      "gerencial",
-      "lider_louvor",
-      "lider_danca",
-      "lider_obreiros",
-      "lider_midia",
-      "lider_celula",
-    ].includes(profile.codigo),
-  );
+  const isManagement = isGerencial(profiles);
+  const canAccessUsers = isAnyLeader(profiles);
   const isWorshipProfile = profiles.some((profile) =>
     ["lider_louvor", "membro_louvor"].includes(profile.codigo),
   );
@@ -47,10 +37,10 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
   );
   const canAccessSongs =
     isManagement || (isWorshipProfile && hasWorshipMembership);
-  const visibleManagementItems =
-    !isManagement && canAccessSongs
-      ? managementItems.filter((item) => item.href !== "/gerencial/musicas")
-      : managementItems;
+  const visibleManagementItems = managementItems.filter((item) => {
+    if (isManagement) return true;
+    return item.href === "/gerencial/usuarios";
+  });
 
   return (
     <div className="flex flex-col h-full sidebar-bg border-r">
@@ -77,7 +67,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
       </div>
 
       <nav className="flex-1 px-3 pb-4 space-y-4 overflow-y-auto">
-        {isAnyLeader && (
+        {canAccessUsers && visibleManagementItems.length > 0 && (
           <div>
             <h3
               className="px-2 text-[10px] font-semibold uppercase tracking-widest mb-1"
@@ -109,7 +99,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
           </div>
         )}
 
-        {!isManagement && (
+        {!isManagement && canAccessSongs && (
           <div>
             <h3
               className="px-2 text-[10px] font-semibold uppercase tracking-widest mb-1"

@@ -42,6 +42,7 @@ import {
   TEAM_TYPE_LABELS,
   TEAM_TYPE_ICONS,
 } from "@/lib/team-flow";
+import { isGerencial } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
 
 const EMAIL_SUFFIX = "@mkd.com";
@@ -83,15 +84,28 @@ export function Header() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
 
-  const isManagement = profiles.some(
-    (profile) => profile.codigo === "gerencial",
-  );
+  const isManagement = isGerencial(profiles);
 
   // Calcular dashboards permitidos
   const allowedDashboards = React.useMemo(() => {
+    if (isManagement) {
+      return Object.entries(TEAM_TYPE_ROUTES).map(([code, href]) => {
+        const Icon = TEAM_TYPE_ICONS[code];
+        const groupedTeams = (teams as any[]).filter(
+          (team: any) => team.team_type?.codigo === code,
+        );
+        return {
+          code,
+          name: TEAM_TYPE_LABELS[code] || groupedTeams[0]?.team_type?.nome || code,
+          href,
+          icon: Icon,
+          teams: groupedTeams,
+        };
+      });
+    }
+
     const visibleTeams = (teams as any[]).filter((team: any) => {
       if (!team.team_type?.codigo) return false;
-      if (isManagement) return true;
       return (team.members || []).some(
         (member: any) => member.user_id === user?.id,
       );

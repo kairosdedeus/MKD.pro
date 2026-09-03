@@ -4,7 +4,7 @@ import { useAuthStore } from "./stores/authStore";
 import { DashboardLayout } from "./components/layouts/DashboardLayout";
 import { Toaster } from "./components/ui/toaster";
 import { LoadingSpinner } from "./components/shared/LoadingSpinner";
-import { isGerencial, isMember } from "./lib/permissions";
+import { isAnyLeader, isGerencial, isMember } from "./lib/permissions";
 import { TeamTypeCode } from "./types";
 import { useTeams } from "./hooks/useTeams";
 import { TEAM_TYPE_ROUTES } from "./lib/team-flow";
@@ -104,21 +104,8 @@ function ProtectedGerencialRoute({ children }: { children: React.ReactNode }) {
 
 function ProtectedUsersRoute({ children }: { children: React.ReactNode }) {
   const { profiles } = useAuthStore();
-  const { isLeader: checkLeader } = {
-    isLeader: (p: typeof profiles) =>
-      p.some((x) =>
-        [
-          "gerencial",
-          "lider_louvor",
-          "lider_danca",
-          "lider_obreiros",
-          "lider_midia",
-          "lider_celula",
-        ].includes(x.codigo),
-      ),
-  };
 
-  if (!checkLeader(profiles)) {
+  if (!isAnyLeader(profiles)) {
     return (
       <Suspense fallback={<PageLoader />}>
         <AccessDeniedPage />
@@ -224,7 +211,6 @@ function App() {
           <Routes>
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/test-connection" element={<TestConnectionPage />} />
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
         </Suspense>
@@ -284,9 +270,11 @@ function App() {
           <Route
             path="musicas"
             element={
-              <Suspense fallback={<PageLoader />}>
-                <SongsPage />
-              </Suspense>
+              <ProtectedSongsRoute>
+                <Suspense fallback={<PageLoader />}>
+                  <SongsPage />
+                </Suspense>
+              </ProtectedSongsRoute>
             }
           />
           <Route
@@ -350,9 +338,11 @@ function App() {
           <Route
             path="test-connection"
             element={
-              <Suspense fallback={<PageLoader />}>
-                <TestConnectionPage />
-              </Suspense>
+              <ProtectedGerencialRoute>
+                <Suspense fallback={<PageLoader />}>
+                  <TestConnectionPage />
+                </Suspense>
+              </ProtectedGerencialRoute>
             }
           />
         </Route>
