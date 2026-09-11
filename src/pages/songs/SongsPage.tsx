@@ -62,7 +62,7 @@ import { YoutubeMiniplayer } from "@/components/shared/YoutubeMiniplayer";
 import { songService } from "@/services/songService";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuthStore } from "@/stores/authStore";
-import { isGerencial } from "@/lib/permissions";
+import { isGerencial, isLeader } from "@/lib/permissions";
 import { Song } from "@/types";
 import { supabase } from "@/lib/supabaseClient";
 import { cn } from "@/lib/utils";
@@ -125,7 +125,8 @@ function Section({
 export function SongsPage() {
   const { toast } = useToast();
   const { profiles } = useAuthStore();
-  const canManage = isGerencial(profiles || []);
+  const canManage =
+    isGerencial(profiles || []) || isLeader(profiles || [], "louvor");
   const { songs, loading, refetch } = useSongs();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterKey, setFilterKey] = useState("all");
