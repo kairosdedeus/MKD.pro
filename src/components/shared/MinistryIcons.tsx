@@ -135,3 +135,21 @@ export function UshersIcon(props: MinistryIconProps) {
     </MinimalLogoMark>
   );
 }
+
+export function ChildrenNetworkIcon(props: MinistryIconProps) {
+  return (
+    <MinimalLogoMark {...props}>
+      <circle cx="67" cy="33" r="7" fill={cyan} />
+      <circle cx="55" cy="48" r="6" fill={darkGrey} />
+      <circle cx="79" cy="48" r="6" fill={darkGrey} />
+      <circle cx="63" cy="61" r="5.5" fill={cyan} />
+      <circle cx="74" cy="61" r="5.5" fill={cyan} />
+      <path
+        d="M62 39L57 46M72 39L77 46M67 40V55M58 56L64 58M77 56L71 58"
+        stroke={darkGrey}
+        strokeWidth="4.5"
+        strokeLinecap="round"
+      />
+    </MinimalLogoMark>
+  );
+}

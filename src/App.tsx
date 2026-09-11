@@ -65,6 +65,11 @@ const CellsDashboard = lazy(() =>
     default: m.CellsDashboard,
   })),
 );
+const ChildrenNetworkDashboard = lazy(() =>
+  import("./pages/children/ChildrenNetworkDashboard").then((m) => ({
+    default: m.ChildrenNetworkDashboard,
+  })),
+);
 const AccessDeniedPage = lazy(() =>
   import("./pages/AccessDeniedPage").then((m) => ({
     default: m.AccessDeniedPage,
@@ -313,6 +318,16 @@ function App() {
               <ProtectedMinistryRoute teamType="obreiros">
                 <Suspense fallback={<PageLoader />}>
                   <UshersDashboard />
+                </Suspense>
+              </ProtectedMinistryRoute>
+            }
+          />
+          <Route
+            path="rede-criancas"
+            element={
+              <ProtectedMinistryRoute teamType="rede_criancas">
+                <Suspense fallback={<PageLoader />}>
+                  <ChildrenNetworkDashboard />
                 </Suspense>
               </ProtectedMinistryRoute>
             }

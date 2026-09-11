@@ -348,7 +348,7 @@ export function CreateUserModal({
               <Label htmlFor="sobrenome">Sobrenome *</Label>
               <Input
                 id="sobrenome"
-                placeholder="Ex: Cabrera"
+                placeholder="Ex: Silva"
                 autoComplete="off"
                 value={sobrenome}
                 onChange={(e) => setSobrenome(e.target.value)}

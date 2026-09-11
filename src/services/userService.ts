@@ -1,7 +1,6 @@
 import { supabase } from "@/lib/supabaseClient";
 import { UserFormData, UserProfile, UserProfileWithProfiles } from "@/types";
 import { isDuplicateGeneratedEmailError } from "@/lib/user-email";
-import { logger } from "@/lib/logger";
 
 export const userService = {
   async getUsers() {

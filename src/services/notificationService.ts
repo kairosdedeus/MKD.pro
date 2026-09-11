@@ -84,6 +84,7 @@ function teamRoute(code?: string | null) {
   if (code === "danca") return "/danca";
   if (code === "louvor") return "/louvor";
   if (code === "obreiros") return "/obreiros";
+  if (code === "rede_criancas") return "/rede-criancas";
   if (code === "midia") return "/midia";
   if (code === "celula") return "/celulas";
   return "/louvor";
@@ -189,9 +190,7 @@ async function getScheduleSnapshot(scheduleId: string) {
 
 function getScheduleMemberUserIds(schedule?: ScheduleSnapshot | null) {
   return unique(
-    (schedule?.members || []).map(
-      (member) => member.team_member?.user_id,
-    ),
+    (schedule?.members || []).map((member) => member.team_member?.user_id),
   );
 }
 
@@ -210,7 +209,9 @@ function getAddedSongNames(
   const previousKeys = new Set(getScheduleSongKeys(previousSchedule));
   return (schedule.songs || [])
     .filter((song) => {
-      const key = song.song_id ? `${song.song_id}:${song.execution_key || ""}` : "";
+      const key = song.song_id
+        ? `${song.song_id}:${song.execution_key || ""}`
+        : "";
       return key && !previousKeys.has(key);
     })
     .map((song) => song.song?.name)
@@ -245,7 +246,9 @@ function getAddedMemberUserIds(
   schedule: ScheduleSnapshot,
 ) {
   const previousIds = new Set(getScheduleMemberUserIds(previousSchedule));
-  return getScheduleMemberUserIds(schedule).filter((id) => !previousIds.has(id));
+  return getScheduleMemberUserIds(schedule).filter(
+    (id) => !previousIds.has(id),
+  );
 }
 
 function getRemovedMemberUserIds(

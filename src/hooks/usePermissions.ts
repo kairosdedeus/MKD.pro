@@ -26,6 +26,7 @@ export function usePermissions() {
         "lider_louvor",
         "lider_danca",
         "lider_obreiros",
+        "lider_rede_criancas",
         "lider_midia",
         "lider_celula",
       ].includes(c),

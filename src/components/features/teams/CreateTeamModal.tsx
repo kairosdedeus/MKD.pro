@@ -45,6 +45,8 @@ const MINISTRY_COLORS: Record<string, string> = {
   midia: "text-blue-600 dark:text-blue-400 bg-primary/10 border-primary/20",
   obreiros:
     "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/30",
+  rede_criancas:
+    "text-pink-600 dark:text-pink-400 bg-pink-500/10 border-pink-500/30",
   celula:
     "text-orange-600 dark:text-orange-400 bg-orange-500/10 border-orange-500/30",
 };

@@ -6,17 +6,25 @@ export type ProfileCode =
   | "lider_louvor"
   | "lider_danca"
   | "lider_obreiros"
+  | "lider_rede_criancas"
   | "lider_midia"
   | "lider_celula"
   | "auxiliar_celula"
   | "membro_louvor"
   | "membro_danca"
   | "membro_obreiro"
+  | "membro_rede_criancas"
   | "membro_midia"
   | "membro_celula";
 
 // Tipos de equipe
-export type TeamTypeCode = "louvor" | "danca" | "obreiros" | "midia" | "celula";
+export type TeamTypeCode =
+  | "louvor"
+  | "danca"
+  | "obreiros"
+  | "rede_criancas"
+  | "midia"
+  | "celula";
 
 // Status de escala
 export type ScheduleStatus = "draft" | "published" | "completed";

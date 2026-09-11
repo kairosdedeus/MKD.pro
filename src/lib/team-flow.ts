@@ -1,6 +1,7 @@
 import type { ComponentType, SVGProps } from "react";
 import { Home } from "lucide-react";
 import {
+  ChildrenNetworkIcon,
   DanceIcon,
   MediaIcon,
   UshersIcon,
@@ -18,6 +19,8 @@ export const PROFILE_TO_TEAM_TYPE: Record<string, string> = {
   membro_midia: "midia",
   lider_obreiros: "obreiros",
   membro_obreiro: "obreiros",
+  lider_rede_criancas: "rede_criancas",
+  membro_rede_criancas: "rede_criancas",
   lider_celula: "celula",
   auxiliar_celula: "celula",
   membro_celula: "celula",
@@ -28,6 +31,7 @@ export const TEAM_TYPE_LABELS: Record<string, string> = {
   danca: "Dança",
   midia: "Mídia",
   obreiros: "Obreiros",
+  rede_criancas: "Rede de Crianças",
   celula: "Célula",
 };
 
@@ -36,6 +40,7 @@ export const TEAM_TYPE_ROUTES: Record<string, string> = {
   danca: "/danca",
   midia: "/midia",
   obreiros: "/obreiros",
+  rede_criancas: "/rede-criancas",
   celula: "/celulas",
 };
 
@@ -44,6 +49,7 @@ export const TEAM_TYPE_ICONS: Record<string, TeamTypeIcon> = {
   danca: DanceIcon,
   midia: MediaIcon,
   obreiros: UshersIcon,
+  rede_criancas: ChildrenNetworkIcon,
   celula: Home,
 };
 

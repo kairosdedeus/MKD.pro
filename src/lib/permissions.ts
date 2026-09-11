@@ -5,12 +5,14 @@ export const PROFILE_CODES = {
   LIDER_LOUVOR: "lider_louvor" as ProfileCode,
   LIDER_DANCA: "lider_danca" as ProfileCode,
   LIDER_OBREIROS: "lider_obreiros" as ProfileCode,
+  LIDER_REDE_CRIANCAS: "lider_rede_criancas" as ProfileCode,
   LIDER_MIDIA: "lider_midia" as ProfileCode,
   LIDER_CELULA: "lider_celula" as ProfileCode,
   AUXILIAR_CELULA: "auxiliar_celula" as ProfileCode,
   MEMBRO_LOUVOR: "membro_louvor" as ProfileCode,
   MEMBRO_DANCA: "membro_danca" as ProfileCode,
   MEMBRO_OBREIRO: "membro_obreiro" as ProfileCode,
+  MEMBRO_REDE_CRIANCAS: "membro_rede_criancas" as ProfileCode,
   MEMBRO_MIDIA: "membro_midia" as ProfileCode,
   MEMBRO_CELULA: "membro_celula" as ProfileCode,
 };
@@ -19,6 +21,7 @@ export const TEAM_TYPE_CODES = {
   LOUVOR: "louvor" as TeamTypeCode,
   DANCA: "danca" as TeamTypeCode,
   OBREIROS: "obreiros" as TeamTypeCode,
+  REDE_CRIANCAS: "rede_criancas" as TeamTypeCode,
   MIDIA: "midia" as TeamTypeCode,
   CELULA: "celula" as TeamTypeCode,
 };
@@ -41,6 +44,7 @@ export const isLeader = (
     PROFILE_CODES.LIDER_LOUVOR,
     PROFILE_CODES.LIDER_DANCA,
     PROFILE_CODES.LIDER_OBREIROS,
+    PROFILE_CODES.LIDER_REDE_CRIANCAS,
     PROFILE_CODES.LIDER_MIDIA,
     PROFILE_CODES.LIDER_CELULA,
   ];
@@ -53,6 +57,7 @@ export const isLeader = (
     louvor: PROFILE_CODES.LIDER_LOUVOR,
     danca: PROFILE_CODES.LIDER_DANCA,
     obreiros: PROFILE_CODES.LIDER_OBREIROS,
+    rede_criancas: PROFILE_CODES.LIDER_REDE_CRIANCAS,
     midia: PROFILE_CODES.LIDER_MIDIA,
     celula: PROFILE_CODES.LIDER_CELULA,
   };
@@ -68,6 +73,10 @@ export const isMember = (
     louvor: [PROFILE_CODES.MEMBRO_LOUVOR, PROFILE_CODES.LIDER_LOUVOR],
     danca: [PROFILE_CODES.MEMBRO_DANCA, PROFILE_CODES.LIDER_DANCA],
     obreiros: [PROFILE_CODES.MEMBRO_OBREIRO, PROFILE_CODES.LIDER_OBREIROS],
+    rede_criancas: [
+      PROFILE_CODES.MEMBRO_REDE_CRIANCAS,
+      PROFILE_CODES.LIDER_REDE_CRIANCAS,
+    ],
     midia: [PROFILE_CODES.MEMBRO_MIDIA, PROFILE_CODES.LIDER_MIDIA],
     celula: [
       PROFILE_CODES.MEMBRO_CELULA,
@@ -153,6 +162,7 @@ export const getMinistryColor = (teamType: TeamTypeCode): string => {
     danca: "bg-dance text-dance-foreground",
     midia: "bg-media text-media-foreground",
     obreiros: "bg-ushers text-ushers-foreground",
+    rede_criancas: "bg-pink-500/15 text-pink-600 dark:text-pink-400",
     celula: "bg-cells text-cells-foreground",
   };
 
@@ -165,6 +175,7 @@ export const getMinistryColorHex = (teamType: TeamTypeCode): string => {
     danca: "#ec4899",
     midia: "#3b82f6",
     obreiros: "#10b981",
+    rede_criancas: "#f472b6",
     celula: "#f97316",
   };
 
