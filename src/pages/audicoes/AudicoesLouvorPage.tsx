@@ -1063,7 +1063,8 @@ export function AudicoesLouvorPage() {
                     Envio pelo WhatsApp
                   </p>
                   <p className="mt-1 text-muted-foreground">
-                    Abra o WhatsApp pelo botão abaixo e envie seu vídeo para a equipe.
+                    Abra o WhatsApp pelo botão abaixo e envie seu vídeo para a
+                    equipe.
                   </p>
                   <a
                     href="https://w.app/audicaomkd"
