@@ -345,7 +345,7 @@ export function AudicoesLouvorPage() {
 
         <form onSubmit={handleSubmit} className="px-4 pb-8 pt-2 sm:px-7">
           {currentSection === 1 && (
-            <div className="space-y-6">
+            <div className="space-y-8">
               <h2 className="border-b-2 border-primary pb-2 text-2xl font-bold text-primary">
                 📋 Dados Pessoais
               </h2>
@@ -456,7 +456,7 @@ export function AudicoesLouvorPage() {
           )}
 
           {currentSection === 2 && (
-            <div className="space-y-6">
+            <div className="space-y-8">
               <h2 className="border-b-2 border-primary pb-2 text-2xl font-bold text-primary">
                 ✝️ Jornada no M12
               </h2>
@@ -667,7 +667,7 @@ export function AudicoesLouvorPage() {
           )}
 
           {currentSection === 3 && (
-            <div className="space-y-6">
+            <div className="space-y-8">
               <h2 className="border-b-2 border-primary pb-2 text-2xl font-bold text-primary">
                 🎸 Chamado e Ministério
               </h2>
@@ -861,7 +861,7 @@ export function AudicoesLouvorPage() {
           )}
 
           {currentSection === 4 && (
-            <div className="space-y-6">
+            <div className="space-y-8">
               <h2 className="border-b-2 border-primary pb-2 text-2xl font-bold text-primary">
                 📅 Disponibilidade e Compromisso
               </h2>
@@ -998,7 +998,7 @@ export function AudicoesLouvorPage() {
           )}
 
           {currentSection === 5 && (
-            <div className="space-y-6">
+            <div className="space-y-8">
               <h2 className="border-b-2 border-primary pb-2 text-2xl font-bold text-primary">
                 🎬 Vídeo de Avaliação
               </h2>
@@ -1058,11 +1058,21 @@ export function AudicoesLouvorPage() {
               )}
 
               {form.video_metodo === "whatsapp" && (
-                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900 shadow-sm dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200">
-                  <p className="font-semibold">Envio pelo WhatsApp</p>
-                  <p className="mt-1">
-                    WhatsApp oficial: <strong>67984213816</strong>
+                <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-foreground shadow-sm">
+                  <p className="font-semibold text-emerald-700 dark:text-emerald-300">
+                    Envio pelo WhatsApp
                   </p>
+                  <p className="mt-1 text-muted-foreground">
+                    Abra o WhatsApp pelo botão abaixo e envie seu vídeo para a equipe.
+                  </p>
+                  <a
+                    href="https://w.app/audicaomkd"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-emerald-600 px-4 py-2.5 font-semibold text-white transition-colors hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 sm:w-auto"
+                  >
+                    Abrir WhatsApp
+                  </a>
                 </div>
               )}
 
@@ -1088,7 +1098,7 @@ export function AudicoesLouvorPage() {
           )}
 
           {currentSection === 6 && (
-            <div className="space-y-6">
+            <div className="space-y-8">
               <h2 className="border-b-2 border-primary pb-2 text-2xl font-bold text-primary">
                 ✅ Declaração Final
               </h2>
