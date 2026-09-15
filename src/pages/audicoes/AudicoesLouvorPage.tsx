@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ const initialForm = {
   telefone: "",
   email: "",
   endereco: "",
+  mensagem: "",
   encontro_deus: "",
   data_encontro: "",
   escola_lideres: "",
@@ -23,6 +24,8 @@ const initialForm = {
   ministerio: "",
   instrumentos: [] as string[],
   outro_instrumento: "",
+  discipulado: "",
+  discipulador: "",
   chamado: "",
   tempo_experiencia: "",
   nivel: "",
@@ -33,7 +36,9 @@ const initialForm = {
   compromisso_cultos: "",
   compromisso_obs: "",
   vida_devocional: "",
+  vida_devocional_duvidas: "",
   video_metodo: "upload" as "upload" | "whatsapp",
+  video_link: "",
   video_file: null as File | null,
   declaracao: false,
   assinatura: "",
@@ -61,6 +66,30 @@ const disponibilidadeOptions = [
   "Domingo",
 ];
 
+const fieldBaseClass =
+  "w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus:ring-2 [color-scheme:light] dark:[color-scheme:dark]";
+
+const choiceClass =
+  "flex cursor-pointer items-center gap-3 rounded-xl border border-transparent bg-muted/50 p-3 transition-colors hover:border-primary/40 hover:bg-primary/5 has-[:checked]:border-primary has-[:checked]:bg-primary/10";
+
+const isFilled = (value: unknown) => {
+  if (Array.isArray(value)) return value.length > 0;
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") return value.trim().length > 0;
+  return value !== undefined && value !== null;
+};
+
+const getFieldClass = (invalid: boolean) =>
+  `${fieldBaseClass} ${invalid ? "border-destructive focus:border-destructive focus:ring-destructive/20" : "focus:border-primary focus:ring-primary/20"}`;
+
+const formatPhone = (value: string) => {
+  const digits = value.replace(/\D/g, "").slice(0, 11);
+  if (!digits) return "";
+  if (digits.length <= 2) return `(${digits}`;
+  if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+};
+
 export function AudicoesLouvorPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -68,7 +97,27 @@ export function AudicoesLouvorPage() {
   const [currentSection, setCurrentSection] = useState(1);
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const registrationsOpen = audicaoService.isRegistrationOpen();
+  const [fieldErrors, setFieldErrors] = useState<Record<string, boolean>>({});
+  const [registrationsOpen, setRegistrationsOpen] = useState<boolean | null>(
+    null,
+  );
+
+  useEffect(() => {
+    let isMounted = true;
+
+    audicaoService
+      .getRegistrationStatus()
+      .then((open) => {
+        if (isMounted) setRegistrationsOpen(open);
+      })
+      .catch(() => {
+        if (isMounted) setRegistrationsOpen(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const totalSections = 6;
 
@@ -77,54 +126,79 @@ export function AudicoesLouvorPage() {
     value: string | boolean | string[] | File | null,
   ) => {
     setForm((current) => ({ ...current, [field]: value }));
+    setFieldErrors((current) => ({ ...current, [field]: false }));
   };
 
   const validateCurrentSection = () => {
-    const fieldsBySection: Record<number, string[]> = {
-      1: ["nome_completo", "data_nascimento", "telefone", "email"],
+    const errors: Record<string, boolean> = {};
+    const requiredBySection: Record<number, string[]> = {
+      1: ["nome_completo", "data_nascimento", "telefone", "email", "mensagem"],
       2: ["encontro_deus", "escola_lideres", "celula", "tempo_igreja"],
-      3: ["ministerio", "chamado", "tempo_experiencia"],
+      3: ["ministerio", "chamado", "tempo_experiencia", "nivel", "leitura"],
       4: ["disponibilidade", "compromisso_cultos", "vida_devocional"],
+      5: ["video_metodo"],
       6: ["declaracao", "assinatura"],
     };
 
-    const required = fieldsBySection[currentSection] ?? [];
-    const invalid = required.find((field) => {
+    const required = requiredBySection[currentSection] ?? [];
+    required.forEach((field) => {
       const value = form[field as keyof typeof form];
-      if (Array.isArray(value)) return value.length === 0;
-      if (typeof value === "boolean") return !value;
-      return !String(value).trim();
+      if (!isFilled(value)) {
+        errors[field] = true;
+      }
     });
 
-    if (currentSection === 5) {
-      if (form.video_metodo === "upload" && !form.video_file) {
-        toast({
-          variant: "destructive",
-          title: "Vídeo obrigatório",
-          description: "Selecione um arquivo de vídeo para enviar no sistema.",
-        });
-        return false;
-      }
-
+    if (currentSection === 2) {
       if (
-        form.video_metodo === "whatsapp" )
+        ["Sim", "Em andamento"].includes(form.encontro_deus) &&
+        !form.data_encontro
       ) {
-        toast({
-          variant: "destructive",
-          title: "Envio do vídeo",
-          description:
-            "Informe o link do vídeo ou use o WhatsApp 67984213816 para envio direto.",
-        });
-        return false;
+        errors.data_encontro = true;
+      }
+      if (form.escola_lideres === "Concluí" && !form.data_escola) {
+        errors.data_escola = true;
+      }
+      if (form.celula === "Sim" && !form.celula_info) {
+        errors.celula_info = true;
+      }
+      if (form.discipulado === "Sim" && !form.discipulador) {
+        errors.discipulador = true;
       }
     }
 
-    if (invalid) {
+    if (currentSection === 3) {
+      if (form.experiencia_anterior === "Sim" && !form.experiencia_detalhes) {
+        errors.experiencia_detalhes = true;
+      }
+    }
+
+    if (currentSection === 4) {
+      if (form.compromisso_cultos === "Parcialmente" && !form.compromisso_obs) {
+        errors.compromisso_obs = true;
+      }
+      if (
+        form.vida_devocional === "Tenho dúvidas" &&
+        !form.vida_devocional_duvidas
+      ) {
+        errors.vida_devocional_duvidas = true;
+      }
+    }
+
+    if (
+      currentSection === 5 &&
+      form.video_metodo === "upload" &&
+      !form.video_file
+    ) {
+      errors.video_file = true;
+    }
+
+    setFieldErrors(errors);
+
+    if (Object.keys(errors).length > 0) {
       toast({
         variant: "destructive",
         title: "Campos obrigatórios",
-        description:
-          "Preencha todos os campos obrigatórios antes de continuar.",
+        description: "Revise os campos destacados antes de continuar.",
       });
       return false;
     }
@@ -150,6 +224,11 @@ export function AudicoesLouvorPage() {
     });
   };
 
+  const progress = useMemo(
+    () => Math.round((currentSection / totalSections) * 100),
+    [currentSection],
+  );
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!validateCurrentSection()) return;
@@ -162,7 +241,7 @@ export function AudicoesLouvorPage() {
         data_envio: new Date().toISOString(),
         video_link:
           form.video_metodo === "whatsapp"
-            ? "https://wa.me/67984213816"
+            ? "https://w.app/audicaomkd"
             : form.video_link,
       });
 
@@ -182,18 +261,24 @@ export function AudicoesLouvorPage() {
     }
   };
 
-  const progress = useMemo(
-    () => Math.round((currentSection / totalSections) * 100),
-    [currentSection],
-  );
+  if (registrationsOpen === null) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4 text-foreground">
+        <div className="flex items-center gap-3 rounded-full border border-border bg-card px-5 py-3 text-sm text-muted-foreground shadow-sm">
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-primary" />
+          Verificando inscrições...
+        </div>
+      </div>
+    );
+  }
 
   if (!registrationsOpen) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-5 text-white">
-        <div className="mx-auto mt-20 max-w-2xl rounded-[20px] border border-white/10 bg-white/5 p-8 text-center shadow-2xl backdrop-blur-sm">
+      <div className="flex min-h-screen items-center justify-center bg-background p-5 text-foreground">
+        <div className="mx-auto max-w-2xl rounded-2xl border border-border bg-card p-8 text-center shadow-xl">
           <div className="mb-4 text-6xl">⏳</div>
           <h2 className="mb-3 text-3xl font-bold">Inscrições encerradas</h2>
-          <p className="text-base text-white/80">
+          <p className="text-base text-muted-foreground">
             A temporada de audições para o louvor está temporariamente fechada.
             Volte em breve para acompanhar a abertura das inscrições.
           </p>
@@ -207,13 +292,13 @@ export function AudicoesLouvorPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-700 via-purple-700 to-fuchsia-600 p-5 text-white">
-        <div className="mx-auto mt-16 max-w-2xl rounded-[20px] border border-white/20 bg-white/10 p-8 text-center shadow-2xl backdrop-blur-sm">
+      <div className="flex min-h-screen items-center justify-center bg-background p-5 text-foreground">
+        <div className="mx-auto max-w-2xl rounded-2xl border border-border bg-card p-8 text-center shadow-xl">
           <div className="mb-4 text-6xl">✅</div>
           <h2 className="mb-4 text-3xl font-bold">
             Inscrição Enviada com Sucesso!
           </h2>
-          <p className="text-base text-white/85">
+          <p className="text-base text-muted-foreground">
             Obrigado pelo seu interesse em servir na equipe de louvor da Igreja
             MKD. Nossa equipe analisará sua inscrição e entrará em contato em
             breve.
@@ -227,85 +312,133 @@ export function AudicoesLouvorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#667eea] via-[#764ba2] to-[#667eea] p-5 text-slate-800">
-      <div className="mx-auto max-w-[800px] overflow-hidden rounded-[20px] bg-white shadow-[0_20px_60px_rgba(0,0,0,0.3)]">
-        <div className="bg-gradient-to-r from-[#667eea] to-[#764ba2] p-10 text-center text-white">
-          <h1 className="text-3xl font-bold">
-            🎵 Audição - Equipe de Louvor MKD
-          </h1>
-          <p className="mt-2 text-lg opacity-90">Igreja MKD | Modelo M12</p>
+    <div className="min-h-screen bg-background p-3 text-foreground sm:p-5">
+      <div className="mx-auto max-w-[800px] overflow-hidden rounded-2xl border border-border bg-card shadow-xl sm:rounded-3xl">
+        <div className="flex items-center justify-between gap-3 border-b border-primary/20 bg-primary p-4 text-primary-foreground sm:p-5">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => navigate("/login")}
+            className="border-primary-foreground/20 bg-primary-foreground/10 text-primary-foreground hover:bg-primary-foreground/20"
+          >
+            ← Voltar para o login
+          </Button>
+          <div className="text-center">
+            <h1 className="text-xl font-bold sm:text-2xl">
+              🎵 Audição - Equipe de Louvor MKD
+            </h1>
+            <p className="text-sm opacity-90">Igreja MKD | Modelo M12</p>
+          </div>
+          <div className="hidden w-[170px] sm:block" />
         </div>
 
-        <div className="h-[5px] w-full bg-[#e0e0e0]">
+        <div className="h-1.5 w-full bg-muted">
           <div
-            className="h-full bg-gradient-to-r from-[#667eea] to-[#764ba2] transition-all duration-300"
+            className="h-full bg-primary-foreground/80 transition-all duration-300"
             style={{ width: `${progress}%` }}
           />
         </div>
 
-        <div className="py-4 text-center text-sm text-slate-600">
+        <div className="border-b border-border py-4 text-center text-sm text-muted-foreground">
           Passo {currentSection} de {totalSections}
         </div>
 
-        <form onSubmit={handleSubmit} className="px-7 pb-8 pt-2">
+        <form onSubmit={handleSubmit} className="px-4 pb-8 pt-2 sm:px-7">
           {currentSection === 1 && (
             <div className="space-y-6">
-              <h2 className="border-b-4 border-[#667eea] pb-2 text-2xl font-bold text-[#667eea]">
+              <h2 className="border-b-2 border-primary pb-2 text-2xl font-bold text-primary">
                 📋 Dados Pessoais
               </h2>
 
-              <div className="space-y-2">
-                <label className="block font-semibold">Nome Completo</label>
-                <Input
-                  value={form.nome_completo}
-                  onChange={(e) => updateField("nome_completo", e.target.value)}
-                  required
-                />
-              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2 md:col-span-2">
+                  <label className="block font-semibold">Nome completo</label>
+                  <Input
+                    value={form.nome_completo}
+                    aria-invalid={Boolean(fieldErrors.nome_completo)}
+                    className={getFieldClass(
+                      Boolean(fieldErrors.nome_completo),
+                    )}
+                    onChange={(e) =>
+                      updateField("nome_completo", e.target.value)
+                    }
+                    placeholder="Seu nome completo"
+                  />
+                </div>
 
-              <div className="space-y-2">
-                <label className="block font-semibold">
-                  Data de Nascimento
-                </label>
-                <Input
-                  type="date"
-                  value={form.data_nascimento}
-                  onChange={(e) =>
-                    updateField("data_nascimento", e.target.value)
-                  }
-                  required
-                />
-              </div>
+                <div className="space-y-2">
+                  <label className="block font-semibold">
+                    Data de nascimento
+                  </label>
+                  <Input
+                    type="date"
+                    value={form.data_nascimento}
+                    aria-invalid={Boolean(fieldErrors.data_nascimento)}
+                    className={getFieldClass(
+                      Boolean(fieldErrors.data_nascimento),
+                    )}
+                    onChange={(e) =>
+                      updateField("data_nascimento", e.target.value)
+                    }
+                  />
+                </div>
 
-              <div className="space-y-2">
-                <label className="block font-semibold">Telefone/WhatsApp</label>
-                <Input
-                  value={form.telefone}
-                  onChange={(e) => updateField("telefone", e.target.value)}
-                  required
-                  placeholder="(00) 00000-0000"
-                />
-              </div>
+                <div className="space-y-2">
+                  <label className="block font-semibold">
+                    Telefone / WhatsApp
+                  </label>
+                  <Input
+                    type="tel"
+                    inputMode="tel"
+                    value={form.telefone}
+                    aria-invalid={Boolean(fieldErrors.telefone)}
+                    className={getFieldClass(Boolean(fieldErrors.telefone))}
+                    onChange={(e) =>
+                      updateField("telefone", formatPhone(e.target.value))
+                    }
+                    placeholder="(00) 00000-0000"
+                  />
+                </div>
 
-              <div className="space-y-2">
-                <label className="block font-semibold">E-mail</label>
-                <Input
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => updateField("email", e.target.value)}
-                  required
-                  placeholder="seu@email.com"
-                />
-              </div>
+                <div className="space-y-2 md:col-span-2">
+                  <label className="block font-semibold">E-mail</label>
+                  <Input
+                    type="email"
+                    value={form.email}
+                    aria-invalid={Boolean(fieldErrors.email)}
+                    className={getFieldClass(Boolean(fieldErrors.email))}
+                    onChange={(e) => updateField("email", e.target.value)}
+                    placeholder="seu@email.com"
+                  />
+                </div>
 
-              <div className="space-y-2">
-                <label className="block font-semibold">Endereço</label>
-                <textarea
-                  value={form.endereco}
-                  onChange={(e) => updateField("endereco", e.target.value)}
-                  placeholder="Rua, número, bairro, cidade"
-                  className="min-h-[100px] w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[#667eea] focus:ring-2 focus:ring-[#667eea]/10"
-                />
+                <div className="space-y-2 md:col-span-2">
+                  <label className="block font-semibold">Endereço</label>
+                  <textarea
+                    value={form.endereco}
+                    onChange={(e) => updateField("endereco", e.target.value)}
+                    placeholder="Rua, número, bairro, cidade"
+                    className={`${getFieldClass(false)} min-h-[100px]`}
+                  />
+                </div>
+
+                <div className="space-y-2 md:col-span-2">
+                  <label className="block font-semibold">
+                    Fale um pouco sobre você
+                  </label>
+                  <textarea
+                    value={form.mensagem}
+                    maxLength={600}
+                    aria-invalid={Boolean(fieldErrors.mensagem)}
+                    className={`${getFieldClass(Boolean(fieldErrors.mensagem))} min-h-[130px]`}
+                    onChange={(e) => updateField("mensagem", e.target.value)}
+                    placeholder="Conte um pouco sobre sua vida, sua caminhada e o que te move a servir no louvor."
+                  />
+                  <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400">
+                    <span>Limite de 600 caracteres</span>
+                    <span>{form.mensagem.length}/600</span>
+                  </div>
+                </div>
               </div>
 
               <div className="flex justify-end">
@@ -314,7 +447,7 @@ export function AudicoesLouvorPage() {
                   onClick={() => {
                     if (validateCurrentSection()) setCurrentSection(2);
                   }}
-                  className="bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
                 >
                   Próximo →
                 </Button>
@@ -324,11 +457,11 @@ export function AudicoesLouvorPage() {
 
           {currentSection === 2 && (
             <div className="space-y-6">
-              <h2 className="border-b-4 border-[#667eea] pb-2 text-2xl font-bold text-[#667eea]">
+              <h2 className="border-b-2 border-primary pb-2 text-2xl font-bold text-primary">
                 ✝️ Jornada no M12
               </h2>
 
-              <div className="rounded-md border-l-4 border-[#667eea] bg-[#e8eaf6] p-4 text-sm text-slate-700">
+              <div className="rounded-md border-l-4 border-primary bg-primary/10 p-4 text-sm text-foreground">
                 <strong>Importante:</strong> Para fazer parte da equipe de
                 louvor, é necessário estar em comunhão com a igreja e ter
                 passado pelos processos do M12.
@@ -340,14 +473,16 @@ export function AudicoesLouvorPage() {
                 </label>
                 <div className="space-y-2">
                   {["Sim", "Não", "Em andamento"].map((option) => (
-                    <label
-                      key={option}
-                      className="flex items-center gap-3 rounded-xl bg-[#f8f9fa] p-3"
-                    >
+                    <label key={option} className={choiceClass}>
                       <input
                         type="radio"
                         checked={form.encontro_deus === option}
-                        onChange={() => updateField("encontro_deus", option)}
+                        onChange={() => {
+                          updateField("encontro_deus", option);
+                          if (option !== "Sim" && option !== "Em andamento") {
+                            updateField("data_encontro", "");
+                          }
+                        }}
                       />
                       <span>{option}</span>
                     </label>
@@ -355,16 +490,25 @@ export function AudicoesLouvorPage() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="block font-semibold">
-                  Data do Encontro com Deus
-                </label>
-                <Input
-                  value={form.data_encontro}
-                  onChange={(e) => updateField("data_encontro", e.target.value)}
-                  placeholder="Mês/Ano (ex: Janeiro/2024)"
-                />
-              </div>
+              {(["Sim", "Em andamento"].includes(form.encontro_deus) ||
+                form.data_encontro) && (
+                <div className="space-y-2">
+                  <label className="block font-semibold">
+                    Data do Encontro com Deus
+                  </label>
+                  <Input
+                    type="date"
+                    value={form.data_encontro}
+                    aria-invalid={Boolean(fieldErrors.data_encontro)}
+                    className={getFieldClass(
+                      Boolean(fieldErrors.data_encontro),
+                    )}
+                    onChange={(e) =>
+                      updateField("data_encontro", e.target.value)
+                    }
+                  />
+                </div>
+              )}
 
               <div className="space-y-3">
                 <label className="block font-semibold">
@@ -377,14 +521,15 @@ export function AudicoesLouvorPage() {
                     "Não iniciei",
                     "Pretendo iniciar",
                   ].map((option) => (
-                    <label
-                      key={option}
-                      className="flex items-center gap-3 rounded-xl bg-[#f8f9fa] p-3"
-                    >
+                    <label key={option} className={choiceClass}>
                       <input
                         type="radio"
                         checked={form.escola_lideres === option}
-                        onChange={() => updateField("escola_lideres", option)}
+                        onChange={() => {
+                          updateField("escola_lideres", option);
+                          if (option !== "Concluí")
+                            updateField("data_escola", "");
+                        }}
                       />
                       <span>{option}</span>
                     </label>
@@ -392,16 +537,20 @@ export function AudicoesLouvorPage() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="block font-semibold">
-                  Data de conclusão da Escola de Líderes
-                </label>
-                <Input
-                  value={form.data_escola}
-                  onChange={(e) => updateField("data_escola", e.target.value)}
-                  placeholder="Mês/Ano"
-                />
-              </div>
+              {form.escola_lideres === "Concluí" && (
+                <div className="space-y-2">
+                  <label className="block font-semibold">
+                    Data de conclusão da Escola de Líderes
+                  </label>
+                  <Input
+                    type="date"
+                    value={form.data_escola}
+                    aria-invalid={Boolean(fieldErrors.data_escola)}
+                    className={getFieldClass(Boolean(fieldErrors.data_escola))}
+                    onChange={(e) => updateField("data_escola", e.target.value)}
+                  />
+                </div>
+              )}
 
               <div className="space-y-3">
                 <label className="block font-semibold">
@@ -409,14 +558,14 @@ export function AudicoesLouvorPage() {
                 </label>
                 <div className="space-y-2">
                   {["Sim", "Não"].map((option) => (
-                    <label
-                      key={option}
-                      className="flex items-center gap-3 rounded-xl bg-[#f8f9fa] p-3"
-                    >
+                    <label key={option} className={choiceClass}>
                       <input
                         type="radio"
                         checked={form.celula === option}
-                        onChange={() => updateField("celula", option)}
+                        onChange={() => {
+                          updateField("celula", option);
+                          if (option !== "Sim") updateField("celula_info", "");
+                        }}
                       />
                       <span>{option}</span>
                     </label>
@@ -424,16 +573,20 @@ export function AudicoesLouvorPage() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="block font-semibold">
-                  Nome da Célula e Líder
-                </label>
-                <Input
-                  value={form.celula_info}
-                  onChange={(e) => updateField("celula_info", e.target.value)}
-                  placeholder="Ex: Célula Família - Líder João"
-                />
-              </div>
+              {form.celula === "Sim" && (
+                <div className="space-y-2">
+                  <label className="block font-semibold">
+                    Nome da Célula e Líder
+                  </label>
+                  <Input
+                    value={form.celula_info}
+                    aria-invalid={Boolean(fieldErrors.celula_info)}
+                    className={getFieldClass(Boolean(fieldErrors.celula_info))}
+                    onChange={(e) => updateField("celula_info", e.target.value)}
+                    placeholder="Ex: Célula Família - Líder João"
+                  />
+                </div>
+              )}
 
               <div className="space-y-2">
                 <label className="block font-semibold">
@@ -441,8 +594,9 @@ export function AudicoesLouvorPage() {
                 </label>
                 <select
                   value={form.tempo_igreja}
+                  aria-invalid={Boolean(fieldErrors.tempo_igreja)}
+                  className={getFieldClass(Boolean(fieldErrors.tempo_igreja))}
                   onChange={(e) => updateField("tempo_igreja", e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[#667eea] focus:ring-2 focus:ring-[#667eea]/10"
                 >
                   <option value="">Selecione...</option>
                   <option value="Menos de 6 meses">Menos de 6 meses</option>
@@ -459,14 +613,14 @@ export function AudicoesLouvorPage() {
                 </label>
                 <div className="space-y-2">
                   {["Sim", "Não"].map((option) => (
-                    <label
-                      key={option}
-                      className="flex items-center gap-3 rounded-xl bg-[#f8f9fa] p-3"
-                    >
+                    <label key={option} className={choiceClass}>
                       <input
                         type="radio"
                         checked={form.discipulado === option}
-                        onChange={() => updateField("discipulado", option)}
+                        onChange={() => {
+                          updateField("discipulado", option);
+                          if (option !== "Sim") updateField("discipulador", "");
+                        }}
                       />
                       <span>{option}</span>
                     </label>
@@ -474,16 +628,22 @@ export function AudicoesLouvorPage() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="block font-semibold">
-                  Nome do Discipulador
-                </label>
-                <Input
-                  value={form.discipulador}
-                  onChange={(e) => updateField("discipulador", e.target.value)}
-                  placeholder="Nome do seu discipulador"
-                />
-              </div>
+              {form.discipulado === "Sim" && (
+                <div className="space-y-2">
+                  <label className="block font-semibold">
+                    Nome do discipulador
+                  </label>
+                  <Input
+                    value={form.discipulador}
+                    aria-invalid={Boolean(fieldErrors.discipulador)}
+                    className={getFieldClass(Boolean(fieldErrors.discipulador))}
+                    onChange={(e) =>
+                      updateField("discipulador", e.target.value)
+                    }
+                    placeholder="Nome do seu discipulador"
+                  />
+                </div>
+              )}
 
               <div className="flex justify-between gap-3">
                 <Button
@@ -498,7 +658,7 @@ export function AudicoesLouvorPage() {
                   onClick={() => {
                     if (validateCurrentSection()) setCurrentSection(3);
                   }}
-                  className="bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
                 >
                   Próximo →
                 </Button>
@@ -508,7 +668,7 @@ export function AudicoesLouvorPage() {
 
           {currentSection === 3 && (
             <div className="space-y-6">
-              <h2 className="border-b-4 border-[#667eea] pb-2 text-2xl font-bold text-[#667eea]">
+              <h2 className="border-b-2 border-primary pb-2 text-2xl font-bold text-primary">
                 🎸 Chamado e Ministério
               </h2>
 
@@ -518,10 +678,7 @@ export function AudicoesLouvorPage() {
                 </label>
                 <div className="space-y-2">
                   {["Vocalista", "Instrumentista", "Ambos"].map((option) => (
-                    <label
-                      key={option}
-                      className="flex items-center gap-3 rounded-xl bg-[#f8f9fa] p-3"
-                    >
+                    <label key={option} className={choiceClass}>
                       <input
                         type="radio"
                         checked={form.ministerio === option}
@@ -541,10 +698,7 @@ export function AudicoesLouvorPage() {
                   </label>
                   <div className="grid gap-2 md:grid-cols-2">
                     {instrumentOptions.map((instrument) => (
-                      <label
-                        key={instrument}
-                        className="flex items-center gap-3 rounded-xl bg-[#f8f9fa] p-3"
-                      >
+                      <label key={instrument} className={choiceClass}>
                         <input
                           type="checkbox"
                           checked={form.instrumentos.includes(instrument)}
@@ -570,10 +724,10 @@ export function AudicoesLouvorPage() {
                 </label>
                 <textarea
                   value={form.chamado}
+                  aria-invalid={Boolean(fieldErrors.chamado)}
+                  className={`${getFieldClass(Boolean(fieldErrors.chamado))} min-h-[110px]`}
                   onChange={(e) => updateField("chamado", e.target.value)}
-                  placeholder="Conte-nos sobre sua experiência espiritual e como sente o chamado para servir no louvor... (mínimo 100 palavras)"
-                  minLength={100}
-                  className="min-h-[110px] w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[#667eea] focus:ring-2 focus:ring-[#667eea]/10"
+                  placeholder="Conte-nos sobre sua experiência espiritual e como sente o chamado para servir no louvor..."
                 />
               </div>
 
@@ -583,10 +737,13 @@ export function AudicoesLouvorPage() {
                 </label>
                 <select
                   value={form.tempo_experiencia}
+                  aria-invalid={Boolean(fieldErrors.tempo_experiencia)}
+                  className={getFieldClass(
+                    Boolean(fieldErrors.tempo_experiencia),
+                  )}
                   onChange={(e) =>
                     updateField("tempo_experiencia", e.target.value)
                   }
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[#667eea] focus:ring-2 focus:ring-[#667eea]/10"
                 >
                   <option value="">Selecione...</option>
                   <option value="Menos de 1 ano">Menos de 1 ano</option>
@@ -608,10 +765,7 @@ export function AudicoesLouvorPage() {
                     "Avançado",
                     "Profissional",
                   ].map((option) => (
-                    <label
-                      key={option}
-                      className="flex items-center gap-3 rounded-xl bg-[#f8f9fa] p-3"
-                    >
+                    <label key={option} className={choiceClass}>
                       <input
                         type="radio"
                         checked={form.nivel === option}
@@ -628,27 +782,21 @@ export function AudicoesLouvorPage() {
                   Sabe ler partitura ou cifra?
                 </label>
                 <div className="space-y-2">
-                  {["Partitura", "Cifra", "Ambos", "Não"].map((option) => (
-                    <label
-                      key={option}
-                      className="flex items-center gap-3 rounded-xl bg-[#f8f9fa] p-3"
-                    >
-                      <input
-                        type="radio"
-                        checked={form.leitura === option}
-                        onChange={() => updateField("leitura", option)}
-                      />
-                      <span>
-                        {option === "Partitura"
-                          ? "Sim, partitura"
-                          : option === "Cifra"
-                            ? "Sim, cifra"
-                            : option === "Ambos"
-                              ? "Ambos"
-                              : "Não"}
-                      </span>
-                    </label>
-                  ))}
+                  {["Partitura", "Cifra", "Ambos", "Tablatura", "Não"].map(
+                    (option) => (
+                      <label
+                        key={option}
+                        className="flex items-center gap-3 rounded-xl bg-slate-50 p-3 dark:bg-slate-800/70"
+                      >
+                        <input
+                          type="radio"
+                          checked={form.leitura === option}
+                          onChange={() => updateField("leitura", option)}
+                        />
+                        <span>{option}</span>
+                      </label>
+                    ),
+                  )}
                 </div>
               </div>
 
@@ -658,16 +806,15 @@ export function AudicoesLouvorPage() {
                 </label>
                 <div className="space-y-2">
                   {["Sim", "Não"].map((option) => (
-                    <label
-                      key={option}
-                      className="flex items-center gap-3 rounded-xl bg-[#f8f9fa] p-3"
-                    >
+                    <label key={option} className={choiceClass}>
                       <input
                         type="radio"
                         checked={form.experiencia_anterior === option}
-                        onChange={() =>
-                          updateField("experiencia_anterior", option)
-                        }
+                        onChange={() => {
+                          updateField("experiencia_anterior", option);
+                          if (option !== "Sim")
+                            updateField("experiencia_detalhes", "");
+                        }}
                       />
                       <span>{option}</span>
                     </label>
@@ -675,19 +822,22 @@ export function AudicoesLouvorPage() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="block font-semibold">
-                  Igreja/Ministério anterior e tempo
-                </label>
-                <textarea
-                  value={form.experiencia_detalhes}
-                  onChange={(e) =>
-                    updateField("experiencia_detalhes", e.target.value)
-                  }
-                  placeholder="Se sim, onde e por quanto tempo?"
-                  className="min-h-[80px] w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[#667eea] focus:ring-2 focus:ring-[#667eea]/10"
-                />
-              </div>
+              {form.experiencia_anterior === "Sim" && (
+                <div className="space-y-2">
+                  <label className="block font-semibold">
+                    Igreja/Ministério anterior e tempo
+                  </label>
+                  <textarea
+                    value={form.experiencia_detalhes}
+                    aria-invalid={Boolean(fieldErrors.experiencia_detalhes)}
+                    className={`${getFieldClass(Boolean(fieldErrors.experiencia_detalhes))} min-h-[80px]`}
+                    onChange={(e) =>
+                      updateField("experiencia_detalhes", e.target.value)
+                    }
+                    placeholder="Se sim, onde e por quanto tempo?"
+                  />
+                </div>
+              )}
 
               <div className="flex justify-between gap-3">
                 <Button
@@ -702,7 +852,7 @@ export function AudicoesLouvorPage() {
                   onClick={() => {
                     if (validateCurrentSection()) setCurrentSection(4);
                   }}
-                  className="bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
                 >
                   Próximo →
                 </Button>
@@ -712,11 +862,11 @@ export function AudicoesLouvorPage() {
 
           {currentSection === 4 && (
             <div className="space-y-6">
-              <h2 className="border-b-4 border-[#667eea] pb-2 text-2xl font-bold text-[#667eea]">
+              <h2 className="border-b-2 border-primary pb-2 text-2xl font-bold text-primary">
                 📅 Disponibilidade e Compromisso
               </h2>
 
-              <div className="rounded-md border-l-4 border-[#667eea] bg-[#e8eaf6] p-4 text-sm text-slate-700">
+              <div className="rounded-md border-l-4 border-primary bg-primary/10 p-4 text-sm text-foreground">
                 <strong>Atenção:</strong> Fazer parte da equipe de louvor exige
                 compromisso, pontualidade e dedicação aos ensaios e cultos.
               </div>
@@ -727,10 +877,7 @@ export function AudicoesLouvorPage() {
                 </label>
                 <div className="grid gap-2 md:grid-cols-2">
                   {disponibilidadeOptions.map((day) => (
-                    <label
-                      key={day}
-                      className="flex items-center gap-3 rounded-xl bg-[#f8f9fa] p-3"
-                    >
+                    <label key={day} className={choiceClass}>
                       <input
                         type="checkbox"
                         checked={form.disponibilidade.includes(day)}
@@ -748,16 +895,15 @@ export function AudicoesLouvorPage() {
                 </label>
                 <div className="space-y-2">
                   {["Sim, totalmente", "Parcialmente", "Não"].map((option) => (
-                    <label
-                      key={option}
-                      className="flex items-center gap-3 rounded-xl bg-[#f8f9fa] p-3"
-                    >
+                    <label key={option} className={choiceClass}>
                       <input
                         type="radio"
                         checked={form.compromisso_cultos === option}
-                        onChange={() =>
-                          updateField("compromisso_cultos", option)
-                        }
+                        onChange={() => {
+                          updateField("compromisso_cultos", option);
+                          if (option !== "Parcialmente")
+                            updateField("compromisso_obs", "");
+                        }}
                       />
                       <span>{option}</span>
                     </label>
@@ -765,19 +911,22 @@ export function AudicoesLouvorPage() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="block font-semibold">
-                  Se parcialmente, explique:
-                </label>
-                <textarea
-                  value={form.compromisso_obs}
-                  onChange={(e) =>
-                    updateField("compromisso_obs", e.target.value)
-                  }
-                  placeholder="Explique suas limitações de disponibilidade..."
-                  className="min-h-[90px] w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[#667eea] focus:ring-2 focus:ring-[#667eea]/10"
-                />
-              </div>
+              {form.compromisso_cultos === "Parcialmente" && (
+                <div className="space-y-2">
+                  <label className="block font-semibold">
+                    Se parcialmente, explique:
+                  </label>
+                  <textarea
+                    value={form.compromisso_obs}
+                    aria-invalid={Boolean(fieldErrors.compromisso_obs)}
+                    className={`${getFieldClass(Boolean(fieldErrors.compromisso_obs))} min-h-[90px]`}
+                    onChange={(e) =>
+                      updateField("compromisso_obs", e.target.value)
+                    }
+                    placeholder="Explique suas limitações de disponibilidade..."
+                  />
+                </div>
+              )}
 
               <div className="space-y-3">
                 <label className="block font-semibold">
@@ -788,14 +937,16 @@ export function AudicoesLouvorPage() {
                     (option) => (
                       <label
                         key={option}
-                        className="flex items-center gap-3 rounded-xl bg-[#f8f9fa] p-3"
+                        className="flex items-center gap-3 rounded-xl bg-slate-50 p-3 dark:bg-slate-800/70"
                       >
                         <input
                           type="radio"
                           checked={form.vida_devocional === option}
-                          onChange={() =>
-                            updateField("vida_devocional", option)
-                          }
+                          onChange={() => {
+                            updateField("vida_devocional", option);
+                            if (option !== "Tenho dúvidas")
+                              updateField("vida_devocional_duvidas", "");
+                          }}
                         />
                         <span>{option}</span>
                       </label>
@@ -803,6 +954,27 @@ export function AudicoesLouvorPage() {
                   )}
                 </div>
               </div>
+
+              {form.vida_devocional === "Tenho dúvidas" && (
+                <div className="space-y-2">
+                  <label className="block font-semibold">
+                    Descreva suas dúvidas (até 300 caracteres)
+                  </label>
+                  <textarea
+                    value={form.vida_devocional_duvidas}
+                    maxLength={300}
+                    aria-invalid={Boolean(fieldErrors.vida_devocional_duvidas)}
+                    className={`${getFieldClass(Boolean(fieldErrors.vida_devocional_duvidas))} min-h-[90px]`}
+                    onChange={(e) =>
+                      updateField("vida_devocional_duvidas", e.target.value)
+                    }
+                    placeholder="Escreva em poucas palavras as suas dúvidas..."
+                  />
+                  <p className="text-right text-xs text-slate-500 dark:text-slate-400">
+                    {form.vida_devocional_duvidas.length}/300
+                  </p>
+                </div>
+              )}
 
               <div className="flex justify-between gap-3">
                 <Button
@@ -817,7 +989,7 @@ export function AudicoesLouvorPage() {
                   onClick={() => {
                     if (validateCurrentSection()) setCurrentSection(5);
                   }}
-                  className="bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
                 >
                   Próximo →
                 </Button>
@@ -827,11 +999,11 @@ export function AudicoesLouvorPage() {
 
           {currentSection === 5 && (
             <div className="space-y-6">
-              <h2 className="border-b-4 border-[#667eea] pb-2 text-2xl font-bold text-[#667eea]">
+              <h2 className="border-b-2 border-primary pb-2 text-2xl font-bold text-primary">
                 🎬 Vídeo de Avaliação
               </h2>
 
-              <div className="rounded-md border-l-4 border-[#667eea] bg-[#e8eaf6] p-4 text-sm text-slate-700">
+              <div className="rounded-md border-l-4 border-primary bg-primary/10 p-4 text-sm text-foreground">
                 <strong>Instruções importantes:</strong>
                 <br />• Grave um vídeo de <strong>máximo 5 minutos</strong>
                 <br />• <strong>Vocalistas:</strong> cante uma música de
@@ -851,10 +1023,7 @@ export function AudicoesLouvorPage() {
                     { value: "upload", label: "Adicionar arquivo no sistema" },
                     { value: "whatsapp", label: "Enviar pelo WhatsApp" },
                   ].map((option) => (
-                    <label
-                      key={option.value}
-                      className="flex items-center gap-3 rounded-xl bg-[#f8f9fa] p-3"
-                    >
+                    <label key={option.value} className={choiceClass}>
                       <input
                         type="radio"
                         checked={form.video_metodo === option.value}
@@ -876,62 +1045,26 @@ export function AudicoesLouvorPage() {
                   <Input
                     type="file"
                     accept="video/*"
+                    aria-invalid={Boolean(fieldErrors.video_file)}
+                    className={getFieldClass(Boolean(fieldErrors.video_file))}
                     onChange={(event) =>
                       updateField("video_file", event.target.files?.[0] ?? null)
                     }
                   />
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
                     Aceitamos arquivos de vídeo para envio direto no sistema.
                   </p>
                 </div>
               )}
 
               {form.video_metodo === "whatsapp" && (
-                <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
-                  Envie o vídeo para o WhatsApp: <strong>67984213816</strong>
+                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900 shadow-sm dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200">
+                  <p className="font-semibold">Envio pelo WhatsApp</p>
+                  <p className="mt-1">
+                    WhatsApp oficial: <strong>67984213816</strong>
+                  </p>
                 </div>
               )}
-
-              {form.video_metodo === "upload" && (
-                <div className="space-y-2">
-                  <label className="block font-semibold">
-                    Link do vídeo (opcional)
-                  </label>
-                  <Input
-                    value={form.video_link}
-                    onChange={(e) => updateField("video_link", e.target.value)}
-                    placeholder="https://youtube.com/watch?v=... ou link do Google Drive"
-                  />
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <label className="block font-semibold">
-                  Qual música escolheu para apresentar?
-                </label>
-                <Input
-                  value={form.musica_escolhida}
-                  onChange={(e) =>
-                    updateField("musica_escolhida", e.target.value)
-                  }
-                  required
-                  placeholder="Nome da música e artista"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="block font-semibold">
-                  Observações sobre sua apresentação
-                </label>
-                <textarea
-                  value={form.observacoes_video}
-                  onChange={(e) =>
-                    updateField("observacoes_video", e.target.value)
-                  }
-                  placeholder="Alguma informação adicional sobre o vídeo?"
-                  className="min-h-[90px] w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[#667eea] focus:ring-2 focus:ring-[#667eea]/10"
-                />
-              </div>
 
               <div className="flex justify-between gap-3">
                 <Button
@@ -946,7 +1079,7 @@ export function AudicoesLouvorPage() {
                   onClick={() => {
                     if (validateCurrentSection()) setCurrentSection(6);
                   }}
-                  className="bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
                 >
                   Próximo →
                 </Button>
@@ -956,15 +1089,15 @@ export function AudicoesLouvorPage() {
 
           {currentSection === 6 && (
             <div className="space-y-6">
-              <h2 className="border-b-4 border-[#667eea] pb-2 text-2xl font-bold text-[#667eea]">
+              <h2 className="border-b-2 border-primary pb-2 text-2xl font-bold text-primary">
                 ✅ Declaração Final
               </h2>
 
-              <div className="rounded-md border-l-4 border-[#667eea] bg-[#e8eaf6] p-4 text-sm text-slate-700">
+              <div className="rounded-md border-l-4 border-primary bg-primary/10 p-4 text-sm text-foreground">
                 <strong>Antes de enviar, revise todas as informações!</strong>
               </div>
 
-              <div className="space-y-3 rounded-xl bg-[#f8f9fa] p-4">
+              <div className="space-y-3 rounded-xl bg-slate-50 p-4 dark:bg-slate-800/70">
                 <label className="flex items-start gap-3 font-semibold">
                   <input
                     type="checkbox"
@@ -972,14 +1105,13 @@ export function AudicoesLouvorPage() {
                     onChange={(e) =>
                       updateField("declaracao", e.target.checked)
                     }
-                    required
                   />
                   <span>
                     Declaro que todas as informações são verdadeiras e estou
                     ciente que:
                   </span>
                 </label>
-                <ul className="ml-8 list-disc space-y-1 text-sm text-slate-700">
+                <ul className="ml-8 list-disc space-y-1 text-sm text-slate-700 dark:text-slate-300">
                   <li>
                     Fazer parte da equipe de louvor é um privilégio e
                     responsabilidade
@@ -998,8 +1130,9 @@ export function AudicoesLouvorPage() {
                 </label>
                 <Input
                   value={form.assinatura}
+                  aria-invalid={Boolean(fieldErrors.assinatura)}
+                  className={getFieldClass(Boolean(fieldErrors.assinatura))}
                   onChange={(e) => updateField("assinatura", e.target.value)}
-                  required
                   placeholder="Digite seu nome completo como assinatura"
                 />
               </div>
@@ -1020,7 +1153,7 @@ export function AudicoesLouvorPage() {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
                 >
                   {loading ? "Enviando..." : "🚀 Enviar Inscrição"}
                 </Button>

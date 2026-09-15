@@ -121,6 +121,17 @@ describe("audicaoService", () => {
     expect(payload).not.toHaveProperty("nome_completo");
   });
 
+  it("retorna se as inscrições estão abertas", async () => {
+    const { audicaoService } = await import("@/services/audicaoService");
+
+    mockMaybeSingle.mockResolvedValueOnce({
+      data: { enabled: true },
+      error: null,
+    });
+
+    await expect(audicaoService.isRegistrationOpen()).resolves.toBe(true);
+  });
+
   it("faz upload do vídeo e retorna uma URL que pode ser reproduzida", async () => {
     const { audicaoService } = await import("@/services/audicaoService");
 

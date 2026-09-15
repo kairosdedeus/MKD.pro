@@ -13,6 +13,9 @@ import {
   Video,
   Trash2,
   FileText,
+  RefreshCw,
+  ClipboardList,
+  ArrowUpRight,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -30,11 +33,15 @@ import {
   type AudicaoStatus,
   type AudicaoSubmission,
 } from "@/services/audicaoService";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { SkeletonList } from "@/components/shared/SkeletonLoader";
 
 const statusStyles = {
-  pendente: "bg-amber-500/10 text-amber-700 border-amber-200",
-  aprovado: "bg-emerald-500/10 text-emerald-700 border-emerald-200",
-  reprovado: "bg-red-500/10 text-red-700 border-red-200",
+  pendente:
+    "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+  aprovado:
+    "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+  reprovado: "border-destructive/30 bg-destructive/10 text-destructive",
 };
 
 const getDisplayStatus = (status?: string): AudicaoStatus =>
@@ -75,7 +82,7 @@ const questionLabels: Array<{ key: keyof AudicaoSubmission; label: string }> = [
   { key: "compromisso_obs", label: "Observações de compromisso" },
   { key: "vida_devocional", label: "Vida devocional" },
   { key: "vida_devocional_duvidas", label: "Dúvidas sobre vida devocional" },
-  { key: "video_metodo", label: "Método de envio do vídeo" }
+  { key: "video_metodo", label: "Método de envio do vídeo" },
   { key: "observacoes_video", label: "Observações do vídeo" },
   { key: "declaracao", label: "Declaração" },
   { key: "assinatura", label: "Assinatura" },
@@ -175,8 +182,10 @@ export function GerencialAudicoesPage() {
   >(null);
   const [registrationOpen, setRegistrationOpen] = useState(false);
   const [approvedResultsVisible, setApprovedResultsVisible] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const loadResponses = async () => {
+  const loadResponses = async (showRefreshState = false) => {
+    if (showRefreshState) setRefreshing(true);
     try {
       const data = await audicaoService.getSubmissions();
       setResponses(data);
@@ -184,6 +193,7 @@ export function GerencialAudicoesPage() {
       console.error(error);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -232,6 +242,9 @@ export function GerencialAudicoesPage() {
       (response) => getDisplayStatus(response.status) === "reprovado",
     ).length,
   };
+
+  const activeFiltersCount =
+    Number(Boolean(search)) + Number(statusFilter !== "todos");
 
   const openSelection = async (response: AudicaoSubmission) => {
     setSelected(response);
@@ -352,16 +365,33 @@ export function GerencialAudicoesPage() {
   };
 
   return (
-    <div className="space-y-6 p-4 md:p-6">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+    <div className="min-h-full space-y-5 p-3 sm:p-4 md:space-y-6 md:p-6">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Audições Louvor-MKD</h1>
-          <p className="text-muted-foreground">
+          <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-primary">
+            <ClipboardList className="h-4 w-4" />
+            Gestão de audições
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+            Audições Louvor-MKD
+          </h1>
+          <p className="mt-1 max-w-2xl text-sm text-muted-foreground sm:text-base">
             Visualize, analise e gerencie as inscrições da temporada.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
+          <Button
+            variant="outline"
+            onClick={() => loadResponses(true)}
+            disabled={loading || refreshing}
+            className="gap-2"
+          >
+            <RefreshCw
+              className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+            />
+            Atualizar
+          </Button>
           <Button
             variant="outline"
             onClick={handleExportApproved}
@@ -373,7 +403,7 @@ export function GerencialAudicoesPage() {
         </div>
       </div>
 
-      <Card>
+      <Card className="overflow-hidden">
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Publicação e inscrições</CardTitle>
           <p className="text-sm text-muted-foreground">
@@ -400,19 +430,19 @@ export function GerencialAudicoesPage() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Card className="border-l-4 border-l-primary">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-muted-foreground">
               Total
             </CardTitle>
           </CardHeader>
           <CardContent className="flex items-center gap-3">
-            <Users className="h-4 w-4 text-violet-500" />
+            <Users className="h-4 w-4 text-primary" />
             <span className="text-2xl font-bold">{responses.length}</span>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-l-4 border-l-amber-500">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-muted-foreground">
               Pendentes
@@ -430,7 +460,7 @@ export function GerencialAudicoesPage() {
             </span>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-l-4 border-l-emerald-500">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-muted-foreground">
               Aprovados
@@ -448,15 +478,28 @@ export function GerencialAudicoesPage() {
         </Card>
       </div>
 
-      <Card>
+      <Card className="overflow-hidden">
         <CardHeader>
-          <CardTitle className="flex items-center justify-between gap-3">
-            <span>Inscrições</span>
-            <Badge className="w-fit gap-2 bg-violet-500/10 text-violet-700">
-              <Sparkles className="h-3.5 w-3.5" />
-              {responses.length} envio(s)
-            </Badge>
-          </CardTitle>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                Inscrições
+                <Badge variant="secondary" className="gap-2 font-normal">
+                  <Sparkles className="h-3.5 w-3.5 text-primary" />
+                  {responses.length} envio(s)
+                </Badge>
+              </CardTitle>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Selecione uma inscrição para revisar os dados e tomar uma
+                decisão.
+              </p>
+            </div>
+            {activeFiltersCount > 0 && (
+              <Badge variant="outline" className="w-fit text-xs">
+                {activeFiltersCount} filtro(s) ativo(s)
+              </Badge>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="relative">
@@ -479,7 +522,7 @@ export function GerencialAudicoesPage() {
             )}
           </div>
 
-          <div className="flex flex-col gap-3 rounded-xl border bg-muted/20 p-3 sm:flex-row sm:items-center">
+          <div className="flex flex-col gap-3 rounded-xl border bg-muted/30 p-3 sm:flex-row sm:items-center">
             <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
               <Filter className="h-4 w-4" />
               Situação
@@ -494,7 +537,7 @@ export function GerencialAudicoesPage() {
                     aria-pressed={statusFilter === filter}
                     className={`flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-left text-sm transition ${
                       statusFilter === filter
-                        ? "border-violet-500 bg-violet-500/10 font-semibold text-violet-700"
+                        ? "border-primary bg-primary/10 font-semibold text-primary"
                         : "border-transparent bg-background text-muted-foreground hover:border-border hover:text-foreground"
                     }`}
                   >
@@ -514,7 +557,10 @@ export function GerencialAudicoesPage() {
             <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               <span>Exibindo {filteredResponses.length} inscrição(ões)</span>
               {statusFilter !== "todos" && (
-                <Badge className="border-violet-200 bg-violet-500/10 text-violet-700">
+                <Badge
+                  variant="outline"
+                  className="border-primary/30 bg-primary/10 text-primary"
+                >
                   {statusLabels[statusFilter]}
                 </Badge>
               )}
@@ -522,25 +568,44 @@ export function GerencialAudicoesPage() {
           )}
 
           {loading ? (
-            <div className="text-sm text-muted-foreground">
-              Carregando respostas...
-            </div>
+            <SkeletonList rows={4} />
           ) : filteredResponses.length === 0 ? (
-            <div className="text-sm text-muted-foreground">
-              Nenhuma inscrição encontrada.
-            </div>
+            <EmptyState
+              icon={search || statusFilter !== "todos" ? Search : ClipboardList}
+              title={
+                search || statusFilter !== "todos"
+                  ? "Nenhum resultado"
+                  : "Nenhuma inscrição ainda"
+              }
+              description={
+                search || statusFilter !== "todos"
+                  ? "Tente remover os filtros ou buscar por outro nome, e-mail ou ministério."
+                  : "As novas inscrições aparecerão aqui assim que forem enviadas."
+              }
+              action={
+                search || statusFilter !== "todos"
+                  ? {
+                      label: "Limpar filtros",
+                      onClick: () => {
+                        setSearch("");
+                        setStatusFilter("todos");
+                      },
+                    }
+                  : undefined
+              }
+            />
           ) : (
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {filteredResponses.map((response) => (
                 <button
                   key={response.id}
                   type="button"
                   onClick={() => openSelection(response)}
                   className={[
-                    "rounded-2xl border p-4 text-left transition-all",
+                    "group rounded-2xl border bg-card p-4 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                     selected?.id === response.id
-                      ? "border-violet-500 bg-violet-500/5 shadow-sm"
-                      : "border-border bg-card hover:border-violet-400/50 hover:bg-muted/40",
+                      ? "border-primary bg-primary/5 shadow-md"
+                      : "border-border",
                   ].join(" ")}
                 >
                   <div className="flex items-start justify-between gap-3">
@@ -548,7 +613,7 @@ export function GerencialAudicoesPage() {
                       <h3 className="text-base font-semibold">
                         {response.nome || "—"} {response.sobrenome || ""}
                       </h3>
-                      <p className="mt-1 text-sm text-muted-foreground">
+                      <p className="mt-1 truncate text-sm text-muted-foreground">
                         {response.telefone || "Telefone não informado"}
                       </p>
                     </div>
@@ -571,14 +636,15 @@ export function GerencialAudicoesPage() {
                     <span className="truncate">{response.email}</span>
                   </div>
 
-                  <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+                  <div className="mt-3 flex items-center justify-between gap-3 text-xs text-muted-foreground">
                     <span>
                       {response.ministerio || "Ministério não informado"}
                     </span>
-                    <span>
+                    <span className="inline-flex shrink-0 items-center gap-1">
                       {new Date(response.created_at).toLocaleDateString(
                         "pt-BR",
                       )}
+                      <ArrowUpRight className="h-3.5 w-3.5 opacity-0 transition-opacity group-hover:opacity-100" />
                     </span>
                   </div>
                 </button>
@@ -592,13 +658,13 @@ export function GerencialAudicoesPage() {
         open={Boolean(selected)}
         onOpenChange={(open) => !open && setSelected(null)}
       >
-        <DialogContent className="max-h-[92vh] max-w-5xl overflow-y-auto p-0">
+        <DialogContent className="max-h-[92vh] max-w-5xl overflow-y-auto p-0 sm:rounded-2xl">
           {selected && (
             <>
-              <DialogHeader className="border-b bg-muted/20 px-6 pb-5 pt-6">
-                <div className="flex flex-col gap-4 pr-8 sm:flex-row sm:items-start sm:justify-between">
+              <DialogHeader className="border-b bg-muted/30 px-4 pb-5 pt-5 sm:px-6 sm:pt-6">
+                <div className="flex flex-col gap-4 pr-6 sm:flex-row sm:items-start sm:justify-between sm:pr-8">
                   <div className="min-w-0">
-                    <DialogTitle className="truncate text-2xl">
+                    <DialogTitle className="text-xl sm:text-2xl">
                       {selected.nome} {selected.sobrenome}
                     </DialogTitle>
                     <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
@@ -617,7 +683,7 @@ export function GerencialAudicoesPage() {
               </DialogHeader>
 
               <div className="space-y-6 px-4 pb-6 pt-4 sm:px-6">
-                <div className="grid grid-cols-3 gap-1 rounded-xl border bg-muted/30 p-1">
+                <div className="grid grid-cols-3 gap-1 rounded-xl border bg-muted/50 p-1">
                   {[
                     { key: "dados", label: "Dados", icon: FileText },
                     { key: "formulario", label: "Formulário", icon: Eye },
@@ -632,7 +698,7 @@ export function GerencialAudicoesPage() {
                       className={[
                         "inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm transition",
                         activeTab === key
-                          ? "bg-background font-semibold text-violet-700 shadow-sm"
+                          ? "bg-background font-semibold text-primary shadow-sm"
                           : "text-muted-foreground hover:bg-background/70 hover:text-foreground",
                       ].join(" ")}
                     >
@@ -644,7 +710,7 @@ export function GerencialAudicoesPage() {
 
                 {activeTab === "dados" && (
                   <div className="grid gap-4 md:grid-cols-2">
-                    <div className="rounded-xl border bg-muted/30 p-4 space-y-3">
+                    <div className="space-y-3 rounded-xl border bg-muted/30 p-4">
                       <div>
                         <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
                           Contato
@@ -688,7 +754,7 @@ export function GerencialAudicoesPage() {
 
                     <div className="rounded-xl border bg-muted/30 p-4">
                       <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2 text-sm font-semibold text-violet-600">
+                        <div className="flex items-center gap-2 text-sm font-semibold text-primary">
                           <Video className="h-4 w-4" />
                           Vídeo da audição
                         </div>
@@ -708,7 +774,7 @@ export function GerencialAudicoesPage() {
                               href={selected.video_link}
                               target="_blank"
                               rel="noreferrer"
-                              className="mt-3 inline-block text-violet-600 underline"
+                              className="mt-3 inline-flex items-center gap-1 text-primary underline underline-offset-2"
                             >
                               Abrir vídeo / WhatsApp
                             </a>
@@ -740,7 +806,7 @@ export function GerencialAudicoesPage() {
                               href={videoPreviewUrl || selected.video_link}
                               target="_blank"
                               rel="noreferrer"
-                              className="mt-3 inline-block text-violet-600 underline"
+                              className="mt-3 inline-flex items-center gap-1 text-primary underline underline-offset-2"
                             >
                               Abrir link do vídeo
                             </a>

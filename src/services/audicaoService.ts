@@ -215,6 +215,10 @@ export const audicaoService = {
     return false;
   },
 
+  async isRegistrationOpen() {
+    return this.getRegistrationStatus();
+  },
+
   async setRegistrationStatus(enabled: boolean) {
     const normalizedEnabled = Boolean(enabled);
     const { error } = await supabase.from("audition_settings").upsert(
