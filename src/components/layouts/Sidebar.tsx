@@ -5,6 +5,7 @@ import {
   UsersRound,
   UserPlus,
   Music2,
+  Mic2,
   Menu,
   X,
 } from "lucide-react";
@@ -19,6 +20,7 @@ const managementItems = [
   { name: "Usuarios", href: "/gerencial/usuarios", icon: UserPlus },
   { name: "Equipes", href: "/gerencial/equipes", icon: UsersRound },
   { name: "Musicas", href: "/gerencial/musicas", icon: Music2 },
+  { name: "Audições", href: "/gerencial/audicoes", icon: Mic2 },
 ];
 
 function SidebarContent({ onClose }: { onClose?: () => void }) {

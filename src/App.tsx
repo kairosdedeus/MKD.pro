@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuthStore } from "./stores/authStore";
 import { DashboardLayout } from "./components/layouts/DashboardLayout";
@@ -10,6 +10,7 @@ import { useTeams } from "./hooks/useTeams";
 import { TEAM_TYPE_ROUTES } from "./lib/team-flow";
 import { YoutubeMiniplayer } from "./components/shared/YoutubeMiniplayer";
 import { useYoutubeMiniplayerStore } from "./stores/youtubeMiniplayerStore";
+import { audicaoService } from "./services/audicaoService";
 
 function GlobalYoutubeMiniplayer() {
   const { url, title, close } = useYoutubeMiniplayerStore();
@@ -68,6 +69,16 @@ const CellsDashboard = lazy(() =>
 const ChildrenNetworkDashboard = lazy(() =>
   import("./pages/children/ChildrenNetworkDashboard").then((m) => ({
     default: m.ChildrenNetworkDashboard,
+  })),
+);
+const AudicoesLouvorPage = lazy(() =>
+  import("./pages/audicoes/AudicoesLouvorPage").then((m) => ({
+    default: m.AudicoesLouvorPage,
+  })),
+);
+const GerencialAudicoesPage = lazy(() =>
+  import("./pages/gerencial/GerencialAudicoesPage").then((m) => ({
+    default: m.GerencialAudicoesPage,
   })),
 );
 const AccessDeniedPage = lazy(() =>
@@ -202,6 +213,25 @@ function DefaultRedirect() {
   return <Navigate to={route || "/acesso-negado"} replace />;
 }
 
+function AudicoesPublicRoute() {
+  const [loading, setLoading] = useState(true);
+  const [registrationOpen, setRegistrationOpen] = useState(false);
+
+  useEffect(() => {
+    audicaoService
+      .getRegistrationStatus()
+      .then(setRegistrationOpen)
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <PageLoader />;
+  return registrationOpen ? (
+    <AudicoesLouvorPage />
+  ) : (
+    <Navigate to="/login" replace />
+  );
+}
+
 function App() {
   const { user, loading } = useAuthStore();
 
@@ -216,6 +246,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/audicoes-louvor" element={<AudicoesPublicRoute />} />
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
         </Suspense>
@@ -230,6 +261,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/app" replace />} />
         <Route path="/login" element={<Navigate to="/app" replace />} />
+        <Route path="/audicoes-louvor" element={<AudicoesLouvorPage />} />
         <Route path="/" element={<DashboardLayout />}>
           <Route path="app" element={<DefaultRedirect />} />
           <Route
@@ -270,6 +302,16 @@ function App() {
                   <SongsPage />
                 </Suspense>
               </ProtectedSongsRoute>
+            }
+          />
+          <Route
+            path="gerencial/audicoes"
+            element={
+              <ProtectedGerencialRoute>
+                <Suspense fallback={<PageLoader />}>
+                  <GerencialAudicoesPage />
+                </Suspense>
+              </ProtectedGerencialRoute>
             }
           />
           <Route

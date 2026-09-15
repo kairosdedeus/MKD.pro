@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audição - Equipe de Louvor MKD</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .progress-bar {
+            height: 5px;
+            background: #e0e0e0;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .form-content {
+            padding: 30px;
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section-title {
+            color: #667eea;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+
+        .required::after {
+            content: " *";
+            color: #e74c3c;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="date"],
+        input[type="number"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .radio-group,
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .radio-item,
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .radio-item:hover,
+        .checkbox-item:hover {
+            background: #e8eaf6;
+        }
+
+        input[type="radio"],
+        input[type="checkbox"] {
+            margin-right: 10px;
+            width: 20px;
+            height: 20px;
+            accent-color: #667eea;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        button {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-prev {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-prev:hover {
+            background: #d0d0d0;
+        }
+
+        .btn-next,
+        .btn-submit {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-next:hover,
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 18px;
+            font-size: 1.1em;
+        }
+
+        .info-box {
+            background: #e8eaf6;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+        .video-upload {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            background: #f8f9ff;
+            transition: all 0.3s;
+        }
+
+        .video-upload:hover {
+            background: #e8eaf6;
+        }
+
+        .video-upload p {
+            margin: 10px 0;
+            color: #666;
+        }
+
+        .success-message {
+            display: none;
+            text-align: center;
+            padding: 60px 30px;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        .success-icon {
+            font-size: 4em;
+            color: #27ae60;
+            margin-bottom: 20px;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 0.85em;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .step-indicator {
+            text-align: center;
+            padding: 15px;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1.5em;
+            }
+
+            .form-content {
+                padding: 20px;
+            }
+
+            button {
+                padding: 12px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎵 Audição - Equipe de Louvor MKD</h1>
+            <p>Igreja MKD | Modelo M12</p>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="step-indicator" id="stepIndicator">Passo 1 de 6</div>
+
+        <form id="auditionForm" action="https://formsubmit.co/ajax/mkdtecnica@gmail.com" method="POST">
+            <!-- Configurações do FormSubmit -->
+            <input type="hidden" name="_subject" value="Nova Inscrição - Audição Louvor MKD">
+            <input type="hidden" name="_template" value="table">
+            <input type="hidden" name="_captcha" value="false">
+            <input type="hidden" name="_next" value="#">
+
+            <div class="form-content">
+                <!-- SEÇÃO 1: DADOS PESSOAIS -->
+                <div class="section active" data-section="1">
+                    <h2 class="section-title">📋 Dados Pessoais</h2>
+
+                    <div class="form-group">
+                        <label class="required">Nome Completo</label>
+                        <input type="text" name="nome_completo" required placeholder="Digite seu nome completo">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="required">Data de Nascimento</label>
+                        <input type="date" name="data_nascimento" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="required">Telefone/WhatsApp</label>
+                        <input type="tel" name="telefone" required placeholder="(00) 00000-0000">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="required">E-mail</label>
+                        <input type="email" name="email" required placeholder="seu@email.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Endereço</label>
+                        <textarea name="endereco" placeholder="Rua, número, bairro, cidade"></textarea>
+                    </div>
+
+                    <div class="navigation">
+                        <div></div>
+                        <button type="button" class="btn-next" onclick="nextSection()">Próximo →</button>
+                    </div>
+                </div>
+
+                <!-- SEÇÃO 2: JORNADA NO M12 -->
+                <div class="section" data-section="2">
+                    <h2 class="section-title">✝️ Jornada no M12</h2>
+
+                    <div class="info-box">
+                        <strong>Importante:</strong> Para fazer parte da equipe de louvor, é necessário estar em
+                        comunhão com a igreja e ter passado pelos processos do M12.
+                    </div>
+
+                    <div class="form-group">
+                        <label class="required">Você já participou do Encontro com Deus?</label>
+                        <div class="radio-group">
+                            <label class="radio-item">
+                                <input type="radio" name="encontro_deus" value="Sim" required>
+                                <span>Sim</span>
+                            </label>
+                            <label class="radio-item">
+                                <input type="radio" name="encontro_deus" value="Não">
+                                <span>Não</span>
+                            </label>
+                            <label class="radio-item">
+                                <input type="radio" name="encontro_deus" value="Em andamento">
+                                <span>Em andamento</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Data do Encontro com Deus</label>
+                        <input type="text" name="data_encontro" placeholder="Mês/Ano (ex: Janeiro/2024)">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="required">Você concluiu a Escola de Líderes?</label>
+                        <div class="radio-group">
+                            <label class="radio-item">
+                                <input type="radio" name="escola_lideres" value="Concluí" required>
+                                <span>Sim, concluí</span>
+                            </label>
+                            <label class="radio-item">
+                                <input type="radio" name="escola_lideres" value="Cursando">
+                                <span>Estou cursando atualmente</span>
+                            </label>
+                            <label class="radio-item">
+                                <input type="radio" name="escola_lideres" value="Não iniciei">
+                                <span>Ainda não iniciei</span>
+                            </label>
+                            <label class="radio-item">
+                                <input type="radio" name="escola_lideres" value="Pretendo iniciar">
+                                <span>Pretendo iniciar em breve</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Data de conclusão da Escola de Líderes</label>
+                        <input type="text" name="data_escola" placeholder="Mês/Ano">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="required">Você participa regularmente de uma Célula?</label>
+                        <div class="radio-group">
+                            <label class="radio-item">
+                                <input type="radio" name="celula" value="Sim" required>
+                                <span>Sim</span>
+                            </label>
+                            <label class="radio-item">
+                                <input type="radio" name="celula" value="Não">
+                                <span>Não</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Nome da Célula e Líder</label>
+                        <input type="text" name="celula_info" placeholder="Ex: Célula Família - Líder João">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="required">Há quanto tempo frequenta a Igreja MKD?</label>
+                        <select name="tempo_igreja" required>
+                            <option value="">Selecione...</option>
+                            <option value="Menos de 6 meses">Menos de 6 meses</option>
+                            <option value="6 meses a 1 ano">6 meses a 1 ano</option>
+                            <option value="1 a 2 anos">1 a 2 anos</option>
+                            <option value="2 a 5 anos">2 a 5 anos</option>
+                            <option value="Mais de 5 anos">Mais de 5 anos</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Você está sendo discipulado?</label>
+                        <div class="radio-group">
+                            <label class="radio-item">
+                                <input type="radio" name="discipulado" value="Sim">
+                                <span>Sim</span>
+                            </label>
+                            <label class="radio-item">
+                                <input type="radio" name="discipulado" value="Não">
+                                <span>Não</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Nome do Discipulador</label>
+                        <input type="text" name="discipulador" placeholder="Nome do seu discipulador">
+                    </div>
+
+                    <div class="navigation">
+                        <button type="button" class="btn-prev" onclick="prevSection()">← Voltar</button>
+                        <button type="button" class="btn-next" onclick="nextSection()">Próximo →</button>
+                    </div>
+                </div>
+
+                <!-- SEÇÃO 3: CHAMADO E MINISTÉRIO -->
+                <div class="section" data-section="3">
+                    <h2 class="section-title">🎸 Chamado e Ministério</h2>
+
+                    <div class="form-group">
+                        <label class="required">Qual ministério deseja integrar?</label>
+                        <div class="radio-group">
+                            <label class="radio-item">
+                                <input type="radio" name="ministerio" value="Vocalista" required
+                                    onchange="updateInstrumentOptions()">
+                                <span>🎤 Vocalista (Cantor)</span>
+                            </label>
+                            <label class="radio-item">
+                                <input type="radio" name="ministerio" value="Instrumentista"
+                                    onchange="updateInstrumentOptions()">
+                                <span>🎸 Instrumentista</span>
+                            </label>
+                            <label class="radio-item">
+                                <input type="radio" name="ministerio" value="Ambos"
+                                    onchange="updateInstrumentOptions()">
+                                <span>🎤🎸 Ambos</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="instrumentGroup" style="display:none;">
+                        <label>Qual(is) instrumento(s) toca?</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="instrumentos[]" value="Violão">
+                                <span>🎸 Violão</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="instrumentos[]" value="Guitarra">
+                                <span>🎸 Guitarra</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="instrumentos[]" value="Baixo">
+                                <span>🎸 Baixo</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="instrumentos[]" value="Teclado/Piano">
+                                <span>🎹 Teclado/Piano</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="instrumentos[]" value="Bateria">
+                                <span>🥁 Bateria</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="instrumentos[]" value="Percussão">
+                                <span>🎵 Percussão</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="instrumentos[]" value="Saxofone">
+                                <span>🎷 Saxofone</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="instrumentos[]" value="Trompete">
+                                <span>🎺 Trompete</span>
+                            </label>
+                        </div>
+                        <input type="text" name="outro_instrumento" placeholder="Outro instrumento (especifique)"
+                            style="margin-top: 10px;">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="required">Como descreve seu chamado para o ministério de louvor?</label>
+                        <textarea name="chamado" required
+                            placeholder="Conte-nos sobre sua experiência espiritual e como sente o chamado para servir no louvor... (mínimo 100 palavras)"
+                            minlength="100"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="required">Há quanto tempo toca ou canta?</label>
+                        <select name="tempo_experiencia" required>
+                            <option value="">Selecione...</option>
+                            <option value="Menos de 1 ano">Menos de 1 ano</option>
+                            <option value="1 a 3 anos">1 a 3 anos</option>
+                            <option value="3 a 5 anos">3 a 5 anos</option>
+                            <option value="5 a 10 anos">5 a 10 anos</option>
+                            <option value="Mais de 10 anos">Mais de 10 anos</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Nível de proficiência</label>
+                        <div class="radio-group">
+                            <label class="radio-item">
+                                <input type="radio" name="nivel" value="Iniciante">
+                                <span>Iniciante</span>
+                            </label>
+                            <label class="radio-item">
+                                <input type="radio" name="nivel" value="Intermediário">
+                                <span>Intermediário</span>
+                            </label>
+                            <label class="radio-item">
+                                <input type="radio" name="nivel" value="Avançado">
+                                <span>Avançado</span>
+                            </label>
+                            <label class="radio-item">
+                                <input type="radio" name="nivel" value="Profissional">
+                                <span>Profissional</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Sabe ler partitura ou cifra?</label>
+                        <div class="radio-group">
+                            <label class="radio-item">
+                                <input type="radio" name="leitura" value="Partitura">
+                                <span>Sim, partitura</span>
+                            </label>
+                            <label class="radio-item">
+                                <input type="radio" name="leitura" value="Cifra">
+                                <span>Sim, cifra</span>
+                            </label>
+                            <label class="radio-item">
+                                <input type="radio" name="leitura" value="Ambos">
+                                <span>Ambos</span>
+                            </label>
+                            <label class="radio-item">
+                                <input type="radio" name="leitura" value="Não">
+                                <span>Não</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Já participou de equipe de louvor anteriormente?</label>
+                        <div class="radio-group">
+                            <label class="radio-item">
+                                <input type="radio" name="experiencia_anterior" value="Sim">
+                                <span>Sim</span>
+                            </label>
+                            <label class="radio-item">
+                                <input type="radio" name="experiencia_anterior" value="Não">
+                                <span>Não</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Igreja/Ministério anterior e tempo</label>
+                        <textarea name="experiencia_detalhes" placeholder="Se sim, onde e por quanto tempo?"></textarea>
+                    </div>
+
+                    <div class="navigation">
+                        <button type="button" class="btn-prev" onclick="prevSection()">← Voltar</button>
+                        <button type="button" class="btn-next" onclick="nextSection()">Próximo →</button>
+                    </div>
+                </div>
+
+                <!-- SEÇÃO 4: DISPONIBILIDADE -->
+                <div class="section" data-section="4">
+                    <h2 class="section-title">📅 Disponibilidade e Compromisso</h2>
+
+                    <div class="info-box">
+                        <strong>Atenção:</strong> Fazer parte da equipe de louvor exige compromisso, pontualidade e
+                        dedicação aos ensaios e cultos.
+                    </div>
+
+                    <div class="form-group">
+                        <label class="required">Disponibilidade para ensaios (marque os dias):</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="disponibilidade[]" value="Segunda-feira">
+                                <span>Segunda-feira</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="disponibilidade[]" value="Terça-feira">
+                                <span>Terça-feira</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="disponibilidade[]" value="Quarta-feira">
+                                <span>Quarta-feira</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="disponibilidade[]" value="Quinta-feira">
+                                <span>Quinta-feira</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="disponibilidade[]" value="Sexta-feira">
+                                <span>Sexta-feira</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="disponibilidade[]" value="Sábado">
+                                <span>Sábado</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="disponibilidade[]" value="Domingo">
+                                <span>Domingo</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="required">Está disposto(a) a participar de todos os cultos e eventos?</label>
+                        <div class="radio-group">
+                            <label class="radio-item">
+                                <input type="radio" name="compromisso_cultos" value="Sim" required>
+                                <span>Sim, totalmente</span>
+                            </label>
+                            <label class="radio-item">
+                                <input type="radio" name="compromisso_cultos" value="Parcialmente">
+                                <span>Parcialmente</span>
+                            </label>
+                            <label class="radio-item">
+                                <input type="radio" name="compromisso_cultos" value="Não">
+                                <span>Não</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Se parcialmente, explique:</label>
+                        <textarea name="compromisso_obs"
+                            placeholder="Explique suas limitações de disponibilidade..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="required">Compreende que o ministério exige vida devocional consistente?</label>
+                        <div class="radio-group">
+                            <label class="radio-item">
+                                <input type="radio" name="vida_devocional" value="Sim" required>
+                                <span>Sim, compreendo e aceito</span>
+                            </label>
+                            <label class="radio-item">
+                                <input type="radio" name="vida_devocional" value="Tenho dúvidas">
+                                <span>Tenho dúvidas</span>
+                            </label>
+                            <label class="radio-item">
+                                <input type="radio" name="vida_devocional" value="Não">
+                                <span>Não</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="navigation">
+                        <button type="button" class="btn-prev" onclick="prevSection()">← Voltar</button>
+                        <button type="button" class="btn-next" onclick="nextSection()">Próximo →</button>
+                    </div>
+                </div>
+
+                <!-- SEÇÃO 5: VÍDEO DE AVALIAÇÃO -->
+                <div class="section" data-section="5">
+                    <h2 class="section-title">🎬 Vídeo de Avaliação</h2>
+
+                    <div class="info-box">
+                        <strong>Instruções importantes:</strong><br>
+                        • Grave um vídeo de <strong>máximo 5 minutos</strong><br>
+                        • <strong>Vocalistas:</strong> cante uma música de louvor/adoração<br>
+                        • <strong>Instrumentistas:</strong> toque uma música completa<br>
+                        • <strong>Ambos:</strong> demonstre ambas as habilidades<br>
+                        • Use boa qualidade de áudio e imagem<br>
+                        • Escolha uma música conhecida no repertório da igreja
+                    </div>
+
+                    <div class="form-group">
+                        <label class="required">Link do vídeo (YouTube, Google Drive, etc.)</label>
+                        <input type="url" name="video_link" required
+                            placeholder="https://youtube.com/watch?v=... ou link do Google Drive">
+                        <p style="font-size: 0.85em; color: #666; margin-top: 5px;">
+                            💡 Dica: Faça upload no YouTube como "Não listado" ou no Google Drive com permissão de
+                            visualização
+                        </p>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="required">Qual música escolheu para apresentar?</label>
+                        <input type="text" name="musica_escolhida" required placeholder="Nome da música e artista">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Observações sobre sua apresentação</label>
+                        <textarea name="observacoes_video"
+                            placeholder="Alguma informação adicional sobre o vídeo?"></textarea>
+                    </div>
+
+                    <div class="navigation">
+                        <button type="button" class="btn-prev" onclick="prevSection()">← Voltar</button>
+                        <button type="button" class="btn-next" onclick="nextSection()">Próximo →</button>
+                    </div>
+                </div>
+
+                <!-- SEÇÃO 6: DECLARAÇÃO FINAL -->
+                <div class="section" data-section="6">
+                    <h2 class="section-title">✅ Declaração Final</h2>
+
+                    <div class="info-box">
+                        <strong>Antes de enviar, revise todas as informações!</strong>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="required">
+                            <input type="checkbox" name="declaracao" required style="width: auto; margin-right: 10px;">
+                            Declaro que todas as informações são verdadeiras e estou ciente que:
+                        </label>
+                        <ul style="margin-left: 30px; margin-top: 10px; line-height: 1.8;">
+                            <li>Fazer parte da equipe de louvor é um privilégio e responsabilidade</li>
+                            <li>Devo manter vida de comunhão com Deus consistente</li>
+                            <li>Preciso estar em submissão à liderança da igreja</li>
+                            <li>Meu testemunho deve honrar a Deus dentro e fora da igreja</li>
+                        </ul>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="required">Assinatura Digital (digite seu nome completo)</label>
+                        <input type="text" name="assinatura" required
+                            placeholder="Digite seu nome completo como assinatura">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Data</label>
+                        <input type="date" name="data_envio" readonly>
+                    </div>
+
+                    <button type="submit" class="btn-submit">
+                        🚀 Enviar Inscrição
+                    </button>
+
+                    <div class="navigation" style="margin-top: 20px;">
+                        <button type="button" class="btn-prev" onclick="prevSection()">← Voltar</button>
+                        <div></div>
+                    </div>
+                </div>
+
+                <!-- MENSAGEM DE SUCESSO -->
+                <div class="success-message" id="successMessage">
+                    <div class="success-icon">✅</div>
+                    <h2 style="color: #27ae60; margin-bottom: 20px;">Inscrição Enviada com Sucesso!</h2>
+                    <p style="font-size: 1.1em; color: #666; margin-bottom: 20px;">
+                        Obrigado pelo seu interesse em servir na equipe de louvor da Igreja MKD!<br><br>
+                        Nossa equipe analisará sua inscrição e entraremos em contato em breve.<br><br>
+                        <strong>Que Deus te abençoe!</strong> 🙏
+                    </p>
+                    <button type="button" class="btn-next" onclick="location.reload()" style="margin-top: 20px;">
+                        Enviar nova inscrição
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        let currentSection = 1;
+        const totalSections = 6;
+
+        // Atualizar data atual
+        document.querySelector('input[name="data_envio"]').valueAsDate = new Date();
+
+        function updateProgress() {
+            const progress = (currentSection / totalSections) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+            document.getElementById('stepIndicator').textContent = `Passo ${currentSection} de ${totalSections}`;
+        }
+
+        function showSection(sectionNum) {
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.querySelector(`[data-section="${sectionNum}"]`).classList.add('active');
+            currentSection = sectionNum;
+            updateProgress();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function nextSection() {
+            if (validateCurrentSection()) {
+                if (currentSection < totalSections) {
+                    showSection(currentSection + 1);
+                }
+            }
+        }
+
+        function prevSection() {
+            if (currentSection > 1) {
+                showSection(currentSection - 1);
+            }
+        }
+
+        function validateCurrentSection() {
+            const currentSectionEl = document.querySelector(`[data-section="${currentSection}"]`);
+            const requiredFields = currentSectionEl.querySelectorAll('[required]');
+            let valid = true;
+
+            requiredFields.forEach(field => {
+                if (!field.value || (field.type === 'checkbox' && !field.checked)) {
+                    valid = false;
+                    field.style.borderColor = '#e74c3c';
+                } else {
+                    field.style.borderColor = '#e0e0e0';
+                }
+            });
+
+            if (!valid) {
+                alert('Por favor, preencha todos os campos obrigatórios!');
+            }
+
+            return valid;
+        }
+
+        function updateInstrumentOptions() {
+            const ministerio = document.querySelector('input[name="ministerio"]:checked');
+            const instrumentGroup = document.getElementById('instrumentGroup');
+
+            if (ministerio && (ministerio.value === 'Instrumentista' || ministerio.value === 'Ambos')) {
+                instrumentGroup.style.display = 'block';
+            } else {
+                instrumentGroup.style.display = 'none';
+            }
+        }
+
+        // Submissão do formulário
+        document.getElementById('auditionForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            if (!validateCurrentSection()) return;
+
+            const submitBtn = document.querySelector('.btn-submit');
+            submitBtn.textContent = 'Enviando...';
+            submitBtn.disabled = true;
+
+            const formData = new FormData(this);
+
+            try {
+                const response = await fetch(this.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    document.querySelector('.form-content').style.display = 'none';
+                    document.getElementById('successMessage').classList.add('show');
+                    document.querySelector('.progress-bar').style.display = 'none';
+                    document.querySelector('.step-indicator').style.display = 'none';
+                } else {
+                    throw new Error('Erro no envio');
+                }
+            } catch (error) {
+                alert('Erro ao enviar formulário. Por favor, tente novamente.');
+                submitBtn.textContent = '🚀 Enviar Inscrição';
+                submitBtn.disabled = false;
+            }
+        });
+
+        // Inicializar
+        updateProgress();
+    </script>
+</body>
+
+</html>

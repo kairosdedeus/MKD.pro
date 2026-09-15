@@ -27,6 +27,10 @@ import {
   HomeContent,
   homeContentService,
 } from "@/services/homeContentService";
+import {
+  audicaoService,
+  AUDICOES_REGISTRATION_CHANGED_EVENT,
+} from "@/services/audicaoService";
 
 interface HomePageProps {
   user?: UserProfile | null;
@@ -56,6 +60,33 @@ export function HomePage({ user = null }: HomePageProps) {
     null,
   );
   const [activeItemIndex, setActiveItemIndex] = useState(0);
+  const [auditionsOpen, setAuditionsOpen] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const syncRegistrationState = () => {
+      setAuditionsOpen(null);
+      audicaoService
+        .getRegistrationStatus()
+        .then(setAuditionsOpen)
+        .catch(console.error);
+    };
+
+    syncRegistrationState();
+
+    window.addEventListener(
+      AUDICOES_REGISTRATION_CHANGED_EVENT,
+      syncRegistrationState,
+    );
+    window.addEventListener("storage", syncRegistrationState);
+
+    return () => {
+      window.removeEventListener(
+        AUDICOES_REGISTRATION_CHANGED_EVENT,
+        syncRegistrationState,
+      );
+      window.removeEventListener("storage", syncRegistrationState);
+    };
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -254,6 +285,15 @@ export function HomePage({ user = null }: HomePageProps) {
                     {content.hero.secondary_cta_label}
                   </Link>
                 </Button>
+                {auditionsOpen === true && (
+                  <Button
+                    asChild
+                    size="lg"
+                    className="h-12 rounded-lg bg-fuchsia-600 px-5 text-sm font-bold text-white shadow-[0_0_24px_rgba(217,70,239,0.4)] hover:bg-fuchsia-500"
+                  >
+                    <Link to="/audicoes-louvor">Audições Louvor-MKD</Link>
+                  </Button>
+                )}
               </div>
             </div>
           </div>
@@ -269,7 +309,10 @@ export function HomePage({ user = null }: HomePageProps) {
         </div>
       </section>
 
-      <section id="cultos" className="bg-[var(--home-dark)] px-5 py-20 sm:px-8 lg:px-12">
+      <section
+        id="cultos"
+        className="bg-[var(--home-dark)] px-5 py-20 sm:px-8 lg:px-12"
+      >
         <div className="mx-auto max-w-5xl">
           <div className="mb-14 text-center">
             <p className="text-sm font-bold uppercase tracking-[0.45em] text-[var(--home-accent)]">
@@ -307,7 +350,10 @@ export function HomePage({ user = null }: HomePageProps) {
         </div>
       </section>
 
-      <section id="agenda" className="bg-[var(--home-soft)] px-5 py-20 text-[var(--home-ink)] sm:px-8 lg:px-12">
+      <section
+        id="agenda"
+        className="bg-[var(--home-soft)] px-5 py-20 text-[var(--home-ink)] sm:px-8 lg:px-12"
+      >
         <div className="mx-auto max-w-7xl">
           <div className="mb-14 text-center">
             <p className="text-sm font-bold uppercase tracking-[0.45em] text-[var(--home-accent)]">
@@ -373,7 +419,10 @@ export function HomePage({ user = null }: HomePageProps) {
         </div>
       </section>
 
-      <section id="quem-somos" className="bg-white px-5 py-20 text-[var(--home-ink)] sm:px-8 lg:px-12">
+      <section
+        id="quem-somos"
+        className="bg-white px-5 py-20 text-[var(--home-ink)] sm:px-8 lg:px-12"
+      >
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1fr_0.86fr] lg:items-center">
           <div className="animate-in fade-in slide-in-from-bottom-2 duration-700">
             <p className="text-sm font-bold uppercase tracking-[0.45em] text-[var(--home-accent)]">
@@ -417,7 +466,10 @@ export function HomePage({ user = null }: HomePageProps) {
         </div>
       </section>
 
-      <section id="ministerios" className="bg-[var(--home-dark)] px-5 py-20 sm:px-8 lg:px-12">
+      <section
+        id="ministerios"
+        className="bg-[var(--home-dark)] px-5 py-20 sm:px-8 lg:px-12"
+      >
         <div className="mx-auto max-w-7xl">
           <div className="mb-7 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
@@ -460,7 +512,10 @@ export function HomePage({ user = null }: HomePageProps) {
       </section>
 
       {visibleGalleries.length > 0 && (
-        <section id="galeria" className="bg-[var(--home-dark)] px-5 py-20 text-white sm:px-8 lg:px-12">
+        <section
+          id="galeria"
+          className="bg-[var(--home-dark)] px-5 py-20 text-white sm:px-8 lg:px-12"
+        >
           <div className="mx-auto max-w-7xl">
             <div className="mb-10 text-center">
               <p className="text-sm font-bold uppercase tracking-[0.45em] text-[var(--home-accent)]">
@@ -523,7 +578,10 @@ export function HomePage({ user = null }: HomePageProps) {
         </section>
       )}
 
-      <section id="visite" className="bg-[var(--home-dark)] px-5 py-16 sm:px-8 lg:px-12">
+      <section
+        id="visite"
+        className="bg-[var(--home-dark)] px-5 py-16 sm:px-8 lg:px-12"
+      >
         <div className="mx-auto grid max-w-7xl gap-8 rounded-2xl border border-white/10 bg-[var(--home-panel)] p-6 sm:p-8 lg:grid-cols-[1fr_0.8fr] lg:items-center">
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.35em] text-[var(--home-accent)]">
@@ -553,7 +611,11 @@ export function HomePage({ user = null }: HomePageProps) {
                   variant="outline"
                   className="h-12 rounded-lg border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white"
                 >
-                  <a href={content.visit.map_url} target="_blank" rel="noreferrer">
+                  <a
+                    href={content.visit.map_url}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
                     <MapPin className="mr-2 h-4 w-4" />
                     Como chegar
                   </a>
@@ -563,7 +625,9 @@ export function HomePage({ user = null }: HomePageProps) {
           </div>
 
           <div className="space-y-3 rounded-xl border border-white/10 bg-white/[0.045] p-5">
-            <p className="text-sm font-semibold text-white">Informacoes uteis</p>
+            <p className="text-sm font-semibold text-white">
+              Informacoes uteis
+            </p>
             {content.contact.address && (
               <p className="flex gap-3 text-sm leading-6 text-white/68">
                 <MapPin className="mt-1 h-4 w-4 flex-shrink-0 text-[var(--home-accent)]" />
