@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { audicaoService } from "@/services/audicaoService";
 
 const today = new Date().toISOString().slice(0, 10);
+const maximumUploadDurationSeconds = 60;
 
 const initialForm = {
   nome_completo: "",
@@ -24,8 +25,6 @@ const initialForm = {
   ministerio: "",
   instrumentos: [] as string[],
   outro_instrumento: "",
-  discipulado: "",
-  discipulador: "",
   chamado: "",
   tempo_experiencia: "",
   nivel: "",
@@ -161,9 +160,6 @@ export function AudicoesLouvorPage() {
       if (form.celula === "Sim" && !form.celula_info) {
         errors.celula_info = true;
       }
-      if (form.discipulado === "Sim" && !form.discipulador) {
-        errors.discipulador = true;
-      }
     }
 
     if (currentSection === 3) {
@@ -222,6 +218,48 @@ export function AudicoesLouvorPage() {
         : [...current.disponibilidade, day];
       return { ...current, disponibilidade: next };
     });
+  };
+
+  const handleVideoFileChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0] ?? null;
+    if (!file) {
+      updateField("video_file", null);
+      return;
+    }
+
+    const video = document.createElement("video");
+    const objectUrl = URL.createObjectURL(file);
+    video.preload = "metadata";
+    video.onloadedmetadata = () => {
+      URL.revokeObjectURL(objectUrl);
+
+      if (video.duration > maximumUploadDurationSeconds) {
+        event.target.value = "";
+        updateField("video_file", null);
+        toast({
+          variant: "destructive",
+          title: "Vídeo acima do limite",
+          description:
+            "Para enviar um vídeo com mais de 1 minuto, use o WhatsApp.",
+        });
+        return;
+      }
+
+      updateField("video_file", file);
+    };
+    video.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      event.target.value = "";
+      updateField("video_file", null);
+      toast({
+        variant: "destructive",
+        title: "Vídeo inválido",
+        description: "Não foi possível ler a duração desse arquivo.",
+      });
+    };
+    video.src = objectUrl;
   };
 
   const progress = useMemo(
@@ -607,44 +645,6 @@ export function AudicoesLouvorPage() {
                 </select>
               </div>
 
-              <div className="space-y-3">
-                <label className="block font-semibold">
-                  Você está sendo discipulado?
-                </label>
-                <div className="space-y-2">
-                  {["Sim", "Não"].map((option) => (
-                    <label key={option} className={choiceClass}>
-                      <input
-                        type="radio"
-                        checked={form.discipulado === option}
-                        onChange={() => {
-                          updateField("discipulado", option);
-                          if (option !== "Sim") updateField("discipulador", "");
-                        }}
-                      />
-                      <span>{option}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {form.discipulado === "Sim" && (
-                <div className="space-y-2">
-                  <label className="block font-semibold">
-                    Nome do discipulador
-                  </label>
-                  <Input
-                    value={form.discipulador}
-                    aria-invalid={Boolean(fieldErrors.discipulador)}
-                    className={getFieldClass(Boolean(fieldErrors.discipulador))}
-                    onChange={(e) =>
-                      updateField("discipulador", e.target.value)
-                    }
-                    placeholder="Nome do seu discipulador"
-                  />
-                </div>
-              )}
-
               <div className="flex justify-between gap-3">
                 <Button
                   type="button"
@@ -1005,7 +1005,10 @@ export function AudicoesLouvorPage() {
 
               <div className="rounded-md border-l-4 border-primary bg-primary/10 p-4 text-sm text-foreground">
                 <strong>Instruções importantes:</strong>
-                <br />• Grave um vídeo de <strong>máximo 5 minutos</strong>
+                <br />• Para enviar pelo sistema, grave um vídeo de{" "}
+                <strong>até 1 minuto</strong>
+                <br />• Vídeos com mais de 1 minuto devem ser enviados pelo
+                WhatsApp
                 <br />• <strong>Vocalistas:</strong> cante uma música de
                 louvor/adoração
                 <br />• <strong>Instrumentistas:</strong> toque uma música
@@ -1047,12 +1050,11 @@ export function AudicoesLouvorPage() {
                     accept="video/*"
                     aria-invalid={Boolean(fieldErrors.video_file)}
                     className={getFieldClass(Boolean(fieldErrors.video_file))}
-                    onChange={(event) =>
-                      updateField("video_file", event.target.files?.[0] ?? null)
-                    }
+                    onChange={handleVideoFileChange}
                   />
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Aceitamos arquivos de vídeo para envio direto no sistema.
+                    Limite do upload: 1 minuto. Para vídeos mais longos, use o
+                    WhatsApp.
                   </p>
                 </div>
               )}

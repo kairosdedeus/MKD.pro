@@ -16,6 +16,7 @@ import {
   RefreshCw,
   ClipboardList,
   ArrowUpRight,
+  MessageCircle,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -630,6 +631,16 @@ export function GerencialAudicoesPage() {
                           : "Pendente"}
                     </Badge>
                   </div>
+
+                  {response.video_metodo === "whatsapp" && (
+                    <Badge
+                      variant="outline"
+                      className="mt-3 w-fit gap-1.5 border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                    >
+                      <MessageCircle className="h-3.5 w-3.5" />
+                      Enviado pelo WhatsApp
+                    </Badge>
+                  )}
 
                   <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
                     <Mail className="h-4 w-4" />
